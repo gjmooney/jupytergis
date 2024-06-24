@@ -1,9 +1,8 @@
 import { JupyterFrontEnd } from '@jupyterlab/application';
-import { WidgetTracker } from '@jupyterlab/apputils';
+import { Dialog, WidgetTracker } from '@jupyterlab/apputils';
 import { ITranslator } from '@jupyterlab/translation';
 import { redoIcon, undoIcon } from '@jupyterlab/ui-components';
 
-import { JupyterGISWidget } from './widget';
 import {
   IDict,
   IJGISFormSchemaRegistry,
@@ -11,8 +10,11 @@ import {
   IJGISSource,
   IJupyterGISModel
 } from '@jupytergis/schema';
-import { FormDialog } from './formdialog';
 import { UUID } from '@lumino/coreutils';
+import { FormDialog } from './formdialog';
+
+import { LayerBrowserWidget } from './layerBrowser/layerBrowserDialog';
+import { JupyterGISWidget } from './widget';
 
 /**
  * Add the commands to the application's command registry.
@@ -70,6 +72,17 @@ export function addCommands(
     iconClass: 'fa fa-map',
     execute: Private.createRasterSourceAndLayer(tracker)
   });
+
+  commands.addCommand(CommandIDs.openLayerBrowser, {
+    label: trans.__('Open Layer Browser'),
+    isEnabled: () => {
+      return tracker.currentWidget
+        ? tracker.currentWidget.context.model.sharedModel.editable
+        : false;
+    },
+    iconClass: 'fa fa-book-open',
+    execute: Private.createLayerBrowser(tracker)
+  });
 }
 
 /**
@@ -80,6 +93,7 @@ export namespace CommandIDs {
   export const undo = 'jupytergis:undo';
 
   export const newRasterLayer = 'jupytergis:newRasterLayer';
+  export const openLayerBrowser = 'jupytergis:openLayerBrowser';
 }
 
 namespace Private {
@@ -104,6 +118,96 @@ namespace Private {
 
   // TODO Allow for creating only a source (e.g. loading a CSV file)
   // TODO Allow for creating only a layer (e.g. creating a vector layer given a source selected from a dropdown)
+  export function createLayerBrowser(tracker: WidgetTracker<JupyterGISWidget>) {
+    return async (args: any) => {
+      const current = tracker.currentWidget;
+
+      if (!current) {
+        return;
+      }
+
+      const form = {
+        title: 'Raster Layer parameters',
+        default: (model: IJupyterGISModel) => {
+          return {
+            name: 'RasterSource',
+            url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            maxZoom: 24,
+            minZoom: 0
+          };
+        }
+      };
+
+      current.context.model.syncFormData(form);
+
+      // const syncSelectedField = (
+      //   id: string | null,
+      //   value: any,
+      //   parentType: 'panel' | 'dialog'
+      // ): void => {
+      //   let property: string | null = null;
+      //   if (id) {
+      //     const prefix = id.split('_')[0];
+      //     property = id.substring(prefix.length);
+      //   }
+      //   current.context.model.syncSelectedPropField({
+      //     id: property,
+      //     value,
+      //     parentType
+      //   });
+      // };
+
+      // const dialog = new LayerBrowserDialog({
+      //   context: current.context,
+      //   title: form.title,
+      //   sourceData: form.default(current.context.model),
+      //   schema: FORM_SCHEMA['RasterSource'],
+      //   // syncData: (props: IDict) => {
+      //   //   const sharedModel = current.context.model.sharedModel;
+      //   //   if (!sharedModel) {
+      //   //     return;
+      //   //   }
+
+      //   //   const { name, ...parameters } = props;
+
+      //   //   const sourceId = UUID.uuid4();
+
+      //   //   const sourceModel: IJGISSource = {
+      //   //     type: 'RasterSource',
+      //   //     name,
+      //   //     parameters: {
+      //   //       url: parameters.url,
+      //   //       minZoom: parameters.minZoom,
+      //   //       maxZoom: parameters.maxZoom
+      //   //     }
+      //   //   };
+
+      //   //   const layerModel: IJGISLayer = {
+      //   //     type: 'RasterLayer',
+      //   //     parameters: {
+      //   //       source: sourceId
+      //   //     },
+      //   //     visible: true,
+      //   //     name: name + ' Layer'
+      //   //   };
+
+      //   //   sharedModel.addSource(sourceId, sourceModel);
+      //   //   sharedModel.addLayer(UUID.uuid4(), layerModel);
+      //   // },
+      //   cancelButton: () => {
+      //     current.context.model.syncFormData(undefined);
+      //   }
+      //   // syncSelectedPropField: syncSelectedField
+      // });
+
+      const dialog = new Dialog({
+        // title: 'Layer Browser',
+        body: new LayerBrowserWidget(),
+        buttons: [Dialog.cancelButton(), Dialog.okButton()]
+      });
+      await dialog.launch();
+    };
+  }
 
   export function createRasterSourceAndLayer(
     tracker: WidgetTracker<JupyterGISWidget>
