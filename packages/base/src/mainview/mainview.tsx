@@ -438,10 +438,11 @@ export class MainView extends React.Component<IProps, IStates> {
   ): void {
     change.layerChange?.forEach(change => {
       const layer = change.newValue;
-      if (!layer) {
+      if (layer && Object.keys(layer).length === 0) {
         this.removeLayer(change.id);
       } else {
         if (
+          layer &&
           JupyterGISModel.getOrderedLayerIds(this._model).includes(change.id)
         ) {
           this.updateLayer(change.id, layer);

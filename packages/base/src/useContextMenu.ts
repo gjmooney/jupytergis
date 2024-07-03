@@ -4,13 +4,13 @@ import { ContextMenu } from '@lumino/widgets';
 import {
   ChangeEvent,
   KeyboardEvent,
-  MutableRefObject,
+  RefObject,
   useEffect,
   useState
 } from 'react';
 
 export function useContextMenu(
-  ref: MutableRefObject<null>,
+  ref: RefObject<HTMLElement>,
   layer: IJGISLayer,
   layerId: string,
   gisModel: IJupyterGISModel | undefined
@@ -28,13 +28,11 @@ export function useContextMenu(
 
     if (ref.current) {
       console.log('event handling');
-      //@ts-expect-error wip
       ref.current.addEventListener('contextmenu', open);
     }
 
     return () => {
       if (ref.current) {
-        //@ts-expect-error wip
         ref.current.removeEventListener('contextmenu', open);
       }
     };
@@ -53,7 +51,8 @@ export function useContextMenu(
     mnemonic: 1,
     execute: () => {
       console.log('removing', layerId);
-      gisModel?.sharedModel.removeLayer(layerId);
+      gisModel?.removeLayerTest(layerId, layer);
+      console.log('gisModel?.getLayerTree()', gisModel?.getLayerTree());
     }
   });
 
