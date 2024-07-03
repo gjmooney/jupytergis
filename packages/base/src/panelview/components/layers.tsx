@@ -15,7 +15,10 @@ import { Panel } from '@lumino/widgets';
 import React, { useEffect, useRef, useState } from 'react';
 import { nonVisibilityIcon, rasterIcon, visibilityIcon } from '../../icons';
 import { IControlPanelModel } from '../../types';
-import { useContextMenu } from '../../useContextMenu';
+import {
+  createGroupContextMenu,
+  createLayerContextMenu
+} from '../../useContextMenu';
 
 const LAYERS_PANEL_CLASS = 'jp-gis-layerPanel';
 const LAYER_GROUP_CLASS = 'jp-gis-layerGroup';
@@ -116,6 +119,7 @@ function LayersBodyComponent(props: IBodyProps): JSX.Element {
    */
   useEffect(() => {
     const updateLayers = () => {
+      console.log('in update layer tree');
       setLayerTree(model?.getLayerTree() || []);
     };
     model?.sharedModel.layersChanged.connect(updateLayers);
@@ -169,6 +173,7 @@ interface ILayerGroupProps {
  * The component to handle group of layers.
  */
 function LayerGroupComponent(props: ILayerGroupProps): JSX.Element {
+  const myRef = useRef<HTMLDivElement>(null);
   const { group, gisModel } = props;
   if (group === undefined) {
     return <></>;
@@ -177,9 +182,15 @@ function LayerGroupComponent(props: ILayerGroupProps): JSX.Element {
   const name = group?.name ?? 'Undefined group';
   const layers = group?.layers ?? [];
 
+  createGroupContextMenu(myRef);
+
   return (
     <div className={`${LAYER_ITEM_CLASS} ${LAYER_GROUP_CLASS}`}>
-      <div onClick={() => setOpen(!open)} className={LAYER_GROUP_HEADER_CLASS}>
+      <div
+        ref={myRef}
+        onClick={() => setOpen(!open)}
+        className={LAYER_GROUP_HEADER_CLASS}
+      >
         <LabIcon.resolveReact
           icon={caretDownIcon}
           className={
@@ -270,14 +281,10 @@ function LayerComponent(props: ILayerProps): JSX.Element {
     gisModel?.sharedModel?.updateLayer(layerId, layer);
   };
 
-  const myRef = useRef(null);
+  const myRef = useRef<HTMLDivElement>(null);
 
-  const { isRenaming, handleRenameInput, handleKeyDown } = useContextMenu(
-    myRef,
-    layer,
-    layerId,
-    gisModel
-  );
+  const { isRenaming, handleRenameInput, handleKeyDown } =
+    createLayerContextMenu(myRef, layer, layerId, gisModel);
 
   return (
     <div

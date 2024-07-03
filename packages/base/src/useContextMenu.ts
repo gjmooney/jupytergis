@@ -9,15 +9,7 @@ import {
   useState
 } from 'react';
 
-export function useContextMenu(
-  ref: RefObject<HTMLElement>,
-  layer: IJGISLayer,
-  layerId: string,
-  gisModel: IJupyterGISModel | undefined
-) {
-  const [renameText, setRenameText] = useState('');
-  const [isRenaming, setIsRenaming] = useState(false);
-
+export function useContextMenu(ref: RefObject<HTMLElement>, contextMenu) {
   useEffect(() => {
     const open = (e: MouseEvent) => {
       console.log('in the event listener', e);
@@ -37,8 +29,19 @@ export function useContextMenu(
       }
     };
   }, [ref]);
+}
+
+export function createLayerContextMenu(
+  ref: RefObject<HTMLElement>,
+  layer: IJGISLayer,
+  layerId: string,
+  gisModel: IJupyterGISModel | undefined
+) {
+  const [renameText, setRenameText] = useState('');
+  const [isRenaming, setIsRenaming] = useState(false);
 
   const commands = new CommandRegistry();
+
   commands.addCommand('rename-layer', {
     label: 'Rename Layer',
     mnemonic: 1,
@@ -51,12 +54,13 @@ export function useContextMenu(
     mnemonic: 1,
     execute: () => {
       console.log('removing', layerId);
-      gisModel?.removeLayerTest(layerId, layer);
+      gisModel?.sharedModel.removeLayer(layerId);
       console.log('gisModel?.getLayerTree()', gisModel?.getLayerTree());
     }
   });
 
   const contextMenu = new ContextMenu({ commands });
+  useContextMenu(ref, contextMenu);
 
   contextMenu.addItem({
     command: 'rename-layer',
@@ -88,4 +92,38 @@ export function useContextMenu(
     handleRenameInput,
     handleKeyDown
   };
+}
+
+export function createGroupContextMenu(ref) {
+  const commands = new CommandRegistry();
+
+  commands.addCommand('rename-group', {
+    label: 'Rename Group',
+    mnemonic: 1,
+    execute: () => {
+      console.log('rename group');
+    }
+  });
+  commands.addCommand('remove-group', {
+    label: 'Remove Group',
+    mnemonic: 1,
+    execute: () => {
+      console.log('remove group');
+    }
+  });
+
+  const contextMenu = new ContextMenu({ commands });
+  useContextMenu(ref, contextMenu);
+
+  contextMenu.addItem({
+    command: 'rename-group',
+    selector: '.jp-gis-layerGroupHeader',
+    rank: 1
+  });
+
+  contextMenu.addItem({
+    command: 'remove-group',
+    selector: '.jp-gis-layerGroupHeader',
+    rank: 1
+  });
 }
