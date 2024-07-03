@@ -11,8 +11,15 @@ import {
   ReactWidget,
   caretDownIcon
 } from '@jupyterlab/ui-components';
-import { Panel } from '@lumino/widgets';
-import React, { useEffect, useState } from 'react';
+import { CommandRegistry } from '@lumino/commands';
+import { ContextMenu, Panel } from '@lumino/widgets';
+import React, {
+  ChangeEvent,
+  KeyboardEvent,
+  useEffect,
+  useRef,
+  useState
+} from 'react';
 import { nonVisibilityIcon, rasterIcon, visibilityIcon } from '../../icons';
 import { IControlPanelModel } from '../../types';
 
@@ -43,8 +50,15 @@ export namespace LayersPanel {
 export class LayersPanel extends Panel {
   constructor(options: LayersPanel.IOptions) {
     super();
+    // this._contextMenu = createLayerPanelContextMenu();
     this._model = options.model;
     this.id = 'jupytergis::layerTree';
+    // this.node.addEventListener('contextmenu', e => {
+    //   console.log('in the event listener', e);
+    //   e.preventDefault();
+    //   e.stopPropagation();
+    //   this._contextMenu.open(e);
+    // });
     this.addClass(LAYERS_PANEL_CLASS);
     this.addWidget(
       ReactWidget.create(
@@ -74,6 +88,7 @@ export class LayersPanel extends Panel {
   };
 
   private _model: IControlPanelModel | undefined;
+  // private _contextMenu: ContextMenu;
 }
 
 /**
@@ -224,6 +239,9 @@ function isSelected(layerId: string, model: IJupyterGISModel | undefined) {
  * The component to display a single layer.
  */
 function LayerComponent(props: ILayerProps): JSX.Element {
+  const ref = useRef(null);
+  const [renameText, setRenameText] = useState('');
+
   const { layerId, gisModel } = props;
   const layer = gisModel?.getLayer(layerId);
   if (layer === undefined) {
@@ -261,30 +279,109 @@ function LayerComponent(props: ILayerProps): JSX.Element {
     gisModel?.sharedModel?.updateLayer(layerId, layer);
   };
 
+  const [isRenaming, setIsRenaming] = useState(false);
+
+  useEffect(() => {
+    const contextMenu = createLayerPanelContextMenu();
+    if (ref.current) {
+      console.log('event handling');
+      //@ts-expect-error wip
+      ref.current.addEventListener('contextmenu', e => {
+        console.log('in the event listener', e);
+        e.preventDefault();
+        e.stopPropagation();
+        contextMenu.open(e);
+      });
+    }
+    // TODO: Clean up
+  }, []);
+
+  const createLayerPanelContextMenu = () => {
+    console.log('making context menu');
+    const commands = new CommandRegistry();
+    commands.addCommand('rename-layer', {
+      execute: args => {
+        console.log('renameing layer id', layerId);
+        console.log('name', layer);
+        console.log('gisModel?.getLayerTree()', gisModel?.getLayerTree());
+
+        // gisModel?.sharedModel.renameLayer(layerId);
+        setIsRenaming(true);
+      },
+      label: 'Rename Layer',
+      isEnabled: () => true
+    });
+
+    const contextMenu = new ContextMenu({ commands });
+
+    contextMenu.addItem({
+      command: 'rename-layer',
+      selector: '.jp-gis-layerTitle',
+      rank: 1
+    });
+
+    return contextMenu;
+  };
+
+  const handleRenameInput = (event: ChangeEvent<HTMLInputElement>) => {
+    setRenameText(event.target.value.toLowerCase());
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      console.log('enter', renameText);
+      layer.name = renameText;
+      gisModel?.sharedModel.updateLayer(layerId, layer);
+      setIsRenaming(false);
+    }
+  };
+
   return (
     <div
+      ref={ref}
       className={`${LAYER_ITEM_CLASS} ${LAYER_CLASS}${selected ? ' jp-mod-selected' : ''}`}
     >
-      <div className={LAYER_TITLE_CLASS} onClick={() => props.onClick(layerId)}>
-        {layer.type === 'RasterLayer' && (
+      {isRenaming ? (
+        <div className={LAYER_TITLE_CLASS}>
           <LabIcon.resolveReact
             icon={rasterIcon}
             className={LAYER_ICON_CLASS}
           />
-        )}
-        <span>{name}</span>
-      </div>
-      <Button
-        title={layer.visible ? 'Hide layer' : 'Show layer'}
-        onClick={toggleVisibility}
-        minimal
-      >
-        <LabIcon.resolveReact
-          icon={layer.visible ? visibilityIcon : nonVisibilityIcon}
-          className={LAYER_ICON_CLASS}
-          tag="span"
-        />
-      </Button>
+          <input
+            type="text"
+            onChange={handleRenameInput}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            // onBlur={() => setIsEditing(false)}
+          />
+        </div>
+      ) : (
+        <>
+          <div
+            className={LAYER_TITLE_CLASS}
+            onClick={() => props.onClick(layerId)}
+          >
+            {layer.type === 'RasterLayer' && (
+              <LabIcon.resolveReact
+                icon={rasterIcon}
+                className={LAYER_ICON_CLASS}
+              />
+            )}
+            <span>{name}</span>
+          </div>
+          <Button
+            title={layer.visible ? 'Hide layer' : 'Show layer'}
+            onClick={toggleVisibility}
+            minimal
+          >
+            <LabIcon.resolveReact
+              icon={layer.visible ? visibilityIcon : nonVisibilityIcon}
+              className={LAYER_ICON_CLASS}
+              tag="span"
+            />
+          </Button>
+        </>
+      )}
     </div>
   );
 }
