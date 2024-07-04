@@ -1,4 +1,8 @@
-import { IJGISLayer, IJupyterGISModel } from '@jupytergis/schema';
+import {
+  IJGISLayer,
+  IJGISLayerGroup,
+  IJupyterGISModel
+} from '@jupytergis/schema';
 import { CommandRegistry } from '@lumino/commands';
 import { ContextMenu } from '@lumino/widgets';
 import {
@@ -94,7 +98,11 @@ export function createLayerContextMenu(
   };
 }
 
-export function createGroupContextMenu(ref, group, gisModel) {
+export function createGroupContextMenu(
+  ref: RefObject<HTMLElement>,
+  group: IJGISLayerGroup,
+  gisModel: IJupyterGISModel | undefined
+) {
   const [renameText, setRenameText] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
 
@@ -105,10 +113,10 @@ export function createGroupContextMenu(ref, group, gisModel) {
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       console.log('enter', renameText);
-      const [t, s] = gisModel.renameLayerGroup(group.name, renameText);
+      gisModel?.renameLayerGroup(group.name, renameText);
       group.name = renameText;
-      console.log('group index in key down ', t, s);
-      gisModel?.sharedModel.updateLayerTreeItem(t, s);
+      // console.log('group index in key down ', t, s);
+      // gisModel?.sharedModel.updateLayerTreeItem(t, s);
       setIsRenaming(false);
     }
   };
