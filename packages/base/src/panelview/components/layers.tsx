@@ -182,24 +182,36 @@ function LayerGroupComponent(props: ILayerGroupProps): JSX.Element {
   const name = group?.name ?? 'Undefined group';
   const layers = group?.layers ?? [];
 
-  createGroupContextMenu(myRef);
+  const { isRenaming, handleKeyDown, handleRenameInput } =
+    createGroupContextMenu(myRef, group, gisModel);
 
   return (
     <div className={`${LAYER_ITEM_CLASS} ${LAYER_GROUP_CLASS}`}>
-      <div
-        ref={myRef}
-        onClick={() => setOpen(!open)}
-        className={LAYER_GROUP_HEADER_CLASS}
-      >
-        <LabIcon.resolveReact
-          icon={caretDownIcon}
-          className={
-            LAYER_GROUP_COLLAPSER_CLASS + (open ? ' jp-mod-expanded' : '')
-          }
-          tag={'span'}
+      {isRenaming ? (
+        <input
+          type="text"
+          onChange={handleRenameInput}
+          onKeyDown={handleKeyDown}
+          autoFocus
+          minLength={1}
+          // onBlur={() => setIsEditing(false)}
         />
-        <span>{name}</span>
-      </div>
+      ) : (
+        <div
+          ref={myRef}
+          onClick={() => setOpen(!open)}
+          className={LAYER_GROUP_HEADER_CLASS}
+        >
+          <LabIcon.resolveReact
+            icon={caretDownIcon}
+            className={
+              LAYER_GROUP_COLLAPSER_CLASS + (open ? ' jp-mod-expanded' : '')
+            }
+            tag={'span'}
+          />
+          <span>{name}</span>
+        </div>
+      )}
       {open && (
         <div>
           {layers.map(layer =>

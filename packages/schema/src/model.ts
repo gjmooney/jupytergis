@@ -8,13 +8,13 @@ import Ajv from 'ajv';
 import {
   IJGISContent,
   IJGISLayer,
-  IJGISLayerItem,
-  IJGISLayers,
   IJGISLayerGroup,
+  IJGISLayerItem,
   IJGISLayerTree,
+  IJGISLayers,
+  IJGISOptions,
   IJGISSource,
-  IJGISSources,
-  IJGISOptions
+  IJGISSources
 } from './_interface/jgis';
 import { JupyterGISDoc } from './doc';
 import {
@@ -287,6 +287,21 @@ export class JupyterGISModel implements IJupyterGISModel {
     return this._sharedModel.options;
   }
 
+  removeLayerTest(
+    id: string,
+    layer: IJGISLayer,
+    groupName?: string,
+    position?: number
+  ): void {
+    console.log('remove layer test1');
+    if (this.getLayer(id)) {
+      console.log('remove layer test2');
+      this.sharedModel.removeLayer(id);
+    }
+
+    // this._removeLayerTreeItem(id, groupName, position);
+  }
+
   syncSelected(value: { [key: string]: ISelection }, emitter?: string): void {
     this.sharedModel.awareness.setLocalStateField('selected', {
       value,
@@ -314,6 +329,83 @@ export class JupyterGISModel implements IJupyterGISModel {
    *   from root of layer tree.
    */
   private _addLayerTreeItem(
+    item: IJGISLayerItem,
+    groupName?: string,
+    index?: number
+  ): void {
+    if (groupName) {
+      const layerTree = this.getLayerTree();
+      const indexesPath = Private.findGroupPath(layerTree, groupName);
+      if (!indexesPath.length) {
+        console.warn(
+          `The group "${groupName}" does not exist in the layer tree`
+        );
+        return;
+      }
+
+      const mainGroupIndex = indexesPath.shift();
+      if (mainGroupIndex === undefined) {
+        return;
+      }
+      const mainGroup = layerTree[mainGroupIndex] as IJGISLayerGroup;
+      let workingGroup = mainGroup;
+      while (indexesPath.length) {
+        const groupIndex = indexesPath.shift();
+        if (groupIndex === undefined) {
+          break;
+        }
+        workingGroup = workingGroup.layers[groupIndex] as IJGISLayerGroup;
+      }
+      workingGroup.layers.splice(index ?? workingGroup.layers.length, 0, item);
+
+      this._sharedModel.updateLayerTreeItem(mainGroupIndex, mainGroup);
+    } else {
+      this.sharedModel.addLayerTreeItem(
+        index ?? this.getLayerTree().length,
+        item
+      );
+    }
+  }
+
+  renameLayerGroup(groupName: string, newName: string): void {
+    const layerTree = this.getLayerTree();
+    console.log('layerTree', layerTree);
+    const indexesPath = Private.findGroupPath(layerTree, groupName);
+    console.log('indexesPath', indexesPath);
+    if (!indexesPath.length) {
+      console.warn(`The group "${groupName}" does not exist in the layer tree`);
+      return;
+    }
+
+    const mainGroupIndex = indexesPath.shift();
+    console.log('mainGroupIndex', mainGroupIndex);
+    if (mainGroupIndex === undefined) {
+      return;
+    }
+    const mainGroup = layerTree[mainGroupIndex] as IJGISLayerGroup;
+    console.log('mainGroup', mainGroup);
+    let workingGroup = mainGroup;
+    console.log('workingGroup1', workingGroup);
+    let groupIndex: number | undefined = -1;
+    while (indexesPath.length) {
+      groupIndex = indexesPath.shift();
+      console.log('groupIndex', groupIndex);
+      if (groupIndex === undefined) {
+        break;
+      }
+      workingGroup = workingGroup.layers[groupIndex] as IJGISLayerGroup;
+      workingGroup.name = newName;
+      console.log('workingGroup2', workingGroup);
+    }
+
+    if (groupIndex) {
+      this._sharedModel.updateLayerTreeItem(groupIndex, workingGroup);
+    } else {
+      console.log('Something went wrong');
+    }
+  }
+
+  private _removeLayerTreeItem(
     item: IJGISLayerItem,
     groupName?: string,
     index?: number

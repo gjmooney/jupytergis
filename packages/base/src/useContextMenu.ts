@@ -94,14 +94,33 @@ export function createLayerContextMenu(
   };
 }
 
-export function createGroupContextMenu(ref) {
+export function createGroupContextMenu(ref, group, gisModel) {
+  const [renameText, setRenameText] = useState('');
+  const [isRenaming, setIsRenaming] = useState(false);
+
+  const handleRenameInput = (event: ChangeEvent<HTMLInputElement>) => {
+    setRenameText(event.target.value.toLowerCase());
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      console.log('enter', renameText);
+      const [t, s] = gisModel.renameLayerGroup(group.name, renameText);
+      group.name = renameText;
+      console.log('group index in key down ', t, s);
+      gisModel?.sharedModel.updateLayerTreeItem(t, s);
+      setIsRenaming(false);
+    }
+  };
+
   const commands = new CommandRegistry();
 
   commands.addCommand('rename-group', {
     label: 'Rename Group',
     mnemonic: 1,
     execute: () => {
-      console.log('rename group');
+      setIsRenaming(true);
+      console.log('rename group', group);
     }
   });
   commands.addCommand('remove-group', {
@@ -126,4 +145,10 @@ export function createGroupContextMenu(ref) {
     selector: '.jp-gis-layerGroupHeader',
     rank: 1
   });
+
+  return {
+    isRenaming,
+    handleRenameInput,
+    handleKeyDown
+  };
 }
