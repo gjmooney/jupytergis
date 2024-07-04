@@ -407,22 +407,20 @@ export class JupyterGISModel implements IJupyterGISModel {
     //   console.log('workingGroup2', workingGroup);
     // }
 
-    const { groupIndex, workingGroup, mainGroupIndex, mainGroup } =
+    const { workingGroup, mainGroup, mainGroupIndex } =
       this._getLayerTreeInfo(groupName);
 
-    if (groupIndex && mainGroup && workingGroup) {
+    if (workingGroup && mainGroup) {
       workingGroup.name = newName;
       this._sharedModel.updateLayerTreeItem(mainGroupIndex, mainGroup);
     } else {
-      console.log('Something went wrong');
+      console.log('Something went wrong when renaming layer');
     }
   }
 
   private _getLayerTreeInfo(groupName: string): {
     mainGroup: IJGISLayerGroup | null;
     workingGroup: IJGISLayerGroup | null;
-    updateNeeded: boolean;
-    groupIndex: number;
     mainGroupIndex: number;
   } {
     const layerTree = this.getLayerTree();
@@ -432,8 +430,6 @@ export class JupyterGISModel implements IJupyterGISModel {
       return {
         mainGroup: null,
         workingGroup: null,
-        updateNeeded: false,
-        groupIndex: -1,
         mainGroupIndex: -1
       };
     }
@@ -443,30 +439,22 @@ export class JupyterGISModel implements IJupyterGISModel {
       return {
         mainGroup: null,
         workingGroup: null,
-        updateNeeded: false,
-        groupIndex: -1,
         mainGroupIndex: -1
       };
     }
     const mainGroup = layerTree[mainGroupIndex] as IJGISLayerGroup;
     let workingGroup = mainGroup;
-    let groupIndex;
     while (indexesPath.length) {
-      groupIndex = indexesPath.shift();
+      const groupIndex = indexesPath.shift();
       if (groupIndex === undefined) {
         break;
       }
       workingGroup = workingGroup.layers[groupIndex] as IJGISLayerGroup;
     }
 
-    // Determine if an update is needed
-    const updateNeeded = true; // newName ? true : !!item;
-
     return {
       mainGroup,
       workingGroup,
-      updateNeeded,
-      groupIndex,
       mainGroupIndex
     };
   }
