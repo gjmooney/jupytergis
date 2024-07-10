@@ -1,47 +1,63 @@
 {
   "layers": {
+    "a5ac7671-74bb-4c99-a494-916348397d01": {
+      "type": "RasterLayer",
+      "parameters": {
+        "source": "f22850a8-bfd5-4dfb-ba1e-c3f2c3ccf93b"
+      },
+      "name": "Open Street Map 2",
+      "visible": true
+    },
     "a0044fd7-f167-445f-b3d1-620a8f94b498": {
+      "visible": true,
       "name": "Open Topo Map",
       "type": "RasterLayer",
       "parameters": {
         "source": "5fd42e3b-4681-4607-b15d-65c3a3e89b32"
+      }
+    },
+    "7760eed2-fb98-430f-b8c6-6d642ad0f41a": {
+      "type": "RasterLayer",
+      "parameters": {
+        "source": "51509e14-ccce-4bf7-8920-60860a356ed4"
       },
+      "name": "USGS.USTopo Layer",
       "visible": true
     },
-    "a5ac7671-74bb-4c99-a494-916348397d01": {
-      "name": "Open Street Map 2",
-      "parameters": {
-        "source": "f22850a8-bfd5-4dfb-ba1e-c3f2c3ccf93b"
-      },
+    "e252ef05-e072-4450-b3b6-6afeae0c7d4d": {
       "type": "RasterLayer",
+      "name": "Strava.All Layer",
+      "parameters": {
+        "source": "787460fd-2db7-48c7-b57c-b2f3212dda23"
+      },
       "visible": true
     },
     "2467576f-b527-4cb7-998d-fa1d056fb8a1": {
+      "name": "Open Street Map",
       "parameters": {
         "source": "699facc9-e7c4-4f38-acf1-1fd7f02d9f36"
       },
       "visible": true,
-      "name": "Open Street Map",
       "type": "RasterLayer"
     }
   },
   "sources": {
-    "f22850a8-bfd5-4dfb-ba1e-c3f2c3ccf93b": {
+    "5fd42e3b-4681-4607-b15d-65c3a3e89b32": {
+      "type": "RasterSource",
       "parameters": {
         "maxZoom": 24.0,
         "minZoom": 0.0,
+        "url": "https://tile.opentopomap.org/{z}/{x}/{y}.png "
+      },
+      "name": "Open Topo Map"
+    },
+    "f22850a8-bfd5-4dfb-ba1e-c3f2c3ccf93b": {
+      "name": "Open Street Map 2",
+      "parameters": {
+        "minZoom": 0.0,
+        "maxZoom": 24.0,
         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       },
-      "type": "RasterSource",
-      "name": "Open Street Map 2"
-    },
-    "5fd42e3b-4681-4607-b15d-65c3a3e89b32": {
-      "parameters": {
-        "url": "https://tile.opentopomap.org/{z}/{x}/{y}.png ",
-        "maxZoom": 24.0,
-        "minZoom": 0.0
-      },
-      "name": "Open Topo Map",
       "type": "RasterSource"
     },
     "699facc9-e7c4-4f38-acf1-1fd7f02d9f36": {
@@ -51,6 +67,30 @@
         "minZoom": 0.0,
         "maxZoom": 24.0,
         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+      }
+    },
+    "51509e14-ccce-4bf7-8920-60860a356ed4": {
+      "parameters": {
+        "attribution": "Tiles courtesy of the U.S. Geological Survey",
+        "provider": "USGS",
+        "maxZoom": 20.0,
+        "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}",
+        "minZoom": 0.0,
+        "urlParameters": {}
+      },
+      "name": "USGS.USTopo",
+      "type": "RasterSource"
+    },
+    "787460fd-2db7-48c7-b57c-b2f3212dda23": {
+      "type": "RasterSource",
+      "name": "Strava.All",
+      "parameters": {
+        "minZoom": 0.0,
+        "attribution": "Map tiles by <a href=\"https://labs.strava.com/heatmap\">Strava 2021</a>",
+        "maxZoom": 15.0,
+        "provider": "Strava",
+        "url": "https://heatmap-external-a.strava.com/tiles/all/hot/{z}/{x}/{y}.png",
+        "urlParameters": {}
       }
     }
   },
@@ -65,13 +105,25 @@
       "layers": [
         "a0044fd7-f167-445f-b3d1-620a8f94b498",
         {
-          "name": "level 2 group",
           "layers": [
             "a5ac7671-74bb-4c99-a494-916348397d01"
-          ]
+          ],
+          "name": "level 2 group"
         }
       ],
       "name": "level 1 group"
+    },
+    {
+      "layers": [
+        "7760eed2-fb98-430f-b8c6-6d642ad0f41a",
+        {
+          "layers": [
+            "e252ef05-e072-4450-b3b6-6afeae0c7d4d"
+          ],
+          "name": "level 4 group"
+        }
+      ],
+      "name": "level 3 group"
     }
   ]
 }
