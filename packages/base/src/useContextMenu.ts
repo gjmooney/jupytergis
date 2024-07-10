@@ -16,14 +16,12 @@ import {
 export function useContextMenu(ref: RefObject<HTMLElement>, contextMenu) {
   useEffect(() => {
     const open = (e: MouseEvent) => {
-      console.log('in the event listener', e);
       e.preventDefault();
       e.stopPropagation();
       contextMenu.open(e);
     };
 
     if (ref.current) {
-      console.log('event handling');
       ref.current.addEventListener('contextmenu', open);
     }
 
@@ -144,13 +142,13 @@ export function createGroupContextMenu(
   contextMenu.addItem({
     command: 'rename-group',
     selector: '.jp-gis-layerGroupHeader',
-    rank: 1
+    rank: 2
   });
 
   contextMenu.addItem({
     command: 'remove-group',
     selector: '.jp-gis-layerGroupHeader',
-    rank: 1
+    rank: 2
   });
 
   return {

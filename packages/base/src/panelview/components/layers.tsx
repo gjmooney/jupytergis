@@ -182,16 +182,11 @@ function LayerGroupComponent(props: ILayerGroupProps): JSX.Element {
   const name = group?.name ?? 'Undefined group';
   const layers = group?.layers ?? [];
 
-  useEffect(() => {
-    console.log('myRef', myRef);
-    console.log(myRef.current);
-  }, [myRef, myRef.current]);
-
   const { isRenaming, handleKeyDown, handleRenameInput } =
     createGroupContextMenu(myRef, group, gisModel);
 
   return (
-    <div className={`${LAYER_ITEM_CLASS} ${LAYER_GROUP_CLASS}`}>
+    <div ref={myRef} className={`${LAYER_ITEM_CLASS} ${LAYER_GROUP_CLASS}`}>
       {isRenaming ? (
         <input
           type="text"
@@ -202,7 +197,6 @@ function LayerGroupComponent(props: ILayerGroupProps): JSX.Element {
         />
       ) : (
         <div
-          ref={myRef}
           onClick={() => setOpen(!open)}
           className={LAYER_GROUP_HEADER_CLASS}
         >
