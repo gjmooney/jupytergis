@@ -128,14 +128,13 @@ export function createGroupContextMenu(
     mnemonic: 1,
     execute: () => {
       setIsRenaming(true);
-      console.log('rename group', group);
     }
   });
   commands.addCommand('remove-group', {
     label: 'Remove Group',
     mnemonic: 1,
     execute: () => {
-      console.log('remove group');
+      gisModel?.removeLayerGroup(group.name);
     }
   });
 

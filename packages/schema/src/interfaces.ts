@@ -149,12 +149,8 @@ export interface IJupyterGISModel extends DocumentRegistry.IModel {
   ): void;
   getOptions(): IJGISOptions;
   setOptions(value: IJGISOptions): void;
-  removeLayerTest(
-    id: string,
-    layer: IJGISLayer,
-    groupName?: string,
-    position?: number
-  ): void;
+
+  removeLayerGroup(groupName: string): void;
   renameLayerGroup(groupName: string, newName: string): void;
 
   syncSelected(value: { [key: string]: ISelection }, emitter?: string): void;
