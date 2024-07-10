@@ -69,7 +69,7 @@
   padding-right: 4px;
 }
 
-.jp-gis-layerTitle input {
+.jp-gis-left-panel-input {
   background-color: transparent;
   border: 1px solid var(--jp-border-color1);
   border-radius: 8px;
@@ -79,14 +79,6 @@
   outline: none;
 }
 
-.jp-gis-layerTitle input:focus {
+.jp-gis-left-panel-input:focus {
   border: 1px solid var(--jp-brand-color1);
-}
-
-.jp-gis-layerTitle input:not(:valid) {
-  border: 1px solid red;
-}
-
-.jp-gis-layerTitle input:valid {
-  border: 1px solid green;
 }

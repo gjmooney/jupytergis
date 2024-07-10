@@ -182,6 +182,11 @@ function LayerGroupComponent(props: ILayerGroupProps): JSX.Element {
   const name = group?.name ?? 'Undefined group';
   const layers = group?.layers ?? [];
 
+  useEffect(() => {
+    console.log('myRef', myRef);
+    console.log(myRef.current);
+  }, [myRef, myRef.current]);
+
   const { isRenaming, handleKeyDown, handleRenameInput } =
     createGroupContextMenu(myRef, group, gisModel);
 
@@ -193,7 +198,6 @@ function LayerGroupComponent(props: ILayerGroupProps): JSX.Element {
           onChange={handleRenameInput}
           onKeyDown={handleKeyDown}
           autoFocus
-          minLength={1}
           // onBlur={() => setIsEditing(false)}
         />
       ) : (
@@ -314,7 +318,6 @@ function LayerComponent(props: ILayerProps): JSX.Element {
             onChange={handleRenameInput}
             onKeyDown={handleKeyDown}
             autoFocus
-            minLength={1}
             // onBlur={() => setIsEditing(false)}
           />
         </div>
