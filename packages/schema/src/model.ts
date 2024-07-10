@@ -377,36 +377,6 @@ export class JupyterGISModel implements IJupyterGISModel {
   }
 
   renameLayerGroup(groupName: string, newName: string): void {
-    // const layerTree = this.getLayerTree();
-    // console.log('layerTree', layerTree);
-    // const indexesPath = Private.findGroupPath(layerTree, groupName);
-    // console.log('indexesPath', indexesPath);
-    // if (!indexesPath.length) {
-    //   console.warn(`The group "${groupName}" does not exist in the layer tree`);
-    //   return;
-    // }
-
-    // const mainGroupIndex = indexesPath.shift();
-    // console.log('mainGroupIndex', mainGroupIndex);
-    // if (mainGroupIndex === undefined) {
-    //   return;
-    // }
-    // const mainGroup = layerTree[mainGroupIndex] as IJGISLayerGroup;
-    // console.log('mainGroup', mainGroup);
-    // let workingGroup = mainGroup;
-    // console.log('workingGroup1', workingGroup);
-    // let groupIndex: number | undefined = -1;
-    // while (indexesPath.length) {
-    //   groupIndex = indexesPath.shift();
-    //   console.log('groupIndex', groupIndex);
-    //   if (groupIndex === undefined) {
-    //     break;
-    //   }
-    //   workingGroup = workingGroup.layers[groupIndex] as IJGISLayerGroup;
-    //   workingGroup.name = newName;
-    //   console.log('workingGroup2', workingGroup);
-    // }
-
     const { workingGroup, mainGroup, mainGroupIndex } =
       this._getLayerTreeInfo(groupName);
 
@@ -427,19 +397,18 @@ export class JupyterGISModel implements IJupyterGISModel {
       layerTree: IJGISLayerItem[],
       groupName: string
     ): IJGISLayerItem[] {
-      return layerTree.reduce((acc, item) => {
+      const result: IJGISLayerItem[] = [];
+
+      for (const item of layerTree) {
         if (typeof item === 'string') {
-          acc.push(item);
-        } else if (item.name === groupName) {
-          return acc;
-        } else if ('layers' in item && Array.isArray(item.layers)) {
+          result.push(item); // Push layer IDs directly
+        } else if (item.name !== groupName) {
           const filteredLayers = removeLayerGroupItem(item.layers, groupName);
-          acc.push({ ...item, layers: filteredLayers });
-        } else {
-          acc.push(item);
+          result.push({ ...item, layers: filteredLayers }); // Update layers with filtered list
         }
-        return acc;
-      }, [] as IJGISLayerItem[]);
+      }
+
+      return result;
     }
 
     this._sharedModel.updateLayerTreeItem(
