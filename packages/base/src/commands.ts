@@ -116,22 +116,36 @@ export function addCommands(
           continue;
         }
 
-        try {
-          const edit = document.createElement('input');
-          const originalName = node.innerText;
-          const newName = await Private.getUserInputForRename(
-            node,
-            edit,
-            originalName
-          );
+        const edit = document.createElement('input');
+        const originalName = node.innerText;
+        const newName = await Private.getUserInputForRename(
+          node,
+          edit,
+          originalName
+        );
 
-          if (newName !== originalName) {
-            layer.name = newName;
-            model.sharedModel.updateLayer(layerId, layer);
-          }
-        } catch (error) {
-          console.error(`Error renaming layer ${layerId}:`, error);
+        if (newName !== originalName) {
+          layer.name = newName;
+          model.sharedModel.updateLayer(layerId, layer);
         }
+      }
+    }
+  });
+
+  commands.addCommand(CommandIDs.removeGroup, {
+    label: trans.__('Remove Group'),
+    execute: async () => {
+      const model = tracker.currentWidget?.context.model;
+      const selected = model?.localState?.selected.value;
+
+      if (!selected) {
+        console.info('Nothing selected');
+        return;
+      }
+
+      for (const selection in selected) {
+        selected[selection].type === 'group' &&
+          model.removeLayerGroup(selection);
       }
     }
   });
@@ -145,6 +159,12 @@ export function addCommands(
   app.contextMenu.addItem({
     command: CommandIDs.renameLayer,
     selector: '.jp-gis-layerTitle',
+    rank: 1
+  });
+
+  app.contextMenu.addItem({
+    command: CommandIDs.removeGroup,
+    selector: '.jp-gis-layerGroupHeader',
     rank: 1
   });
 }

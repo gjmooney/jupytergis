@@ -13,10 +13,9 @@ import {
   caretDownIcon
 } from '@jupyterlab/ui-components';
 import { Panel } from '@lumino/widgets';
-import React, { MouseEvent, useEffect, useRef, useState } from 'react';
+import React, { MouseEvent, useEffect, useState } from 'react';
 import { nonVisibilityIcon, rasterIcon, visibilityIcon } from '../../icons';
 import { IControlPanelModel } from '../../types';
-import { createGroupContextMenu } from '../../useContextMenu';
 
 const LAYERS_PANEL_CLASS = 'jp-gis-layerPanel';
 const LAYER_GROUP_CLASS = 'jp-gis-layerGroup';
@@ -61,14 +60,18 @@ export class LayersPanel extends Panel {
   /**
    * Function to call when a layer is selected from a component of the panel.
    *
-   * @param layer - the selected layer.
+   * @param layerIdOrGroupName - the selected layer.
    */
-  private _onSelect = (layer?: string, nodeId?: string) => {
+  private _onSelect = (
+    type: 'layer' | 'source' | 'group',
+    layerIdOrGroupName?: string,
+    nodeId?: string
+  ) => {
     if (this._model) {
       const selection: { [key: string]: ISelection } = {};
-      if (layer) {
-        selection[layer] = {
-          type: 'layer',
+      if (layerIdOrGroupName) {
+        selection[layerIdOrGroupName] = {
+          type,
           selectedNodeId: nodeId
         };
       }
@@ -84,7 +87,11 @@ export class LayersPanel extends Panel {
  */
 interface IBodyProps {
   model: IControlPanelModel;
-  onSelect: (layer?: string, nodeId?: string) => void;
+  onSelect: (
+    type: 'layer' | 'source' | 'group',
+    layer?: string,
+    nodeId?: string
+  ) => void;
 }
 
 /**
@@ -101,8 +108,12 @@ function LayersBodyComponent(props: IBodyProps): JSX.Element {
   /**
    * Propagate the layer selection.
    */
-  const onItemClick = (item?: string, nodeId?: string) => {
-    props.onSelect(item, nodeId);
+  const onItemClick = (
+    type: 'layer' | 'source' | 'group',
+    item?: string,
+    nodeId?: string
+  ) => {
+    props.onSelect(type, item, nodeId);
   };
 
   /**
@@ -156,50 +167,57 @@ function LayersBodyComponent(props: IBodyProps): JSX.Element {
 interface ILayerGroupProps {
   gisModel: IJupyterGISModel | undefined;
   group: IJGISLayerGroup | undefined;
-  onClick: (item?: string) => void;
+  onClick: (
+    type: 'layer' | 'source' | 'group',
+    item?: string,
+    nodeId?: string
+  ) => void;
 }
 
 /**
  * The component to handle group of layers.
  */
 function LayerGroupComponent(props: ILayerGroupProps): JSX.Element {
-  const myRef = useRef<HTMLDivElement>(null);
-  const { group, gisModel } = props;
+  const { group, gisModel, onClick } = props;
+
   if (group === undefined) {
     return <></>;
   }
+
+  const [id, setId] = useState('');
   const [open, setOpen] = useState<boolean>(false);
   const name = group?.name ?? 'Undefined group';
   const layers = group?.layers ?? [];
 
-  const { isRenaming, handleKeyDown, handleRenameInput } =
-    createGroupContextMenu(myRef, group, gisModel);
+  // const { isRenaming, handleKeyDown, handleRenameInput } =
+  //   createGroupContextMenu(myRef, group, gisModel);
+
+  useEffect(() => {
+    setId(DOMUtils.createDomID());
+  }, []);
+
+  const handleRightClick = (event: MouseEvent<HTMLElement>) => {
+    const childId = event.currentTarget.children.namedItem(id)?.id;
+    console.log('childId', childId);
+    onClick('group', name, childId);
+  };
 
   return (
-    <div ref={myRef} className={`${LAYER_ITEM_CLASS} ${LAYER_GROUP_CLASS}`}>
-      {isRenaming ? (
-        <input
-          type="text"
-          onChange={handleRenameInput}
-          onKeyDown={handleKeyDown}
-          autoFocus
-          // onBlur={() => setIsEditing(false)}
+    <div className={`${LAYER_ITEM_CLASS} ${LAYER_GROUP_CLASS}`}>
+      <div
+        onClick={() => setOpen(!open)}
+        onContextMenu={handleRightClick}
+        className={LAYER_GROUP_HEADER_CLASS}
+      >
+        <LabIcon.resolveReact
+          icon={caretDownIcon}
+          className={
+            LAYER_GROUP_COLLAPSER_CLASS + (open ? ' jp-mod-expanded' : '')
+          }
+          tag={'span'}
         />
-      ) : (
-        <div
-          onClick={() => setOpen(!open)}
-          className={LAYER_GROUP_HEADER_CLASS}
-        >
-          <LabIcon.resolveReact
-            icon={caretDownIcon}
-            className={
-              LAYER_GROUP_COLLAPSER_CLASS + (open ? ' jp-mod-expanded' : '')
-            }
-            tag={'span'}
-          />
-          <span>{name}</span>
-        </div>
-      )}
+        <span id={id}>{name}</span>
+      </div>
       {open && (
         <div>
           {layers.map(layer =>
@@ -207,13 +225,13 @@ function LayerGroupComponent(props: ILayerGroupProps): JSX.Element {
               <LayerComponent
                 gisModel={gisModel}
                 layerId={layer}
-                onClick={props.onClick}
+                onClick={onClick}
               />
             ) : (
               <LayerGroupComponent
                 gisModel={gisModel}
                 group={layer}
-                onClick={props.onClick}
+                onClick={onClick}
               />
             )
           )}
@@ -229,7 +247,11 @@ function LayerGroupComponent(props: ILayerGroupProps): JSX.Element {
 interface ILayerProps {
   gisModel: IJupyterGISModel | undefined;
   layerId: string;
-  onClick: (item?: string, nodeId?: string) => void;
+  onClick: (
+    type: 'layer' | 'source' | 'group',
+    item?: string,
+    nodeId?: string
+  ) => void;
 }
 
 function isSelected(layerId: string, model: IJupyterGISModel | undefined) {
@@ -289,7 +311,7 @@ function LayerComponent(props: ILayerProps): JSX.Element {
 
   const setSelection = (event: MouseEvent<HTMLElement>) => {
     const childId = event.currentTarget.children.namedItem(id)?.id;
-    onClick(layerId, childId);
+    onClick('layer', layerId, childId);
   };
 
   return (

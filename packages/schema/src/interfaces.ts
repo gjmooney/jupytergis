@@ -47,7 +47,7 @@ export interface IJGISSourceDocChange {
 }
 
 export interface ISelection {
-  type: 'layer' | 'source';
+  type: 'layer' | 'source' | 'group';
   parent?: string;
   selectedNodeId?: string;
 }
