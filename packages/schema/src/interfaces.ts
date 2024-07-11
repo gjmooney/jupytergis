@@ -49,6 +49,7 @@ export interface IJGISSourceDocChange {
 export interface ISelection {
   type: 'layer' | 'source';
   parent?: string;
+  selectedNodeId?: string;
 }
 
 export interface IJupyterGISClientState {

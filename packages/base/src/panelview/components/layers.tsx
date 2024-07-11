@@ -5,6 +5,7 @@ import {
   IJupyterGISModel,
   ISelection
 } from '@jupytergis/schema';
+import { DOMUtils } from '@jupyterlab/apputils';
 import {
   Button,
   LabIcon,
@@ -12,13 +13,10 @@ import {
   caretDownIcon
 } from '@jupyterlab/ui-components';
 import { Panel } from '@lumino/widgets';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { MouseEvent, useEffect, useRef, useState } from 'react';
 import { nonVisibilityIcon, rasterIcon, visibilityIcon } from '../../icons';
 import { IControlPanelModel } from '../../types';
-import {
-  createGroupContextMenu,
-  createLayerContextMenu
-} from '../../useContextMenu';
+import { createGroupContextMenu } from '../../useContextMenu';
 
 const LAYERS_PANEL_CLASS = 'jp-gis-layerPanel';
 const LAYER_GROUP_CLASS = 'jp-gis-layerGroup';
@@ -47,15 +45,8 @@ export namespace LayersPanel {
 export class LayersPanel extends Panel {
   constructor(options: LayersPanel.IOptions) {
     super();
-    // this._contextMenu = createLayerPanelContextMenu();
     this._model = options.model;
     this.id = 'jupytergis::layerTree';
-    // this.node.addEventListener('contextmenu', e => {
-    //   console.log('in the event listener', e);
-    //   e.preventDefault();
-    //   e.stopPropagation();
-    //   this._contextMenu.open(e);
-    // });
     this.addClass(LAYERS_PANEL_CLASS);
     this.addWidget(
       ReactWidget.create(
@@ -72,12 +63,13 @@ export class LayersPanel extends Panel {
    *
    * @param layer - the selected layer.
    */
-  private _onSelect = (layer?: string) => {
+  private _onSelect = (layer?: string, nodeId?: string) => {
     if (this._model) {
       const selection: { [key: string]: ISelection } = {};
       if (layer) {
         selection[layer] = {
-          type: 'layer'
+          type: 'layer',
+          selectedNodeId: nodeId
         };
       }
       this._model?.jGISModel?.syncSelected(selection, this.id);
@@ -85,7 +77,6 @@ export class LayersPanel extends Panel {
   };
 
   private _model: IControlPanelModel | undefined;
-  // private _contextMenu: ContextMenu;
 }
 
 /**
@@ -93,7 +84,7 @@ export class LayersPanel extends Panel {
  */
 interface IBodyProps {
   model: IControlPanelModel;
-  onSelect: (layer?: string) => void;
+  onSelect: (layer?: string, nodeId?: string) => void;
 }
 
 /**
@@ -110,8 +101,8 @@ function LayersBodyComponent(props: IBodyProps): JSX.Element {
   /**
    * Propagate the layer selection.
    */
-  const onItemClick = (item?: string) => {
-    props.onSelect(item);
+  const onItemClick = (item?: string, nodeId?: string) => {
+    props.onSelect(item, nodeId);
   };
 
   /**
@@ -119,7 +110,6 @@ function LayersBodyComponent(props: IBodyProps): JSX.Element {
    */
   useEffect(() => {
     const updateLayers = () => {
-      console.log('in update layer tree');
       setLayerTree(model?.getLayerTree() || []);
     };
     model?.sharedModel.layersChanged.connect(updateLayers);
@@ -239,7 +229,7 @@ function LayerGroupComponent(props: ILayerGroupProps): JSX.Element {
 interface ILayerProps {
   gisModel: IJupyterGISModel | undefined;
   layerId: string;
-  onClick: (item?: string) => void;
+  onClick: (item?: string, nodeId?: string) => void;
 }
 
 function isSelected(layerId: string, model: IJupyterGISModel | undefined) {
@@ -254,16 +244,22 @@ function isSelected(layerId: string, model: IJupyterGISModel | undefined) {
  * The component to display a single layer.
  */
 function LayerComponent(props: ILayerProps): JSX.Element {
-  const { layerId, gisModel } = props;
+  const { layerId, gisModel, onClick } = props;
   const layer = gisModel?.getLayer(layerId);
   if (layer === undefined) {
     return <></>;
   }
+
+  const [id, setId] = useState('');
   const [selected, setSelected] = useState<boolean>(
     // TODO Support multi-selection as `model?.jGISModel?.localState?.selected.value` does
     isSelected(layerId, gisModel)
   );
   const name = layer.name;
+
+  useEffect(() => {
+    setId(DOMUtils.createDomID());
+  }, []);
 
   /**
    * Listen to the changes on the current layer.
@@ -291,57 +287,39 @@ function LayerComponent(props: ILayerProps): JSX.Element {
     gisModel?.sharedModel?.updateLayer(layerId, layer);
   };
 
-  const myRef = useRef<HTMLDivElement>(null);
-
-  const { isRenaming, handleRenameInput, handleKeyDown } =
-    createLayerContextMenu(myRef, layer, layerId, gisModel);
+  const setSelection = (event: MouseEvent<HTMLElement>) => {
+    const childId = event.currentTarget.children.namedItem(id)?.id;
+    onClick(layerId, childId);
+  };
 
   return (
     <div
-      ref={myRef}
       className={`${LAYER_ITEM_CLASS} ${LAYER_CLASS}${selected ? ' jp-mod-selected' : ''}`}
     >
-      {isRenaming ? (
-        <div className={LAYER_TITLE_CLASS}>
+      <div
+        className={LAYER_TITLE_CLASS}
+        onClick={setSelection}
+        onContextMenu={setSelection}
+      >
+        {layer.type === 'RasterLayer' && (
           <LabIcon.resolveReact
             icon={rasterIcon}
             className={LAYER_ICON_CLASS}
           />
-          <input
-            type="text"
-            onChange={handleRenameInput}
-            onKeyDown={handleKeyDown}
-            autoFocus
-            // onBlur={() => setIsEditing(false)}
-          />
-        </div>
-      ) : (
-        <>
-          <div
-            className={LAYER_TITLE_CLASS}
-            onClick={() => props.onClick(layerId)}
-          >
-            {layer.type === 'RasterLayer' && (
-              <LabIcon.resolveReact
-                icon={rasterIcon}
-                className={LAYER_ICON_CLASS}
-              />
-            )}
-            <span>{name}</span>
-          </div>
-          <Button
-            title={layer.visible ? 'Hide layer' : 'Show layer'}
-            onClick={toggleVisibility}
-            minimal
-          >
-            <LabIcon.resolveReact
-              icon={layer.visible ? visibilityIcon : nonVisibilityIcon}
-              className={LAYER_ICON_CLASS}
-              tag="span"
-            />
-          </Button>
-        </>
-      )}
+        )}
+        <span id={id}>{name}</span>
+      </div>
+      <Button
+        title={layer.visible ? 'Hide layer' : 'Show layer'}
+        onClick={toggleVisibility}
+        minimal
+      >
+        <LabIcon.resolveReact
+          icon={layer.visible ? visibilityIcon : nonVisibilityIcon}
+          className={LAYER_ICON_CLASS}
+          tag="span"
+        />
+      </Button>
     </div>
   );
 }
