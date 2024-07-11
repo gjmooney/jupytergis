@@ -117,12 +117,18 @@ export function addCommands(
         }
 
         const edit = document.createElement('input');
+        edit?.classList.add('jp-gis-left-panel-input');
         const originalName = node.innerText;
         const newName = await Private.getUserInputForRename(
           node,
           edit,
           originalName
         );
+
+        if (newName.trim() === '') {
+          console.warn('New name cannot be empty');
+          continue;
+        }
 
         if (newName !== originalName) {
           layer.name = newName;
@@ -150,6 +156,55 @@ export function addCommands(
     }
   });
 
+  commands.addCommand(CommandIDs.renameGroup, {
+    label: trans.__('Rename Group'),
+    execute: async () => {
+      const model = tracker.currentWidget?.context.model;
+
+      const selected = model?.localState?.selected.value;
+
+      if (!selected) {
+        console.error('No group selected');
+        return;
+      }
+
+      // TODO: Probably don't want to rename multiple layers at a time actually
+      console.log('test', selected);
+      for (const selection in selected) {
+        console.log('selection', selection);
+        const nodeId = selected[selection].selectedNodeId;
+
+        if (!nodeId) {
+          continue;
+        } // Skip if layer or nodeId is missing
+
+        const node = document.getElementById(nodeId);
+        if (!node) {
+          console.warn(`Node with ID ${nodeId} not found`);
+          continue;
+        }
+
+        const edit = document.createElement('input');
+        edit?.classList.add('jp-gis-left-panel-input');
+        const originalName = node.innerText;
+        const newName = await Private.getUserInputForRename(
+          node,
+          edit,
+          originalName
+        );
+
+        if (newName.trim() === '') {
+          console.warn('New name cannot be empty');
+          continue;
+        }
+
+        if (newName !== originalName) {
+          model.renameLayerGroup(selection, newName);
+        }
+      }
+    }
+  });
+
   app.contextMenu.addItem({
     command: CommandIDs.removeLayer,
     selector: '.jp-gis-layerTitle',
@@ -164,6 +219,12 @@ export function addCommands(
 
   app.contextMenu.addItem({
     command: CommandIDs.removeGroup,
+    selector: '.jp-gis-layerGroupHeader',
+    rank: 1
+  });
+
+  app.contextMenu.addItem({
+    command: CommandIDs.renameGroup,
     selector: '.jp-gis-layerGroupHeader',
     rank: 1
   });
@@ -227,45 +288,32 @@ namespace Private {
 
   export async function getUserInputForRename(
     text: HTMLElement,
-    edit: HTMLInputElement,
+    input: HTMLInputElement,
     original: string
   ): Promise<string> {
     const parent = text.parentElement as HTMLElement;
-    parent.replaceChild(edit, text);
-    edit.focus();
-    const index = edit.value.lastIndexOf('.');
-    if (index === -1) {
-      edit.setSelectionRange(0, edit.value.length);
-    } else {
-      edit.setSelectionRange(0, index);
-    }
+    parent.replaceChild(input, text);
+    input.focus();
 
     return new Promise<string>(resolve => {
-      edit.onblur = () => {
-        parent.replaceChild(text, edit);
-        resolve(edit.value);
-      };
-      edit.onkeydown = (event: KeyboardEvent) => {
-        switch (event.keyCode) {
-          case 13: // Enter
-            event.stopPropagation();
-            event.preventDefault();
-            edit.blur();
-            break;
-          case 27: // Escape
-            event.stopPropagation();
-            event.preventDefault();
-            edit.value = original;
-            edit.blur();
-            // Put focus back on the text node. That way the user can, for
-            // example, press the keyboard shortcut to go back into edit mode,
-            // and it will work.
-            text.focus();
-            break;
-          default:
-            break;
+      input.addEventListener('blur', () => {
+        parent.replaceChild(text, input);
+        resolve(input.value);
+      });
+
+      input.addEventListener('keydown', (event: KeyboardEvent) => {
+        if (event.key === 'Enter') {
+          event.stopPropagation();
+          event.preventDefault();
+          input.blur();
+        } else if (event.key === 'Escape') {
+          event.stopPropagation();
+          event.preventDefault();
+          input.value = original;
+          input.blur();
+          text.focus();
         }
-      };
+      });
     });
   }
 }
