@@ -46,8 +46,10 @@ export interface IJGISSourceDocChange {
   }>;
 }
 
+export type SelectionType = 'layer' | 'source' | 'group';
+
 export interface ISelection {
-  type: 'layer' | 'source' | 'group';
+  type: SelectionType;
   parent?: string;
   selectedNodeId?: string;
 }

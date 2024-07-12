@@ -3,7 +3,8 @@ import {
   IJGISLayerTree,
   IJupyterGISClientState,
   IJupyterGISModel,
-  ISelection
+  ISelection,
+  SelectionType
 } from '@jupytergis/schema';
 import { DOMUtils } from '@jupyterlab/apputils';
 import {
@@ -63,7 +64,7 @@ export class LayersPanel extends Panel {
    * @param layerIdOrGroupName - the selected layer.
    */
   private _onSelect = (
-    type: 'layer' | 'source' | 'group',
+    type: SelectionType,
     layerIdOrGroupName?: string,
     nodeId?: string
   ) => {
@@ -87,11 +88,7 @@ export class LayersPanel extends Panel {
  */
 interface IBodyProps {
   model: IControlPanelModel;
-  onSelect: (
-    type: 'layer' | 'source' | 'group',
-    layer?: string,
-    nodeId?: string
-  ) => void;
+  onSelect: (type: SelectionType, layer?: string, nodeId?: string) => void;
 }
 
 /**
@@ -108,11 +105,7 @@ function LayersBodyComponent(props: IBodyProps): JSX.Element {
   /**
    * Propagate the layer selection.
    */
-  const onItemClick = (
-    type: 'layer' | 'source' | 'group',
-    item?: string,
-    nodeId?: string
-  ) => {
+  const onItemClick = (type: SelectionType, item?: string, nodeId?: string) => {
     props.onSelect(type, item, nodeId);
   };
 
@@ -167,11 +160,7 @@ function LayersBodyComponent(props: IBodyProps): JSX.Element {
 interface ILayerGroupProps {
   gisModel: IJupyterGISModel | undefined;
   group: IJGISLayerGroup | undefined;
-  onClick: (
-    type: 'layer' | 'source' | 'group',
-    item?: string,
-    nodeId?: string
-  ) => void;
+  onClick: (type: SelectionType, item?: string, nodeId?: string) => void;
 }
 
 /**
@@ -244,11 +233,7 @@ function LayerGroupComponent(props: ILayerGroupProps): JSX.Element {
 interface ILayerProps {
   gisModel: IJupyterGISModel | undefined;
   layerId: string;
-  onClick: (
-    type: 'layer' | 'source' | 'group',
-    item?: string,
-    nodeId?: string
-  ) => void;
+  onClick: (type: SelectionType, item?: string, nodeId?: string) => void;
 }
 
 function isSelected(layerId: string, model: IJupyterGISModel | undefined) {

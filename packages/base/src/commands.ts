@@ -5,7 +5,9 @@ import { redoIcon, undoIcon } from '@jupyterlab/ui-components';
 
 import {
   IJGISFormSchemaRegistry,
-  IJGISLayerBrowserRegistry
+  IJGISLayerBrowserRegistry,
+  IJupyterGISModel,
+  SelectionType
 } from '@jupytergis/schema';
 
 import { LayerBrowserWidget } from './layerBrowser/layerBrowserDialog';
@@ -77,14 +79,10 @@ export function addCommands(
   commands.addCommand(CommandIDs.removeLayer, {
     label: trans.__('Remove Layer'),
     execute: () => {
-      const selected =
-        tracker.currentWidget?.context.model.localState?.selected.value;
-
-      if (selected) {
-        Object.keys(selected).forEach(key => {
-          tracker.currentWidget?.context.model.sharedModel.removeLayer(key);
-        });
-      }
+      const model = tracker.currentWidget?.context.model;
+      Private.removeSelectedItems(model, 'layer', selection => {
+        model?.sharedModel.removeLayer(selection);
+      });
     }
   });
 
@@ -92,49 +90,13 @@ export function addCommands(
     label: trans.__('Rename Layer'),
     execute: async () => {
       const model = tracker.currentWidget?.context.model;
-      console.log('rename layer');
-
-      const selectedLayers = model?.localState?.selected.value;
-
-      if (!selectedLayers) {
-        console.error('No layers selected');
-        return;
-      }
-
-      // TODO: Probably don't want to rename multiple layers at a time actually
-      for (const layerId in selectedLayers) {
-        const layer = model.getLayer(layerId);
-        const nodeId = selectedLayers[layerId].selectedNodeId;
-
-        if (!layer || !nodeId) {
-          continue;
-        } // Skip if layer or nodeId is missing
-
-        const node = document.getElementById(nodeId);
-        if (!node) {
-          console.warn(`Node with ID ${nodeId} not found`);
-          continue;
-        }
-
-        const edit = document.createElement('input');
-        edit?.classList.add('jp-gis-left-panel-input');
-        const originalName = node.innerText;
-        const newName = await Private.getUserInputForRename(
-          node,
-          edit,
-          originalName
-        );
-
-        if (newName.trim() === '') {
-          console.warn('New name cannot be empty');
-          continue;
-        }
-
-        if (newName !== originalName) {
+      await Private.renameSelectedItem(model, 'layer', (layerId, newName) => {
+        const layer = model?.getLayer(layerId);
+        if (layer) {
           layer.name = newName;
-          model.sharedModel.updateLayer(layerId, layer);
+          model?.sharedModel.updateLayer(layerId, layer);
         }
-      }
+      });
     }
   });
 
@@ -142,17 +104,9 @@ export function addCommands(
     label: trans.__('Remove Group'),
     execute: async () => {
       const model = tracker.currentWidget?.context.model;
-      const selected = model?.localState?.selected.value;
-
-      if (!selected) {
-        console.info('Nothing selected');
-        return;
-      }
-
-      for (const selection in selected) {
-        selected[selection].type === 'group' &&
-          model.removeLayerGroup(selection);
-      }
+      Private.removeSelectedItems(model, 'group', selection => {
+        model?.removeLayerGroup(selection);
+      });
     }
   });
 
@@ -160,48 +114,9 @@ export function addCommands(
     label: trans.__('Rename Group'),
     execute: async () => {
       const model = tracker.currentWidget?.context.model;
-
-      const selected = model?.localState?.selected.value;
-
-      if (!selected) {
-        console.error('No group selected');
-        return;
-      }
-
-      // TODO: Probably don't want to rename multiple layers at a time actually
-      console.log('test', selected);
-      for (const selection in selected) {
-        console.log('selection', selection);
-        const nodeId = selected[selection].selectedNodeId;
-
-        if (!nodeId) {
-          continue;
-        } // Skip if layer or nodeId is missing
-
-        const node = document.getElementById(nodeId);
-        if (!node) {
-          console.warn(`Node with ID ${nodeId} not found`);
-          continue;
-        }
-
-        const edit = document.createElement('input');
-        edit?.classList.add('jp-gis-left-panel-input');
-        const originalName = node.innerText;
-        const newName = await Private.getUserInputForRename(
-          node,
-          edit,
-          originalName
-        );
-
-        if (newName.trim() === '') {
-          console.warn('New name cannot be empty');
-          continue;
-        }
-
-        if (newName !== originalName) {
-          model.renameLayerGroup(selection, newName);
-        }
-      }
+      await Private.renameSelectedItem(model, 'group', (groupName, newName) => {
+        model?.renameLayerGroup(groupName, newName);
+      });
     }
   });
 
@@ -315,5 +230,80 @@ namespace Private {
         }
       });
     });
+  }
+
+  export function removeSelectedItems(
+    model: IJupyterGISModel | undefined,
+    itemTypeToRemove: SelectionType,
+    removeFunction: (id: string) => void
+  ) {
+    const selected = model?.localState?.selected.value;
+
+    if (!selected) {
+      console.info('Nothing selected');
+      return;
+    }
+
+    for (const selection in selected) {
+      if (selected[selection].type === itemTypeToRemove) {
+        removeFunction(selection);
+      }
+    }
+  }
+
+  export async function renameSelectedItem(
+    model: IJupyterGISModel | undefined,
+    itemType: SelectionType,
+    callback: (itemId: string, newName: string) => void
+  ) {
+    const selectedItems = model?.localState?.selected.value;
+
+    if (!selectedItems) {
+      console.error(`No ${itemType} selected`);
+      return;
+    }
+
+    let itemId = '';
+
+    // If more then one item is selected, only rename the first
+    for (const id in selectedItems) {
+      if (selectedItems[id].type === itemType) {
+        itemId = id;
+        break;
+      }
+    }
+
+    if (!itemId) {
+      return;
+    }
+
+    const nodeId = selectedItems[itemId].selectedNodeId;
+    if (!nodeId) {
+      return;
+    }
+
+    const node = document.getElementById(nodeId);
+    if (!node) {
+      console.warn(`Node with ID ${nodeId} not found`);
+      return;
+    }
+
+    const edit = document.createElement('input');
+    edit.classList.add('jp-gis-left-panel-input');
+    const originalName = node.innerText;
+    const newName = await Private.getUserInputForRename(
+      node,
+      edit,
+      originalName
+    );
+
+    if (newName.trim() === '') {
+      console.warn('New name cannot be empty');
+      return;
+    }
+
+    if (newName !== originalName) {
+      callback(itemId, newName);
+    }
   }
 }
