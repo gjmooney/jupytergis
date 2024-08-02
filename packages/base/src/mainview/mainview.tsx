@@ -27,6 +27,7 @@ import * as React from 'react';
 
 import * as MapLibre from 'maplibre-gl';
 
+import { Protocol } from 'pmtiles';
 import { isLightTheme } from '../tools';
 import { MainViewModel } from './mainviewmodel';
 import { Spinner } from './spinner';
@@ -140,6 +141,10 @@ export class MainView extends React.Component<IProps, IStates> {
         });
       });
 
+      // PM tile stuff
+      this._protocol = new Protocol();
+      MapLibre.addProtocol('pmtiles', this._protocol.tile);
+
       // Workaround for broken intialization of maplibre
       this._Map._lazyInitEmptyStyle();
 
@@ -155,6 +160,39 @@ export class MainView extends React.Component<IProps, IStates> {
     }
   }
 
+  configureTileSource(
+    sourceSpec:
+      | MapLibre.RasterSourceSpecification
+      | MapLibre.RasterDEMSourceSpecification
+      | MapLibre.VectorSourceSpecification,
+    url: string
+  ) {
+    // Use Tiles attribute if url has replaceable params (for example {z}/{x}/{y}), otherwise use url attribute
+    const regexPatterns = [
+      /\{z\}/,
+      /\{x\}/,
+      /\{y\}/,
+      /\{ratio\}/,
+      /\{quadkey\}/,
+      /\{bbox-epsg-3857\}/
+    ];
+
+    let result = false;
+
+    for (const pattern of regexPatterns) {
+      if (pattern.test(url)) {
+        result = true;
+        break;
+      }
+    }
+
+    result
+      ? (sourceSpec = { tiles: [url], ...sourceSpec })
+      : (sourceSpec = { url, ...sourceSpec });
+
+    return sourceSpec;
+  }
+
   /**
    * Add a source in the map.
    *
@@ -165,27 +203,39 @@ export class MainView extends React.Component<IProps, IStates> {
     switch (source.type) {
       case 'RasterSource': {
         const mapSource = this._Map.getSource(id) as MapLibre.RasterTileSource;
+
         if (!mapSource) {
-          this._Map.addSource(id, {
-            type: 'raster',
-            attribution: source.parameters?.attribution || '',
-            tiles: [this.computeSourceUrl(source)],
-            tileSize: 256
-          });
+          const parameters = source.parameters as IRasterSource;
+          const sourceSpec = this.configureTileSource(
+            {
+              type: 'raster',
+              minzoom: parameters.minZoom,
+              maxzoom: parameters.maxZoom,
+              attribution: parameters.attribution || ''
+            },
+            this.computeSourceUrl(source)
+          );
+
+          this._Map.addSource(id, sourceSpec);
         }
         break;
       }
       case 'VectorTileSource': {
         const mapSource = this._Map.getSource(id) as MapLibre.VectorTileSource;
+
         if (!mapSource) {
           const parameters = source.parameters as IVectorTileSource;
-          this._Map.addSource(id, {
-            type: 'vector',
-            minzoom: parameters.minZoom,
-            maxzoom: parameters.maxZoom,
-            attribution: parameters.attribution || '',
-            tiles: [this.computeSourceUrl(source)]
-          });
+          const sourceSpec = this.configureTileSource(
+            {
+              type: 'vector',
+              minzoom: parameters.minZoom,
+              maxzoom: parameters.maxZoom,
+              attribution: parameters.attribution || ''
+            },
+            this.computeSourceUrl(source)
+          );
+
+          this._Map.addSource(id, sourceSpec);
         }
         break;
       }
@@ -206,13 +256,19 @@ export class MainView extends React.Component<IProps, IStates> {
         const mapSource = this._Map.getSource(
           id
         ) as MapLibre.RasterDEMTileSource;
+
         if (!mapSource) {
           const parameters = source.parameters as IRasterDemSource;
-          this._Map.addSource(id, {
-            type: 'raster-dem',
-            tileSize: parameters.tileSize,
-            url: parameters.url
-          });
+          const sourceSpec = this.configureTileSource(
+            {
+              type: 'raster-dem',
+              tileSize: parameters.tileSize,
+              encoding: parameters.encoding
+            },
+            this.computeSourceUrl(source)
+          );
+
+          this._Map.addSource(id, sourceSpec);
         }
         break;
       }
@@ -295,9 +351,9 @@ export class MainView extends React.Component<IProps, IStates> {
         break;
       }
       case 'VectorTileSource': {
-        (mapSource as MapLibre.RasterTileSource).setTiles([
+        (mapSource as MapLibre.VectorTileSource).setUrl(
           this.computeSourceUrl(source)
-        ]);
+        );
         break;
       }
       case 'GeoJSONSource': {
@@ -309,7 +365,7 @@ export class MainView extends React.Component<IProps, IStates> {
       }
       case 'RasterDemSource': {
         const parameters = source.parameters as IRasterDemSource;
-        (mapSource as MapLibre.RasterDEMTileSource).setTiles([parameters.url]);
+        (mapSource as MapLibre.RasterDEMTileSource).setUrl(parameters.url);
         break;
       }
       case 'ImageSource': {
@@ -440,6 +496,7 @@ export class MainView extends React.Component<IProps, IStates> {
     if (index < currentLayerIds.length && index !== -1) {
       beforeId = currentLayerIds[index];
     }
+
     switch (layer.type) {
       case 'RasterLayer': {
         this._Map.addLayer(
@@ -820,4 +877,5 @@ export class MainView extends React.Component<IProps, IStates> {
   private _ready = false;
   private _terrainControl: MapLibre.TerrainControl | null;
   private _videoPlaying = false;
+  private _protocol: Protocol;
 }
