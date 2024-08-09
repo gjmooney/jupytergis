@@ -185,7 +185,7 @@ export class MainView extends React.Component<IProps, IStates> {
             minzoom: parameters.minZoom,
             maxzoom: parameters.maxZoom,
             attribution: parameters.attribution || '',
-            tiles: [this.computeSourceUrl(source)]
+            url: this.computeSourceUrl(source)
           });
         }
         break;
@@ -648,7 +648,7 @@ export class MainView extends React.Component<IProps, IStates> {
       }
     }
 
-    if (layer.filters && layer.filters?.length !== 0) {
+    if (layer.filters) {
       this.setFilters(id, layer.filters);
     }
   }
@@ -769,6 +769,11 @@ export class MainView extends React.Component<IProps, IStates> {
   }
 
   private async setFilters(id: string, filters: IJGISFilterItem[]) {
+    if (filters.length === 0) {
+      this._Map.setFilter(id, null);
+      return;
+    }
+
     const filterExpression = [
       'all',
       ...filters.map(id => [id.operator, id.feature, id.value])
