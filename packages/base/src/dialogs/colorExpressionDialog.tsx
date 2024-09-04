@@ -4,7 +4,10 @@ import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { Button } from '@jupyterlab/ui-components';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
+
+import initGdalJs from 'gdal3.js';
 import React, { useEffect, useRef, useState } from 'react';
+import BandRow from './components/color-expression/BandRow';
 import StopRow from './components/color-expression/StopRow';
 
 interface IZoomColorProps {
@@ -18,13 +21,24 @@ export interface IStopRow {
   color: any;
 }
 
-const ZoomColor = ({ context, okSignalPromise, cancel }: IZoomColorProps) => {
+export interface IBandRow {
+  band: number;
+  colorInterpretation: string;
+}
+
+const ColorExpressionDialog = ({
+  context,
+  okSignalPromise,
+  cancel
+}: IZoomColorProps) => {
   const functions = ['interpolate'];
   const rowsRef = useRef<IStopRow[]>();
+  const bandsRef = useRef<IBandRow[]>();
   const selectedLayerRef = useRef<string>('');
   const [selectedFunction, setSelectedFunction] = useState('interpolate');
   const [selectedLayer, setSelectedLayer] = useState('');
   const [stopRows, setStopRows] = useState<IStopRow[]>([]);
+  const [bandRows, setBandRows] = useState<IBandRow[]>([]);
 
   useEffect(() => {
     const handleClientStateChanged = () => {
@@ -44,8 +58,73 @@ const ZoomColor = ({ context, okSignalPromise, cancel }: IZoomColorProps) => {
     handleClientStateChanged();
 
     context.model.clientStateChanged.connect(handleClientStateChanged);
+    // getBandInfo();
   }, []);
 
+  useEffect(() => {
+    const getBandInfo = async () => {
+      console.log('get band info');
+
+      const layer = context.model.getLayer(selectedLayer);
+      const source = context.model.getSource(layer?.parameters?.source);
+      console.log(
+        'source?.parameters?.urls[0].url',
+        source?.parameters?.urls[0].url
+      );
+
+      const sourceUrl = source?.parameters?.urls[0].url;
+
+      if (!sourceUrl) {
+        return;
+      }
+      console.log('sanity');
+      const Gdal = await initGdalJs({
+        path: 'https://cdn.jsdelivr.net/npm/gdal3.js@2.8.1/dist/package',
+        useWorker: false
+      });
+
+      // const Gdal = await initGdalJs();
+
+      const fileData = await fetch(sourceUrl);
+      const file = new File([await fileData.blob()], 'loaded.tif');
+      const result = await Gdal.open(file);
+      console.log('result', result);
+      const tifDataset = result.datasets[0];
+      const tifDatasetInfo = await Gdal.gdalinfo(tifDataset);
+      console.log('tifDatasetInfo', tifDatasetInfo);
+
+      const bandsArr: IBandRow[] = [];
+
+      tifDatasetInfo['bands'].forEach(bandData => {
+        bandsArr.push({
+          band: bandData.band,
+          colorInterpretation: bandData.colorInterpretation
+        });
+      });
+
+      console.log('bandsArr', bandsArr);
+
+      setBandRows(bandsArr);
+
+      Gdal.close(tifDataset);
+
+      // ! Keeping this here just in case
+      // // TODO: support multiple urls
+      // const tiff = await fromUrl(
+      //   'https://s2downloads.eox.at/demo/EOxCloudless/2020/rgbnir/s2cloudless2020-16bits_sinlge-file_z0-4.tif'
+      // );
+      // const image = await tiff.getImage();
+
+      // const count = await tiff.getImageCount();
+      // // This returns the number of bands
+      // const sample = image.getSamplesPerPixel()
+
+      // console.log('sample', sample)
+      // console.log('count', count);
+      // console.log('image', image);
+    };
+    getBandInfo();
+  });
   useEffect(() => {
     // This it to parse a color object on the layer
     selectedLayerRef.current = selectedLayer;
@@ -82,6 +161,11 @@ const ZoomColor = ({ context, okSignalPromise, cancel }: IZoomColorProps) => {
   useEffect(() => {
     rowsRef.current = stopRows;
   }, [stopRows]);
+
+  useEffect(() => {
+    bandsRef.current = bandRows;
+    console.log('bandRows', bandRows);
+  }, [bandRows]);
 
   const handleOk = () => {
     const layer = context.model.getLayer(selectedLayer);
@@ -156,7 +240,11 @@ const ZoomColor = ({ context, okSignalPromise, cancel }: IZoomColorProps) => {
           ))}
         </select>
       </div>
-      {/* <div className="base">Placeholder</div> */}
+      <div className="band container">
+        {bandRows.map((band, index) => (
+          <BandRow index={index} bandRow={band} />
+        ))}
+      </div>
       <div className="stop container">
         <div className="labels" style={{ display: 'flex', gap: 6 }}>
           <span style={{ flex: '0 0 18%' }}>Value</span>
@@ -202,7 +290,7 @@ export class ZoomColorWidget extends Dialog<boolean> {
     >();
 
     const body = (
-      <ZoomColor
+      <ColorExpressionDialog
         context={options.context}
         okSignalPromise={okSignalPromise}
         cancel={cancelCallback}
@@ -228,4 +316,4 @@ export class ZoomColorWidget extends Dialog<boolean> {
   }
 }
 
-export default ZoomColor;
+export default ColorExpressionDialog;

@@ -56,6 +56,15 @@ export class ToolbarWidget extends Toolbar {
       this.addItem('separator1', new Separator());
 
       this.addItem(
+        'colorExpr',
+        new CommandToolbarButton({
+          id: CommandIDs.colorExpr,
+          label: '',
+          commands: options.commands
+        })
+      );
+
+      this.addItem(
         'openLayerBrowser',
         new CommandToolbarButton({
           id: CommandIDs.openLayerBrowser,
