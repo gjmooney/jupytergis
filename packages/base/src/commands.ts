@@ -13,7 +13,7 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { WidgetTracker, showErrorMessage } from '@jupyterlab/apputils';
 import { ITranslator } from '@jupyterlab/translation';
 import { CommandIDs, icons } from './constants';
-import { ZoomColorWidget } from './dialogs/colorExpressionDialog';
+import { ColorExprWidget } from './dialogs/colorExpressionDialog';
 import { CreationFormDialog } from './dialogs/formdialog';
 import { LayerBrowserWidget } from './dialogs/layerBrowserDialog';
 import { TerrainDialogWidget } from './dialogs/terrainDialog';
@@ -51,7 +51,7 @@ export function addCommands(
         ? tracker.currentWidget.context.model.sharedModel.editable
         : false;
     },
-    execute: Private.createZoomColorDialog(tracker),
+    execute: Private.createColorExprDialog(tracker),
 
     ...icons.get(CommandIDs.colorExpr)
   });
@@ -826,7 +826,7 @@ namespace Private {
     };
   }
 
-  export function createZoomColorDialog(
+  export function createColorExprDialog(
     tracker: WidgetTracker<JupyterGISWidget>
   ) {
     return async () => {
@@ -836,7 +836,7 @@ namespace Private {
         return;
       }
 
-      const dialog = new ZoomColorWidget({
+      const dialog = new ColorExprWidget({
         context: current.context
       });
       await dialog.launch();

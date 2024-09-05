@@ -8,14 +8,14 @@ import { Signal } from '@lumino/signaling';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import initGdalJs from 'gdal3.js';
+import { ExpressionValue } from 'ol/expr/expression';
 import React, { useEffect, useRef, useState } from 'react';
 import BandRow from './components/color-expression/BandRow';
 import StopRow from './components/color-expression/StopRow';
-import { ExpressionValue } from 'ol/expr/expression';
 
 interface IZoomColorProps {
   context: DocumentRegistry.IContext<IJupyterGISModel>;
-  okSignalPromise: PromiseDelegate<Signal<ZoomColorWidget, null>>;
+  okSignalPromise: PromiseDelegate<Signal<ColorExprWidget, null>>;
   cancel: () => void;
 }
 
@@ -116,7 +116,6 @@ const ColorExpressionDialog = ({
     });
 
     console.log('bandsArr', bandsArr);
-
     setTifData(tifDataset);
     setBandRows(bandsArr);
 
@@ -189,41 +188,18 @@ const ColorExpressionDialog = ({
 
   const handleOk = () => {
     const layer = context.model.getLayer(selectedLayer);
-    // console.log('selectedLayer', selectedLayer);
     if (!layer || !layer.parameters) {
       return;
     }
 
     const colorExpr: ExpressionValue = ['interpolate', [selectedFunction]];
 
-    const nir = ['band', 2];
-
-    // near-infrared is the first band from above
-    const red = ['band', 1];
-
-    const difference = ['-', nir, red];
-    const sum = ['+', nir, red];
-
-    // ! REplace this with the selected band
-    const ndvi = ['/', difference, sum];
-    // colorExpr.push(ndvi);
     colorExpr.push(['band', selectedBand]);
 
     rowsRef.current?.map(stop => {
       colorExpr.push(stop.value);
       colorExpr.push(stop.color);
     });
-
-    // colorExpr.push(-0.2); // ndvi values <= -0.2 will get the color below
-    // colorExpr.push([191, 191, 191]);
-    // colorExpr.push(0); // ndvi values between -0.2 and 0 will get an interpolated color between the one above and the one below
-    // colorExpr.push([255, 255, 224]);
-    // colorExpr.push(0.2);
-    // colorExpr.push([145, 191, 82]);
-    // colorExpr.push(0.4);
-    // colorExpr.push([79, 138, 46]);
-    // colorExpr.push(0.6);
-    // colorExpr.push([15, 84, 10]);
 
     (layer.parameters as IWebGlLayer).color = colorExpr;
     context.model.sharedModel.updateLayer(selectedLayerRef.current, layer);
@@ -307,8 +283,8 @@ export interface IZoomColorOptions {
   context: DocumentRegistry.IContext<IJupyterGISModel>;
 }
 
-export class ZoomColorWidget extends Dialog<boolean> {
-  private okSignal: Signal<ZoomColorWidget, null>;
+export class ColorExprWidget extends Dialog<boolean> {
+  private okSignal: Signal<ColorExprWidget, null>;
 
   constructor(options: IZoomColorOptions) {
     const cancelCallback = () => {
@@ -316,7 +292,7 @@ export class ZoomColorWidget extends Dialog<boolean> {
     };
 
     const okSignalPromise = new PromiseDelegate<
-      Signal<ZoomColorWidget, null>
+      Signal<ColorExprWidget, null>
     >();
 
     const body = (
