@@ -65,7 +65,7 @@ const StopRow = ({
 
   const handleValueChange = event => {
     const newRows = [...stopRows];
-    stopRows[index].value = event.target.value;
+    stopRows[index].value = +event.target.value;
     setStopRows(newRows);
     setInputZoom(event.target.value);
   };

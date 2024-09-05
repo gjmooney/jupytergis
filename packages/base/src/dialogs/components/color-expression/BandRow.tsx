@@ -3,18 +3,35 @@ import { IBandRow } from '../../colorExpressionDialog';
 
 const BandRow = ({
   index,
-  bandRow
+  bandRow,
+  bandRows,
+  setSelectedBand
 }: {
   index: number;
-
   bandRow: IBandRow;
+  bandRows: IBandRow[];
+  setSelectedBand: any;
 }) => {
   console.log('bandRow', bandRow);
+
   return (
-    <div style={{ display: 'flex' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
       <span>Band</span>
       <span>
-        Band {bandRow.band}({bandRow.colorInterpretation})
+        <select
+          className="jp-mod-styled jp-SchemaForm"
+          onChange={event => setSelectedBand(event.target.value)}
+        >
+          {bandRows.map((band, bandIndex) => (
+            <option
+              key={bandIndex}
+              value={band.band}
+              selected={band.band === bandRow.band}
+            >
+              {`Band ${band.band} (${band.colorInterpretation})`}
+            </option>
+          ))}
+        </select>
       </span>
     </div>
   );

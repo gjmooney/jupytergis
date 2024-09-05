@@ -5,10 +5,13 @@ import { Button } from '@jupyterlab/ui-components';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
 
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import initGdalJs from 'gdal3.js';
 import React, { useEffect, useRef, useState } from 'react';
 import BandRow from './components/color-expression/BandRow';
 import StopRow from './components/color-expression/StopRow';
+import { ExpressionValue } from 'ol/expr/expression';
 
 interface IZoomColorProps {
   context: DocumentRegistry.IContext<IJupyterGISModel>;
@@ -31,14 +34,16 @@ const ColorExpressionDialog = ({
   okSignalPromise,
   cancel
 }: IZoomColorProps) => {
-  const functions = ['interpolate'];
+  const functions = ['discrete', 'linear', 'exact'];
   const rowsRef = useRef<IStopRow[]>();
   const bandsRef = useRef<IBandRow[]>();
   const selectedLayerRef = useRef<string>('');
-  const [selectedFunction, setSelectedFunction] = useState('interpolate');
+  const [selectedFunction, setSelectedFunction] = useState('linear');
   const [selectedLayer, setSelectedLayer] = useState('');
+  const [selectedBand, setSelectedBand] = useState(1);
   const [stopRows, setStopRows] = useState<IStopRow[]>([]);
   const [bandRows, setBandRows] = useState<IBandRow[]>([]);
+  const [tifData, setTifData] = useState<Dataset | undefined>(undefined);
 
   useEffect(() => {
     const handleClientStateChanged = () => {
@@ -66,6 +71,10 @@ const ColorExpressionDialog = ({
   // }, []);
 
   const getBandInfo = async () => {
+    if (tifData) {
+      console.log('returtnerd');
+      return;
+    }
     console.log('get band info');
 
     const layer = context.model.getLayer(selectedLayer);
@@ -108,6 +117,7 @@ const ColorExpressionDialog = ({
 
     console.log('bandsArr', bandsArr);
 
+    setTifData(tifDataset);
     setBandRows(bandsArr);
 
     Gdal.close(tifDataset);
@@ -160,6 +170,7 @@ const ColorExpressionDialog = ({
 
     setStopRows(pairedObjects);
 
+    // setTifData(undefined);300
     getBandInfo();
   }, [selectedLayer]);
 
@@ -172,6 +183,10 @@ const ColorExpressionDialog = ({
     console.log('bandRows', bandRows);
   }, [bandRows]);
 
+  useEffect(() => {
+    console.log('selectedBand', selectedBand);
+  }, [selectedBand]);
+
   const handleOk = () => {
     const layer = context.model.getLayer(selectedLayer);
     // console.log('selectedLayer', selectedLayer);
@@ -179,7 +194,7 @@ const ColorExpressionDialog = ({
       return;
     }
 
-    const colorExpr: any = [selectedFunction, ['linear']];
+    const colorExpr: ExpressionValue = ['interpolate', [selectedFunction]];
 
     const nir = ['band', 2];
 
@@ -189,8 +204,10 @@ const ColorExpressionDialog = ({
     const difference = ['-', nir, red];
     const sum = ['+', nir, red];
 
+    // ! REplace this with the selected band
     const ndvi = ['/', difference, sum];
-    colorExpr.push(ndvi);
+    // colorExpr.push(ndvi);
+    colorExpr.push(['band', selectedBand]);
 
     rowsRef.current?.map(stop => {
       colorExpr.push(stop.value);
@@ -229,11 +246,24 @@ const ColorExpressionDialog = ({
 
   return (
     <div className="jp-gis-color-container">
+      <div className="band container">
+        {bandRows.length === 0 ? (
+          <FontAwesomeIcon icon={faSpinner} />
+        ) : (
+          <BandRow
+            index={0}
+            bandRow={bandRows[0]}
+            bandRows={bandRows}
+            setSelectedBand={setSelectedBand}
+          />
+        )}
+      </div>
       <div className="funcion select">
-        <label htmlFor="function-select">Function</label>
+        <label htmlFor="function-select">Interpolation</label>
         <select
           name="function-select"
           id="function-select"
+          value={selectedFunction}
           onChange={event => {
             setSelectedFunction(event.target.value);
           }}
@@ -244,11 +274,6 @@ const ColorExpressionDialog = ({
             </option>
           ))}
         </select>
-      </div>
-      <div className="band container">
-        {bandRows.map((band, index) => (
-          <BandRow index={index} bandRow={band} />
-        ))}
       </div>
       <div className="stop container">
         <div className="labels" style={{ display: 'flex', gap: 6 }}>
