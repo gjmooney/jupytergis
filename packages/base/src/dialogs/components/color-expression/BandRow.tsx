@@ -12,8 +12,6 @@ const BandRow = ({
   bandRows: IBandRow[];
   setSelectedBand: any;
 }) => {
-  console.log('bandRow', bandRow);
-
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
       <span>Band</span>

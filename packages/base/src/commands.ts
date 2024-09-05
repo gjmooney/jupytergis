@@ -11,6 +11,7 @@ import {
 } from '@jupytergis/schema';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { WidgetTracker, showErrorMessage } from '@jupyterlab/apputils';
+import { IStateDB } from '@jupyterlab/statedb';
 import { ITranslator } from '@jupyterlab/translation';
 import { CommandIDs, icons } from './constants';
 import { ColorExprWidget } from './dialogs/colorExpressionDialog';
@@ -39,7 +40,8 @@ export function addCommands(
   tracker: WidgetTracker<JupyterGISWidget>,
   translator: ITranslator,
   formSchemaRegistry: IJGISFormSchemaRegistry,
-  layerBrowserRegistry: IJGISLayerBrowserRegistry
+  layerBrowserRegistry: IJGISLayerBrowserRegistry,
+  state: IStateDB
 ): void {
   const trans = translator.load('jupyterlab');
   const { commands } = app;
@@ -51,7 +53,7 @@ export function addCommands(
         ? tracker.currentWidget.context.model.sharedModel.editable
         : false;
     },
-    execute: Private.createColorExprDialog(tracker),
+    execute: Private.createColorExprDialog(tracker, state),
 
     ...icons.get(CommandIDs.colorExpr)
   });
@@ -827,7 +829,8 @@ namespace Private {
   }
 
   export function createColorExprDialog(
-    tracker: WidgetTracker<JupyterGISWidget>
+    tracker: WidgetTracker<JupyterGISWidget>,
+    state: IStateDB
   ) {
     return async () => {
       const current = tracker.currentWidget;
@@ -837,7 +840,8 @@ namespace Private {
       }
 
       const dialog = new ColorExprWidget({
-        context: current.context
+        context: current.context,
+        state
       });
       await dialog.launch();
     };

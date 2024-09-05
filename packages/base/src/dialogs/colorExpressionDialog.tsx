@@ -1,12 +1,12 @@
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IJupyterGISModel, IWebGlLayer } from '@jupytergis/schema';
 import { Dialog } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { IStateDB } from '@jupyterlab/statedb';
 import { Button } from '@jupyterlab/ui-components';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
-
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import initGdalJs from 'gdal3.js';
 import { ExpressionValue } from 'ol/expr/expression';
 import React, { useEffect, useRef, useState } from 'react';
@@ -15,6 +15,7 @@ import StopRow from './components/color-expression/StopRow';
 
 interface IZoomColorProps {
   context: DocumentRegistry.IContext<IJupyterGISModel>;
+  state: IStateDB;
   okSignalPromise: PromiseDelegate<Signal<ColorExprWidget, null>>;
   cancel: () => void;
 }
@@ -31,19 +32,18 @@ export interface IBandRow {
 
 const ColorExpressionDialog = ({
   context,
+  state,
   okSignalPromise,
   cancel
 }: IZoomColorProps) => {
   const functions = ['discrete', 'linear', 'exact'];
   const rowsRef = useRef<IStopRow[]>();
-  const bandsRef = useRef<IBandRow[]>();
   const selectedLayerRef = useRef<string>('');
   const [selectedFunction, setSelectedFunction] = useState('linear');
   const [selectedLayer, setSelectedLayer] = useState('');
   const [selectedBand, setSelectedBand] = useState(1);
   const [stopRows, setStopRows] = useState<IStopRow[]>([]);
   const [bandRows, setBandRows] = useState<IBandRow[]>([]);
-  const [tifData, setTifData] = useState<Dataset | undefined>(undefined);
 
   useEffect(() => {
     const handleClientStateChanged = () => {
@@ -63,50 +63,46 @@ const ColorExpressionDialog = ({
     handleClientStateChanged();
 
     context.model.clientStateChanged.connect(handleClientStateChanged);
-    // getBandInfo();
   }, []);
 
-  // useEffect(() => {
-
-  // }, []);
-
   const getBandInfo = async () => {
-    if (tifData) {
-      console.log('returtnerd');
+    const bandsArr: IBandRow[] = [];
+
+    const tifDataState = await state.fetch(selectedLayer);
+    if (tifDataState) {
+      const tifData = JSON.parse(tifDataState['tifData']);
+
+      tifData['info']['bands'].forEach(bandData => {
+        bandsArr.push({
+          band: bandData.band,
+          colorInterpretation: bandData.colorInterpretation
+        });
+      });
+      setBandRows(bandsArr);
+
       return;
     }
-    console.log('get band info');
 
     const layer = context.model.getLayer(selectedLayer);
     const source = context.model.getSource(layer?.parameters?.source);
-    console.log(
-      'source?.parameters?.urls[0].url',
-      source?.parameters?.urls[0].url
-    );
 
     const sourceUrl = source?.parameters?.urls[0].url;
 
     if (!sourceUrl) {
       return;
     }
-    console.log('sanity');
+    //! This takes so long, maybe do when adding source instead
     const Gdal = await initGdalJs({
       path: 'lab/extensions/@jupytergis/jupytergis-core/static',
       useWorker: false
     });
 
-    // const Gdal = await initGdalJs();
-
     const fileData = await fetch(sourceUrl);
     const file = new File([await fileData.blob()], 'loaded.tif');
 
     const result = await Gdal.open(file);
-    console.log('result', result);
     const tifDataset = result.datasets[0];
     const tifDatasetInfo = await Gdal.gdalinfo(tifDataset);
-    console.log('tifDatasetInfo', tifDatasetInfo);
-
-    const bandsArr: IBandRow[] = [];
 
     tifDatasetInfo['bands'].forEach(bandData => {
       bandsArr.push({
@@ -115,8 +111,7 @@ const ColorExpressionDialog = ({
       });
     });
 
-    console.log('bandsArr', bandsArr);
-    setTifData(tifDataset);
+    state.save(selectedLayer, JSON.stringify(tifDatasetInfo));
     setBandRows(bandsArr);
 
     Gdal.close(tifDataset);
@@ -157,7 +152,7 @@ const ColorExpressionDialog = ({
     // So if it's not a string then it's an array and we parse
     // First element is function (ie interpolate)
     // Second element is type of interpolation (ie linear)
-    // Third is ...something idk what, the NVDI for testing
+    // Third is input value that stop values are compared with
     // Fourth and on is value:color pairs
     for (let i = 3; i < color.length; i += 2) {
       const obj: IStopRow = {
@@ -178,7 +173,6 @@ const ColorExpressionDialog = ({
   }, [stopRows]);
 
   useEffect(() => {
-    bandsRef.current = bandRows;
     console.log('bandRows', bandRows);
   }, [bandRows]);
 
@@ -281,10 +275,12 @@ const ColorExpressionDialog = ({
 
 export interface IZoomColorOptions {
   context: DocumentRegistry.IContext<IJupyterGISModel>;
+  state: IStateDB;
 }
 
 export class ColorExprWidget extends Dialog<boolean> {
   private okSignal: Signal<ColorExprWidget, null>;
+  private state: IStateDB;
 
   constructor(options: IZoomColorOptions) {
     const cancelCallback = () => {
@@ -300,6 +296,7 @@ export class ColorExprWidget extends Dialog<boolean> {
         context={options.context}
         okSignalPromise={okSignalPromise}
         cancel={cancelCallback}
+        state={options.state}
       />
     );
 
