@@ -61,70 +61,74 @@ const ColorExpressionDialog = ({
     // getBandInfo();
   }, []);
 
-  useEffect(() => {
-    const getBandInfo = async () => {
-      console.log('get band info');
+  // useEffect(() => {
 
-      const layer = context.model.getLayer(selectedLayer);
-      const source = context.model.getSource(layer?.parameters?.source);
-      console.log(
-        'source?.parameters?.urls[0].url',
-        source?.parameters?.urls[0].url
-      );
+  // }, []);
 
-      const sourceUrl = source?.parameters?.urls[0].url;
+  const getBandInfo = async () => {
+    console.log('get band info');
 
-      if (!sourceUrl) {
-        return;
-      }
-      console.log('sanity');
-      const Gdal = await initGdalJs({
-        path: 'https://cdn.jsdelivr.net/npm/gdal3.js@2.8.1/dist/package',
-        useWorker: false
+    const layer = context.model.getLayer(selectedLayer);
+    const source = context.model.getSource(layer?.parameters?.source);
+    console.log(
+      'source?.parameters?.urls[0].url',
+      source?.parameters?.urls[0].url
+    );
+
+    const sourceUrl = source?.parameters?.urls[0].url;
+
+    if (!sourceUrl) {
+      return;
+    }
+    console.log('sanity');
+    const Gdal = await initGdalJs({
+      path: 'https://cdn.jsdelivr.net/npm/gdal3.js@2.8.1/dist/package',
+      useWorker: false
+    });
+
+    // const Gdal = await initGdalJs();
+
+    const fileData = await fetch(sourceUrl);
+    const file = new File([await fileData.blob()], 'loaded.tif');
+
+    // ! Compress option is to get geotiff-3 to load
+    const result = await Gdal.open(file, ['COMPRESS=JPEG']);
+    console.log('result', result);
+    const tifDataset = result.datasets[0];
+    const tifDatasetInfo = await Gdal.gdalinfo(tifDataset);
+    console.log('tifDatasetInfo', tifDatasetInfo);
+
+    const bandsArr: IBandRow[] = [];
+
+    tifDatasetInfo['bands'].forEach(bandData => {
+      bandsArr.push({
+        band: bandData.band,
+        colorInterpretation: bandData.colorInterpretation
       });
+    });
 
-      // const Gdal = await initGdalJs();
+    console.log('bandsArr', bandsArr);
 
-      const fileData = await fetch(sourceUrl);
-      const file = new File([await fileData.blob()], 'loaded.tif');
-      const result = await Gdal.open(file);
-      console.log('result', result);
-      const tifDataset = result.datasets[0];
-      const tifDatasetInfo = await Gdal.gdalinfo(tifDataset);
-      console.log('tifDatasetInfo', tifDatasetInfo);
+    setBandRows(bandsArr);
 
-      const bandsArr: IBandRow[] = [];
+    Gdal.close(tifDataset);
 
-      tifDatasetInfo['bands'].forEach(bandData => {
-        bandsArr.push({
-          band: bandData.band,
-          colorInterpretation: bandData.colorInterpretation
-        });
-      });
+    // ! Keeping this here just in case
+    // // TODO: support multiple urls
+    // const tiff = await fromUrl(
+    //   'https://s2downloads.eox.at/demo/EOxCloudless/2020/rgbnir/s2cloudless2020-16bits_sinlge-file_z0-4.tif'
+    // );
+    // const image = await tiff.getImage();
 
-      console.log('bandsArr', bandsArr);
+    // const count = await tiff.getImageCount();
+    // // This returns the number of bands
+    // const sample = image.getSamplesPerPixel()
 
-      setBandRows(bandsArr);
+    // console.log('sample', sample)
+    // console.log('count', count);
+    // console.log('image', image);
+  };
 
-      Gdal.close(tifDataset);
-
-      // ! Keeping this here just in case
-      // // TODO: support multiple urls
-      // const tiff = await fromUrl(
-      //   'https://s2downloads.eox.at/demo/EOxCloudless/2020/rgbnir/s2cloudless2020-16bits_sinlge-file_z0-4.tif'
-      // );
-      // const image = await tiff.getImage();
-
-      // const count = await tiff.getImageCount();
-      // // This returns the number of bands
-      // const sample = image.getSamplesPerPixel()
-
-      // console.log('sample', sample)
-      // console.log('count', count);
-      // console.log('image', image);
-    };
-    getBandInfo();
-  });
   useEffect(() => {
     // This it to parse a color object on the layer
     selectedLayerRef.current = selectedLayer;
@@ -156,6 +160,8 @@ const ColorExpressionDialog = ({
     }
 
     setStopRows(pairedObjects);
+
+    getBandInfo();
   }, [selectedLayer]);
 
   useEffect(() => {
