@@ -82,7 +82,7 @@ const ColorExpressionDialog = ({
     }
     console.log('sanity');
     const Gdal = await initGdalJs({
-      path: 'https://cdn.jsdelivr.net/npm/gdal3.js@2.8.1/dist/package',
+      path: 'lab/extensions/@jupytergis/jupytergis-core/static',
       useWorker: false
     });
 
@@ -91,8 +91,7 @@ const ColorExpressionDialog = ({
     const fileData = await fetch(sourceUrl);
     const file = new File([await fileData.blob()], 'loaded.tif');
 
-    // ! Compress option is to get geotiff-3 to load
-    const result = await Gdal.open(file, ['COMPRESS=JPEG']);
+    const result = await Gdal.open(file);
     console.log('result', result);
     const tifDataset = result.datasets[0];
     const tifDatasetInfo = await Gdal.gdalinfo(tifDataset);
