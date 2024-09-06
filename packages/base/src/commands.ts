@@ -14,9 +14,9 @@ import { WidgetTracker, showErrorMessage } from '@jupyterlab/apputils';
 import { IStateDB } from '@jupyterlab/statedb';
 import { ITranslator } from '@jupyterlab/translation';
 import { CommandIDs, icons } from './constants';
-import { ColorExprWidget } from './dialogs/colorExpressionDialog';
 import { CreationFormDialog } from './dialogs/formdialog';
 import { LayerBrowserWidget } from './dialogs/layerBrowserDialog';
+import { SymbologyWidget } from './dialogs/symbologyDialog';
 import { TerrainDialogWidget } from './dialogs/terrainDialog';
 import { JupyterGISWidget } from './widget';
 
@@ -53,7 +53,7 @@ export function addCommands(
         ? tracker.currentWidget.context.model.sharedModel.editable
         : false;
     },
-    execute: Private.createColorExprDialog(tracker, state),
+    execute: Private.createSymbologyDialog(tracker, state),
 
     ...icons.get(CommandIDs.colorExpr)
   });
@@ -828,7 +828,7 @@ namespace Private {
     };
   }
 
-  export function createColorExprDialog(
+  export function createSymbologyDialog(
     tracker: WidgetTracker<JupyterGISWidget>,
     state: IStateDB
   ) {
@@ -839,7 +839,7 @@ namespace Private {
         return;
       }
 
-      const dialog = new ColorExprWidget({
+      const dialog = new SymbologyWidget({
         context: current.context,
         state
       });

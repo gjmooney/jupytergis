@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ISymbologyDialogProps } from './colorExpressionDialog';
-import SinglebandPseudocolor from './components/color-expression/SingleBandPseudoColor';
+import { ISymbologyDialogProps } from '../../symbologyDialog';
+import SingleBandPseudoColor from './SingleBandPseudoColor';
 
 const BandRendering = ({
   context,
@@ -25,7 +25,7 @@ const BandRendering = ({
     switch (selectedRenderType) {
       case 'Singleband Pseudocolor':
         RenderComponent = (
-          <SinglebandPseudocolor
+          <SingleBandPseudoColor
             context={context}
             state={state}
             okSignalPromise={okSignalPromise}

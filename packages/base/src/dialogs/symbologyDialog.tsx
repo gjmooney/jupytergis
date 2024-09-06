@@ -1,6 +1,24 @@
+import { IJupyterGISModel } from '@jupytergis/schema';
+import { Dialog } from '@jupyterlab/apputils';
+import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { IStateDB } from '@jupyterlab/statedb';
+import { PromiseDelegate } from '@lumino/coreutils';
+import { Signal } from '@lumino/signaling';
+
 import React, { useEffect, useState } from 'react';
-import BandRendering from './BandRendering';
-import { ISymbologyDialogProps } from './colorExpressionDialog';
+import BandRendering from './components/symbology/BandRendering';
+export interface ISymbologyDialogProps {
+  context: DocumentRegistry.IContext<IJupyterGISModel>;
+  state: IStateDB;
+  okSignalPromise: PromiseDelegate<Signal<SymbologyWidget, null>>;
+  cancel: () => void;
+  layerId?: string;
+}
+
+export interface ISymbologyWidgetOptions {
+  context: DocumentRegistry.IContext<IJupyterGISModel>;
+  state: IStateDB;
+}
 
 const SymbologyDialog = ({
   context,
@@ -11,7 +29,7 @@ const SymbologyDialog = ({
   const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
   const [componentToRender, setComponentToRender] = useState<any>(null);
 
-  let LayerSymbology;
+  let LayerSymbology: React.JSX.Element;
 
   useEffect(() => {
     const handleClientStateChanged = () => {
@@ -47,6 +65,7 @@ const SymbologyDialog = ({
       return;
     }
 
+    // TODO WebGlLayers can also be used for other layers, need a better way to determine source + layer combo
     switch (layer.type) {
       case 'WebGlLayer':
         LayerSymbology = (
@@ -68,4 +87,44 @@ const SymbologyDialog = ({
   return <>{componentToRender}</>;
 };
 
-export default SymbologyDialog;
+export class SymbologyWidget extends Dialog<boolean> {
+  private okSignal: Signal<SymbologyWidget, null>;
+
+  constructor(options: ISymbologyWidgetOptions) {
+    const cancelCallback = () => {
+      this.resolve(0);
+    };
+
+    const okSignalPromise = new PromiseDelegate<
+      Signal<SymbologyWidget, null>
+    >();
+
+    const body = (
+      <SymbologyDialog
+        context={options.context}
+        okSignalPromise={okSignalPromise}
+        cancel={cancelCallback}
+        state={options.state}
+      />
+    );
+
+    super({ title: 'Symbology', body });
+
+    this.id = 'jupytergis::symbologyWidget';
+
+    this.okSignal = new Signal(this);
+    okSignalPromise.resolve(this.okSignal);
+  }
+
+  resolve(index: number): void {
+    if (index === 0) {
+      super.resolve(index);
+    }
+
+    if (index === 1) {
+      this.okSignal.emit(null);
+    }
+  }
+}
+
+export default SymbologyWidget;

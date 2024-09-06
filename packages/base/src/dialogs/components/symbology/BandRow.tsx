@@ -1,5 +1,5 @@
 import React from 'react';
-import { IBandRow } from '../../colorExpressionDialog';
+import { IBandRow } from './SingleBandPseudoColor';
 
 const BandRow = ({
   index,

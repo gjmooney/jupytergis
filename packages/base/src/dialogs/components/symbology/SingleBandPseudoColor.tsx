@@ -1,11 +1,10 @@
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IWebGlLayer } from '@jupytergis/schema';
 import { Button } from '@jupyterlab/ui-components';
 import initGdalJs from 'gdal3.js';
 import { ExpressionValue } from 'ol/expr/expression';
 import React, { useEffect, useRef, useState } from 'react';
-import { ISymbologyDialogProps } from '../../colorExpressionDialog';
+import { ISymbologyDialogProps } from '../../symbologyDialog';
 import BandRow from './BandRow';
 import StopRow from './StopRow';
 
@@ -19,7 +18,7 @@ export interface IBandRow {
   colorInterpretation: string;
 }
 
-const SinglebandPseudocolor = ({
+const SingleBandPseudoColor = ({
   context,
   state,
   okSignalPromise,
@@ -28,53 +27,24 @@ const SinglebandPseudocolor = ({
 }: ISymbologyDialogProps) => {
   const functions = ['discrete', 'linear', 'exact'];
   const rowsRef = useRef<IStopRow[]>();
-  const selectedLayerRef = useRef<string>('');
   const [selectedFunction, setSelectedFunction] = useState('linear');
-  const [selectedLayer, setSelectedLayer] = useState('');
   const [selectedBand, setSelectedBand] = useState(1);
   const [stopRows, setStopRows] = useState<IStopRow[]>([]);
   const [bandRows, setBandRows] = useState<IBandRow[]>([]);
 
-  // useEffect(() => {
-  //   const handleClientStateChanged = () => {
-  //     if (!context.model.localState?.selected?.value) {
-  //       return;
-  //     }
-
-  //     // TODO: handle multi select better
-  //     const currentLayer = Object.keys(
-  //       context.model.localState?.selected?.value
-  //     )[0];
-
-  //     setSelectedLayer(currentLayer);
-  //   };
-
-  //   // set the layer on initial render
-  //   handleClientStateChanged();
-
-  //   context.model.clientStateChanged.connect(handleClientStateChanged);
-  // }, []);
+  if (!layerId) {
+    return;
+  }
+  const layer = context.model.getLayer(layerId);
+  if (!layer) {
+    return;
+  }
 
   useEffect(() => {
+    getBandInfo();
+
     // This it to parse a color object on the layer
-    // selectedLayerRef.current = selectedLayer;
-
-    // if (!context.model.localState?.selected?.value) {
-    //   return;
-    // }
-
-    // // TODO: handle multi select better
-    // const currentLayer = Object.keys(
-    //   context.model.localState?.selected?.value
-    // )[0];
-    // setSelectedLayer(currentLayer);
-    if (!layerId) {
-      console.log('poow');
-      return;
-    }
-    const layer = context.model.getLayer(layerId);
-    if (!layer || !layer.parameters?.color) {
-      console.log('woop');
+    if (!layer.parameters?.color) {
       return;
     }
 
@@ -100,29 +70,14 @@ const SinglebandPseudocolor = ({
     }
 
     setStopRows(pairedObjects);
-
-    // setTifData(undefined);300
-    getBandInfo();
   }, []);
 
   useEffect(() => {
     rowsRef.current = stopRows;
   }, [stopRows]);
 
-  useEffect(() => {
-    console.log('bandRows', bandRows);
-  }, [bandRows]);
-
-  useEffect(() => {
-    console.log('selectedBand', selectedBand);
-  }, [selectedBand]);
-
   const getBandInfo = async () => {
     const bandsArr: IBandRow[] = [];
-
-    if (!layerId) {
-      return;
-    }
 
     const tifDataState = await state.fetch(layerId);
     if (tifDataState) {
@@ -139,7 +94,7 @@ const SinglebandPseudocolor = ({
       return;
     }
 
-    const layer = context.model.getLayer(layerId);
+    // const layer = context.model.getLayer(layerId);
     const source = context.model.getSource(layer?.parameters?.source);
 
     const sourceUrl = source?.parameters?.urls[0].url;
@@ -147,6 +102,7 @@ const SinglebandPseudocolor = ({
     if (!sourceUrl) {
       return;
     }
+
     //! This takes so long, maybe do when adding source instead
     const Gdal = await initGdalJs({
       path: 'lab/extensions/@jupytergis/jupytergis-core/static',
@@ -189,15 +145,11 @@ const SinglebandPseudocolor = ({
   };
 
   const handleOk = () => {
-    console.log('selectedLayer', layerId);
-    if (!layerId) {
-      return;
-    }
-    const layer = context.model.getLayer(layerId);
-    if (!layer || !layer.parameters) {
+    if (!layer.parameters) {
       return;
     }
 
+    // TODO: Different viewers will have different types
     const colorExpr: ExpressionValue = ['interpolate', [selectedFunction]];
 
     colorExpr.push(['band', selectedBand]);
@@ -207,7 +159,7 @@ const SinglebandPseudocolor = ({
       colorExpr.push(stop.color);
     });
 
-    (layer.parameters as IWebGlLayer).color = colorExpr;
+    layer.parameters.color = colorExpr;
     context.model.sharedModel.updateLayer(layerId, layer);
     cancel();
   };
@@ -285,4 +237,4 @@ const SinglebandPseudocolor = ({
   );
 };
 
-export default SinglebandPseudocolor;
+export default SingleBandPseudoColor;
