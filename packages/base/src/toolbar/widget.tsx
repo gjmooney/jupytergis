@@ -73,15 +73,6 @@ export class ToolbarWidget extends Toolbar {
         })
       );
 
-      this.addItem(
-        'newTerrain',
-        new CommandToolbarButton({
-          id: CommandIDs.newTerrain,
-          label: '',
-          commands: options.commands
-        })
-      );
-
       this.addItem('separator2', new Separator());
 
       this.addItem(
