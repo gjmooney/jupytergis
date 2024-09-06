@@ -79,11 +79,11 @@ const SingleBandPseudoColor = ({
   const getBandInfo = async () => {
     const bandsArr: IBandRow[] = [];
 
-    const tifDataState = await state.fetch(layerId);
+    const tifDataState = (await state.fetch(layerId)) as string;
     if (tifDataState) {
-      const tifData = JSON.parse(tifDataState['tifData']);
+      const tifData = JSON.parse(tifDataState);
 
-      tifData['info']['bands'].forEach(bandData => {
+      tifData['bands'].forEach(bandData => {
         bandsArr.push({
           band: bandData.band,
           colorInterpretation: bandData.colorInterpretation
@@ -116,6 +116,7 @@ const SingleBandPseudoColor = ({
     const tifDataset = result.datasets[0];
     const tifDatasetInfo = await Gdal.gdalinfo(tifDataset);
 
+    console.log('tifDatasetInfo', tifDatasetInfo);
     tifDatasetInfo['bands'].forEach(bandData => {
       bandsArr.push({
         band: bandData.band,
@@ -179,8 +180,8 @@ const SingleBandPseudoColor = ({
   };
 
   return (
-    <div className="jp-gis-color-container">
-      <div className="band container">
+    <div className="jp-gis-layer-symbology-container">
+      <div className="jp-gis-band-container">
         {bandRows.length === 0 ? (
           <FontAwesomeIcon icon={faSpinner} />
         ) : (
@@ -192,25 +193,33 @@ const SingleBandPseudoColor = ({
           />
         )}
       </div>
-      <div className="funcion select">
-        <label htmlFor="function-select">Interpolation</label>
-        <select
-          name="function-select"
-          id="function-select"
-          value={selectedFunction}
-          onChange={event => {
-            setSelectedFunction(event.target.value);
-          }}
-        >
-          {functions.map((func, funcIndex) => (
-            <option key={func} value={func}>
-              {func}
-            </option>
-          ))}
-        </select>
+      <div className="jp-gis-symbology-row">
+        <label htmlFor="function-select">Interpolation:</label>
+        <div className="jp-select-wrapper">
+          <select
+            name="function-select"
+            id="function-select"
+            className="jp-mod-styled"
+            value={selectedFunction}
+            style={{ textTransform: 'capitalize' }}
+            onChange={event => {
+              setSelectedFunction(event.target.value);
+            }}
+          >
+            {functions.map((func, funcIndex) => (
+              <option
+                key={func}
+                value={func}
+                style={{ textTransform: 'capitalize' }}
+              >
+                {func}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <div className="stop container">
-        <div className="labels" style={{ display: 'flex', gap: 6 }}>
+        <div className="jp-gis-stop-labels" style={{ display: 'flex', gap: 6 }}>
           <span style={{ flex: '0 0 18%' }}>Value</span>
           <span>Output Value</span>
         </div>
@@ -224,7 +233,7 @@ const SingleBandPseudoColor = ({
           />
         ))}
       </div>
-      <div className="bottom buttons">
+      <div className="jp-gis-symbology-button-container">
         <Button
           className="jp-Dialog-button jp-mod-accept jp-mod-styled"
           onClick={addStopRow}

@@ -13,24 +13,28 @@ const BandRow = ({
   setSelectedBand: any;
 }) => {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-      <span>Band</span>
-      <span>
+    <div className="jp-gis-symbology-row">
+      <label htmlFor={`band-select-${index}`}>Band:</label>
+
+      <div className="jp-select-wrapper">
         <select
-          className="jp-mod-styled jp-SchemaForm"
+          name={`band-select-${index}`}
+          // className="jp-mod-styled jp-SchemaForm"
           onChange={event => setSelectedBand(event.target.value)}
+          className="jp-mod-styled"
         >
           {bandRows.map((band, bandIndex) => (
             <option
               key={bandIndex}
               value={band.band}
               selected={band.band === bandRow.band}
+              className="jp-mod-styled"
             >
               {`Band ${band.band} (${band.colorInterpretation})`}
             </option>
           ))}
         </select>
-      </span>
+      </div>
     </div>
   );
 };

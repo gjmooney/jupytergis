@@ -42,8 +42,8 @@ const BandRendering = ({
 
   return (
     <>
-      <div className="render type select">
-        <label htmlFor="render-type-select">Render Type</label>
+      <div className="jp-gis-symbology-row">
+        <label htmlFor="render-type-select">Render Type:</label>
         <select
           name="render-type-select"
           id="render-type-select"

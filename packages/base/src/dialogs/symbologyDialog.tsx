@@ -114,6 +114,8 @@ export class SymbologyWidget extends Dialog<boolean> {
 
     this.okSignal = new Signal(this);
     okSignalPromise.resolve(this.okSignal);
+
+    this.addClass('jp-gis-symbology-dialog');
   }
 
   resolve(index: number): void {

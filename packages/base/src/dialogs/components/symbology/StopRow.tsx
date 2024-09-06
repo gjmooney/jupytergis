@@ -59,12 +59,14 @@ const StopRow = ({
         type="number"
         defaultValue={value}
         onChange={handleValueChange}
+        className="jp-mod-styled"
       />
       <input
         id={`jp-gis-color-color-${index}`}
         value={rgbArrToHex(outputValue)}
         type="color"
         onChange={handleColorChange}
+        className="jp-mod-styled"
       />
       <Button
         id={`jp-gis-remove-color-${index}`}
