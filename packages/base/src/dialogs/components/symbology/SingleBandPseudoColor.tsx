@@ -1,11 +1,11 @@
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IDict } from '@jupytergis/schema';
-import { PageConfig } from '@jupyterlab/coreutils';
 import { Button } from '@jupyterlab/ui-components';
-import initGdalJs from 'gdal3.js';
+import { ReadonlyPartialJSONObject } from '@lumino/coreutils';
 import { ExpressionValue } from 'ol/expr/expression';
 import React, { useEffect, useRef, useState } from 'react';
+import { Gdal } from '../../../gdal';
 import { ISymbologyDialogProps } from '../../symbologyDialog';
 import BandRow from './BandRow';
 import StopRow from './StopRow';
@@ -116,18 +116,14 @@ const SingleBandPseudoColor = ({
 
     let tifData;
 
-    const baseUrl = PageConfig.getBaseUrl();
+    const layerState = await state.fetch(`jupytergis:${layerId}`);
 
-    const tifDataState = (await state.fetch(layerId)) as string;
-    if (tifDataState) {
-      tifData = JSON.parse(tifDataState);
+    if (layerState) {
+      tifData = JSON.parse(
+        (layerState as ReadonlyPartialJSONObject).tifData as string
+      );
     } else {
       //! This takes so long, maybe do when adding source instead
-      const Gdal = await initGdalJs({
-        path: baseUrl + '/extensions/@jupytergis/jupytergis-core/static',
-        useWorker: false
-      });
-
       const fileData = await fetch(sourceInfo.url);
       const file = new File([await fileData.blob()], 'loaded.tif');
 
@@ -136,7 +132,7 @@ const SingleBandPseudoColor = ({
       tifData = await Gdal.gdalinfo(tifDataset, ['-stats']);
       Gdal.close(tifDataset);
 
-      state.save(layerId, JSON.stringify(tifData));
+      state.save(`jupytergis:${layerId}`, { tifData: JSON.stringify(tifData) });
     }
 
     tifData['bands'].forEach((bandData: TifBandData) => {
