@@ -7,8 +7,18 @@ async function initializeGdal(): Promise<void> {
   try {
     const baseUrl = PageConfig.getBaseUrl();
 
+    let staticPath = 'extensions/@jupytergis/jupytergis-core/static';
+
+    //@ts-expect-error checking if lab or lite
+    if (window._JUPYTERLAB['@jupyterlite/xeus']) {
+      console.log('lite');
+    } else {
+      console.log('lab');
+      staticPath = 'lab/' + staticPath;
+    }
+
     Gdal = await initGdalJs({
-      path: baseUrl + 'lab/extensions/@jupytergis/jupytergis-core/static',
+      path: baseUrl + staticPath,
       useWorker: false
     });
   } catch (error) {
