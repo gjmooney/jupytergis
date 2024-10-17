@@ -1,13 +1,13 @@
 import { GeoJSONFeature1 } from '@jupytergis/schema';
-import { Button } from '@jupyterlab/ui-components';
 import { ReadonlyPartialJSONObject } from '@lumino/coreutils';
 import colormap from 'colormap';
 import { ExpressionValue } from 'ol/expr/expression';
 import React, { useEffect, useRef, useState } from 'react';
-import { VectorClassifications } from '../../../classificationModes';
-import { IStopRow, ISymbologyDialogProps } from '../../symbologyDialog';
-import ColorRamp from './ColorRamp';
-import StopRow from './StopRow';
+import { VectorClassifications } from '../../../../classificationModes';
+import { IStopRow, ISymbologyDialogProps } from '../../../symbologyDialog';
+import ColorRamp from '../ColorRamp';
+import ValueSelect from './lego/ValueSelect';
+import StopContainer from './lego/StopContainer';
 
 const Graduated = ({
   context,
@@ -216,23 +216,6 @@ const Graduated = ({
     cancel();
   };
 
-  const addStopRow = () => {
-    setStopRows([
-      {
-        stop: 0,
-        output: [0, 0, 0, 1]
-      },
-      ...stopRows
-    ]);
-  };
-
-  const deleteStopRow = (index: number) => {
-    const newFilters = [...stopRows];
-    newFilters.splice(index, 1);
-
-    setStopRows(newFilters);
-  };
-
   const buildColorInfoFromClassification = (
     selectedMode: string,
     numberOfShades: string,
@@ -295,25 +278,11 @@ const Graduated = ({
 
   return (
     <div className="jp-gis-layer-symbology-container">
-      <div className="jp-gis-symbology-row">
-        <label htmlFor={'vector-value-select'}>Value:</label>
-        <select
-          name={'vector-value-select'}
-          onChange={event => setSelectedValue(event.target.value)}
-          className="jp-mod-styled"
-        >
-          {Object.keys(featureProperties).map((feature, index) => (
-            <option
-              key={index}
-              value={feature}
-              selected={feature === selectedValue}
-              className="jp-mod-styled"
-            >
-              {feature}
-            </option>
-          ))}
-        </select>
-      </div>
+      <ValueSelect
+        featureProperties={featureProperties}
+        selectedValue={selectedValue}
+        setSelectedValue={setSelectedValue}
+      />
       <div className="jp-gis-symbology-row">
         <label htmlFor={'vector-method-select'}>Method:</label>
         <select
@@ -338,32 +307,11 @@ const Graduated = ({
         modeOptions={modeOptions}
         classifyFunc={buildColorInfoFromClassification}
       />
-      <div className="jp-gis-stop-container">
-        <div className="jp-gis-stop-labels" style={{ display: 'flex', gap: 6 }}>
-          <span style={{ flex: '0 0 18%' }}>Value</span>
-          <span>Output Value</span>
-        </div>
-        {stopRows.map((stop, index) => (
-          <StopRow
-            key={`${index}-${stop.output}`}
-            index={index}
-            value={stop.stop}
-            outputValue={stop.output}
-            stopRows={stopRows}
-            setStopRows={setStopRows}
-            deleteRow={() => deleteStopRow(index)}
-            useNumber={selectedMethod === 'radius' ? true : false}
-          />
-        ))}
-      </div>
-      <div className="jp-gis-symbology-button-container">
-        <Button
-          className="jp-Dialog-button jp-mod-accept jp-mod-styled"
-          onClick={addStopRow}
-        >
-          Add Stop
-        </Button>
-      </div>
+      <StopContainer
+        selectedMethod={selectedMethod}
+        stopRows={stopRows}
+        setStopRows={setStopRows}
+      />
     </div>
   );
 };
