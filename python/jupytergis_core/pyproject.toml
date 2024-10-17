@@ -30,6 +30,7 @@ requires-python = ">=3.8"
 
 [project.entry-points.jupyter_ydoc]
 jgis = "jupytergis_core.jgis_ydoc:YJGIS"
+json = "jupytergis_core.json_ydoc:YJSON"
 
 [tool.hatch.version]
 source = "nodejs"
