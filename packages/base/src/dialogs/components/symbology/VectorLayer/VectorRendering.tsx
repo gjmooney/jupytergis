@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ISymbologyDialogProps } from '../../symbologyDialog';
+import { ISymbologyDialogProps } from '../../../symbologyDialog';
 import Graduated from './Graduated';
 import SimpleSymbol from './SimpleSymbol';
 

@@ -6,7 +6,7 @@ import { PromiseDelegate } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
 import React, { useEffect, useState } from 'react';
 import BandRendering from './components/symbology/BandRendering';
-import VectorRendering from './components/symbology/VectorRendering';
+import VectorRendering from './components/symbology/VectorLayer/VectorRendering';
 
 export interface ISymbologyDialogProps {
   context: DocumentRegistry.IContext<IJupyterGISModel>;
