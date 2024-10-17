@@ -8,6 +8,8 @@ import { IStopRow, ISymbologyDialogProps } from '../../../symbologyDialog';
 import ColorRamp from '../ColorRamp';
 import ValueSelect from './lego/ValueSelect';
 import StopContainer from './lego/StopContainer';
+import { useGetProperties } from './useGetProperties';
+import { VectorUtils } from '../symbologyUtils';
 
 const Graduated = ({
   context,
@@ -30,7 +32,7 @@ const Graduated = ({
   const layerStateRef = useRef<ReadonlyPartialJSONObject | undefined>();
 
   const [selectedValue, setSelectedValue] = useState('');
-  const [featureProperties, setFeatureProperties] = useState<any>({});
+  // const [featureProperties, setFeatureProperties] = useState<any>({});
   const [selectedMethod, setSelectedMethod] = useState('color');
   const [stopRows, setStopRows] = useState<IStopRow[]>([]);
   const [methodOptions, setMethodOptions] = useState<string[]>(['color']);
@@ -46,38 +48,17 @@ const Graduated = ({
     return;
   }
 
+  const { featureProps } = useGetProperties({
+    layerId,
+    model: context.model
+  });
+
   useEffect(() => {
-    const getProperties = async () => {
-      if (!layerId) {
-        return;
-      }
-      const model = context.model;
-      const layer = model.getLayer(layerId);
-      const source = model.getSource(layer?.parameters?.source);
+    // buildColorInfo();
 
-      if (!source) {
-        return;
-      }
+    const valueColorPairs = VectorUtils.buildColorInfo(layer);
 
-      const data = await model.readGeoJSON(source.parameters?.path);
-      const featureProps: any = {};
-
-      data?.features.forEach((feature: GeoJSONFeature1) => {
-        feature.properties &&
-          Object.entries(feature.properties).forEach(([key, value]) => {
-            if (!(key in featureProps)) {
-              featureProps[key] = new Set();
-            }
-
-            featureProps[key].add(value);
-          });
-
-        setFeatureProperties(featureProps);
-      });
-    };
-
-    getProperties();
-    buildColorInfo();
+    setStopRows(valueColorPairs);
 
     okSignalPromise.promise.then(okSignal => {
       okSignal.connect(handleOk, this);
@@ -99,49 +80,49 @@ const Graduated = ({
 
   useEffect(() => {
     populateOptions();
-  }, [featureProperties]);
+  }, [featureProps]);
 
-  const buildColorInfo = () => {
-    // This it to parse a color object on the layer
-    if (!layer.parameters?.color) {
-      return;
-    }
+  // const buildColorInfo = () => {
+  //   // This it to parse a color object on the layer
+  //   if (!layer.parameters?.color) {
+  //     return;
+  //   }
 
-    const color = layer.parameters.color;
+  //   const color = layer.parameters.color;
 
-    // If color is a string we don't need to parse
-    if (typeof color === 'string') {
-      return;
-    }
+  //   // If color is a string we don't need to parse
+  //   if (typeof color === 'string') {
+  //     return;
+  //   }
 
-    const prefix = layer.parameters.type === 'circle' ? 'circle-' : '';
-    if (!color[`${prefix}fill-color`]) {
-      return;
-    }
+  //   const prefix = layer.parameters.type === 'circle' ? 'circle-' : '';
+  //   if (!color[`${prefix}fill-color`]) {
+  //     return;
+  //   }
 
-    const valueColorPairs: IStopRow[] = [];
+  //   const valueColorPairs: IStopRow[] = [];
 
-    // So if it's not a string then it's an array and we parse
-    // Color[0] is the operator used for the color expression
-    switch (color[`${prefix}fill-color`][0]) {
-      case 'interpolate': {
-        // First element is interpolate for linear selection
-        // Second element is type of interpolation (ie linear)
-        // Third is input value that stop values are compared with
-        // Fourth and on is value:color pairs
-        for (let i = 3; i < color[`${prefix}fill-color`].length; i += 2) {
-          const obj: IStopRow = {
-            stop: color[`${prefix}fill-color`][i],
-            output: color[`${prefix}fill-color`][i + 1]
-          };
-          valueColorPairs.push(obj);
-        }
-        break;
-      }
-    }
+  //   // So if it's not a string then it's an array and we parse
+  //   // Color[0] is the operator used for the color expression
+  //   switch (color[`${prefix}fill-color`][0]) {
+  //     case 'interpolate': {
+  //       // First element is interpolate for linear selection
+  //       // Second element is type of interpolation (ie linear)
+  //       // Third is input value that stop values are compared with
+  //       // Fourth and on is value:color pairs
+  //       for (let i = 3; i < color[`${prefix}fill-color`].length; i += 2) {
+  //         const obj: IStopRow = {
+  //           stop: color[`${prefix}fill-color`][i],
+  //           output: color[`${prefix}fill-color`][i + 1]
+  //         };
+  //         valueColorPairs.push(obj);
+  //       }
+  //       break;
+  //     }
+  //   }
 
-    setStopRows(valueColorPairs);
-  };
+  //   setStopRows(valueColorPairs);
+  // };
 
   const populateOptions = async () => {
     // Set up method options
@@ -162,7 +143,7 @@ const Graduated = ({
     }
 
     setLayerState(layerState as ReadonlyPartialJSONObject);
-    setSelectedValue(value ? value : Object.keys(featureProperties)[0]);
+    setSelectedValue(value ? value : Object.keys(featureProps)[0]);
     setSelectedMethod(method ? method : 'color');
   };
 
@@ -223,7 +204,7 @@ const Graduated = ({
   ) => {
     let stops;
 
-    const values = featureProperties[selectedValue];
+    const values = featureProps[selectedValue];
 
     switch (selectedMode) {
       case 'quantile':
@@ -279,7 +260,7 @@ const Graduated = ({
   return (
     <div className="jp-gis-layer-symbology-container">
       <ValueSelect
-        featureProperties={featureProperties}
+        featureProperties={featureProps}
         selectedValue={selectedValue}
         setSelectedValue={setSelectedValue}
       />

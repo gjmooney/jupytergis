@@ -3,7 +3,7 @@ import React from 'react';
 interface IValueSelectProps {
   featureProperties: any;
   selectedValue: string;
-  setSelectedValue: (value: string) => void;
+  setSelectedValue?: (value: string) => void;
 }
 
 const ValueSelect = ({
@@ -16,7 +16,7 @@ const ValueSelect = ({
       <label htmlFor={'vector-value-select'}>Value:</label>
       <select
         name={'vector-value-select'}
-        onChange={event => setSelectedValue(event.target.value)}
+        // onChange={event => setSelectedValue(event.target.value)}
         className="jp-mod-styled"
       >
         {Object.keys(featureProperties).map((feature, index) => (
