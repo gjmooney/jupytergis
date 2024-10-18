@@ -1,5 +1,4 @@
 import { ReadonlyJSONObject } from '@lumino/coreutils';
-import colormap from 'colormap';
 import { ExpressionValue } from 'ol/expr/expression';
 import React, { useEffect, useRef, useState } from 'react';
 import { VectorClassifications } from '../../../../classificationModes';
@@ -8,7 +7,7 @@ import ColorRamp from '../colorRamp/ColorRamp';
 import ValueSelect from './lego/ValueSelect';
 import StopContainer from './lego/StopContainer';
 import { useGetProperties } from './useGetProperties';
-import { VectorUtils } from '../symbologyUtils';
+import { Utils, VectorUtils } from '../symbologyUtils';
 
 const Graduated = ({
   context,
@@ -52,8 +51,6 @@ const Graduated = ({
   });
 
   useEffect(() => {
-    // buildColorInfo();
-
     const valueColorPairs = VectorUtils.buildColorInfo(layer);
 
     setStopRows(valueColorPairs);
@@ -196,17 +193,11 @@ const Graduated = ({
         return;
     }
 
-    const colorMap = colormap({
-      colormap: selectedRamp,
-      nshades: +numberOfShades,
-      format: 'rgba'
-    });
-
-    const valueColorPairs: IStopRow[] = [];
-
-    for (let i = 0; i < +numberOfShades; i++) {
-      valueColorPairs.push({ stop: stops[i], output: colorMap[i] });
-    }
+    const valueColorPairs = Utils.getValueColorPairs(
+      stops,
+      selectedRamp,
+      +numberOfShades
+    );
 
     setStopRows(valueColorPairs);
   };

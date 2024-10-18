@@ -1,5 +1,6 @@
 import { IJGISLayer } from '@jupytergis/schema';
 import { IStopRow } from '../../symbologyDialog';
+import colormap from 'colormap';
 
 export namespace VectorUtils {
   export const buildColorInfo = (layer: IJGISLayer) => {
@@ -48,6 +49,45 @@ export namespace VectorUtils {
           valueColorPairs.push(obj);
         }
         break;
+    }
+
+    return valueColorPairs;
+  };
+}
+
+export namespace Utils {
+  export const getValueColorPairs = (
+    stops: number[],
+    selectedRamp: string,
+    nClasses: number
+  ) => {
+    let colorMap = colormap({
+      colormap: selectedRamp,
+      nshades: nClasses > 9 ? nClasses : 9,
+      format: 'rgba'
+    });
+
+    const valueColorPairs: IStopRow[] = [];
+
+    // colormap requires 9 classes to generate the ramp
+    // so we do some tomfoolery to make it work with less than 9 stops
+    if (nClasses < 9) {
+      const midIndex = Math.floor(nClasses / 2);
+
+      // Get the first n/2 elements from the second array
+      const firstPart = colorMap.slice(0, midIndex);
+
+      // Get the last n/2 elements from the second array
+      const secondPart = colorMap.slice(
+        colorMap.length - (stops.length - firstPart.length)
+      );
+
+      // Create the new array by combining the first and last parts
+      colorMap = firstPart.concat(secondPart);
+    }
+
+    for (let i = 0; i < nClasses; i++) {
+      valueColorPairs.push({ stop: stops[i], output: colorMap[i] });
     }
 
     return valueColorPairs;
