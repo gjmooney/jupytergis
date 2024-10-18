@@ -8,6 +8,7 @@ import ColorRamp from '../colorRamp/ColorRamp';
 import { ReadonlyJSONObject } from '@lumino/coreutils';
 import { ExpressionValue } from 'ol/expr/expression';
 import colormap from 'colormap';
+import { GlobalStateDbManager } from '../../../../store';
 
 const Categorized = ({
   context,
@@ -19,9 +20,17 @@ const Categorized = ({
   const selectedValueRef = useRef<string>();
   const layerStateRef = useRef<ReadonlyJSONObject | undefined>();
   const stopRowsRef = useRef<IStopRow[]>();
+  const colorRampOptionsRef = useRef<ReadonlyJSONObject | undefined>();
 
   const [selectedValue, setSelectedValue] = useState('');
   const [stopRows, setStopRows] = useState<IStopRow[]>([]);
+  const [layerState, setLayerState] = useState<
+    ReadonlyJSONObject | undefined
+  >();
+  const [colorRampOptions, setColorRampOptions] = useState<
+    ReadonlyJSONObject | undefined
+  >();
+
   if (!layerId) {
     return;
   }
@@ -50,13 +59,48 @@ const Categorized = ({
     };
   }, []);
 
+  useEffect(() => {
+    populateOptions();
+  }, [featureProps]);
+
+  useEffect(() => {
+    layerStateRef.current = layerState;
+    selectedValueRef.current = selectedValue;
+    stopRowsRef.current = stopRows;
+    colorRampOptionsRef.current = colorRampOptions;
+  }, [layerState, selectedValue, stopRows, colorRampOptions]);
+
+  const populateOptions = async () => {
+    const stateDb = GlobalStateDbManager.getInstance().getStateDb();
+
+    const layerState = (await stateDb?.fetch(
+      `jupytergis:${layerId}`
+    )) as ReadonlyJSONObject;
+
+    let value;
+
+    if (layerState) {
+      value = layerState.categorizedValue as string;
+    }
+
+    setLayerState(layerState);
+    setSelectedValue(value ? value : Object.keys(featureProps)[0]);
+  };
+
   const buildColorInfoFromClassification = (
     selectedMode: string,
     numberOfShades: string,
     selectedRamp: string,
     setIsLoading: (isLoading: boolean) => void
   ) => {
-    const stops = Array.from(featureProps[selectedValue]);
+    setColorRampOptions({
+      selectedFunction: '',
+      selectedRamp,
+      numberOfShades: '',
+      selectedMode: ''
+    });
+
+    const stops = Array.from(featureProps[selectedValue]).sort((a, b) => a - b);
 
     const colorMap = colormap({
       colormap: selectedRamp,
@@ -81,12 +125,12 @@ const Categorized = ({
     state.save(`jupytergis:${layerId}`, {
       ...layerStateRef.current,
       renderType: 'Categorized',
-      categorizedValue: selectedValueRef.current
+      categorizedValue: selectedValueRef.current,
+      ...colorRampOptionsRef.current
     });
 
     const colorExpr: ExpressionValue[] = [];
-    colorExpr.push(['case']);
-    // colorExpr.push(['get', selectedValueRef.current]);
+    colorExpr.push('case');
 
     stopRowsRef.current?.map(stop => {
       colorExpr.push(['==', ['get', selectedValueRef.current], stop.stop]);
