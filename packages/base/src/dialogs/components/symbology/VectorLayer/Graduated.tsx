@@ -1,11 +1,10 @@
-import { GeoJSONFeature1 } from '@jupytergis/schema';
-import { ReadonlyPartialJSONObject } from '@lumino/coreutils';
+import { ReadonlyJSONObject } from '@lumino/coreutils';
 import colormap from 'colormap';
 import { ExpressionValue } from 'ol/expr/expression';
 import React, { useEffect, useRef, useState } from 'react';
 import { VectorClassifications } from '../../../../classificationModes';
 import { IStopRow, ISymbologyDialogProps } from '../../../symbologyDialog';
-import ColorRamp from '../ColorRamp';
+import ColorRamp from '../colorRamp/ColorRamp';
 import ValueSelect from './lego/ValueSelect';
 import StopContainer from './lego/StopContainer';
 import { useGetProperties } from './useGetProperties';
@@ -29,15 +28,14 @@ const Graduated = ({
   const selectedValueRef = useRef<string>();
   const selectedMethodRef = useRef<string>();
   const stopRowsRef = useRef<IStopRow[]>();
-  const layerStateRef = useRef<ReadonlyPartialJSONObject | undefined>();
+  const layerStateRef = useRef<ReadonlyJSONObject | undefined>();
 
   const [selectedValue, setSelectedValue] = useState('');
-  // const [featureProperties, setFeatureProperties] = useState<any>({});
   const [selectedMethod, setSelectedMethod] = useState('color');
   const [stopRows, setStopRows] = useState<IStopRow[]>([]);
   const [methodOptions, setMethodOptions] = useState<string[]>(['color']);
   const [layerState, setLayerState] = useState<
-    ReadonlyPartialJSONObject | undefined
+    ReadonlyJSONObject | undefined
   >();
 
   if (!layerId) {
@@ -82,48 +80,6 @@ const Graduated = ({
     populateOptions();
   }, [featureProps]);
 
-  // const buildColorInfo = () => {
-  //   // This it to parse a color object on the layer
-  //   if (!layer.parameters?.color) {
-  //     return;
-  //   }
-
-  //   const color = layer.parameters.color;
-
-  //   // If color is a string we don't need to parse
-  //   if (typeof color === 'string') {
-  //     return;
-  //   }
-
-  //   const prefix = layer.parameters.type === 'circle' ? 'circle-' : '';
-  //   if (!color[`${prefix}fill-color`]) {
-  //     return;
-  //   }
-
-  //   const valueColorPairs: IStopRow[] = [];
-
-  //   // So if it's not a string then it's an array and we parse
-  //   // Color[0] is the operator used for the color expression
-  //   switch (color[`${prefix}fill-color`][0]) {
-  //     case 'interpolate': {
-  //       // First element is interpolate for linear selection
-  //       // Second element is type of interpolation (ie linear)
-  //       // Third is input value that stop values are compared with
-  //       // Fourth and on is value:color pairs
-  //       for (let i = 3; i < color[`${prefix}fill-color`].length; i += 2) {
-  //         const obj: IStopRow = {
-  //           stop: color[`${prefix}fill-color`][i],
-  //           output: color[`${prefix}fill-color`][i + 1]
-  //         };
-  //         valueColorPairs.push(obj);
-  //       }
-  //       break;
-  //     }
-  //   }
-
-  //   setStopRows(valueColorPairs);
-  // };
-
   const populateOptions = async () => {
     // Set up method options
     if (layer?.parameters?.type === 'circle') {
@@ -136,13 +92,11 @@ const Graduated = ({
     let value, method;
 
     if (layerState) {
-      value = (layerState as ReadonlyPartialJSONObject)
-        .graduatedValue as string;
-      method = (layerState as ReadonlyPartialJSONObject)
-        .graduatedMethod as string;
+      value = (layerState as ReadonlyJSONObject).graduatedValue as string;
+      method = (layerState as ReadonlyJSONObject).graduatedMethod as string;
     }
 
-    setLayerState(layerState as ReadonlyPartialJSONObject);
+    setLayerState(layerState as ReadonlyJSONObject);
     setSelectedValue(value ? value : Object.keys(featureProps)[0]);
     setSelectedMethod(method ? method : 'color');
   };
@@ -204,7 +158,7 @@ const Graduated = ({
   ) => {
     let stops;
 
-    const values = featureProps[selectedValue];
+    const values = Array.from(featureProps[selectedValue]);
 
     switch (selectedMode) {
       case 'quantile':
@@ -287,6 +241,7 @@ const Graduated = ({
         layerId={layerId}
         modeOptions={modeOptions}
         classifyFunc={buildColorInfoFromClassification}
+        showModeRow={true}
       />
       <StopContainer
         selectedMethod={selectedMethod}

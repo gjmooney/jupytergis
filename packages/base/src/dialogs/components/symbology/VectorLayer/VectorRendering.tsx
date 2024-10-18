@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ISymbologyDialogProps } from '../../../symbologyDialog';
 import Graduated from './Graduated';
 import SimpleSymbol from './SimpleSymbol';
+import Categorized from './Categorized';
 
 const VectorRendering = ({
   context,
@@ -42,7 +43,7 @@ const VectorRendering = ({
     };
 
     if (layer.type === 'VectorLayer') {
-      const options = ['Single Symbol', 'Graduated'];
+      const options = ['Single Symbol', 'Graduated', 'Categorized'];
       setRenderTypeOptions(options);
     }
 
@@ -65,6 +66,17 @@ const VectorRendering = ({
       case 'Graduated':
         RenderComponent = (
           <Graduated
+            context={context}
+            state={state}
+            okSignalPromise={okSignalPromise}
+            cancel={cancel}
+            layerId={layerId}
+          />
+        );
+        break;
+      case 'Categorized':
+        RenderComponent = (
+          <Categorized
             context={context}
             state={state}
             okSignalPromise={okSignalPromise}

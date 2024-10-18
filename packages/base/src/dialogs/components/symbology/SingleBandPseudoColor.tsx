@@ -10,7 +10,7 @@ import { GeoTiffClassifications } from '../../../classificationModes';
 import { GlobalStateDbManager } from '../../../store';
 import { IStopRow, ISymbologyDialogProps } from '../../symbologyDialog';
 import BandRow from './BandRow';
-import ColorRamp from './ColorRamp';
+import ColorRamp from './colorRamp/ColorRamp';
 import StopRow from './StopRow';
 
 export interface IBandRow {
@@ -486,6 +486,7 @@ const SingleBandPseudoColor = ({
           layerId={layerId}
           modeOptions={modeOptions}
           classifyFunc={buildColorInfoFromClassification}
+          showModeRow={true}
         />
       )}
       <div className="jp-gis-stop-container">
