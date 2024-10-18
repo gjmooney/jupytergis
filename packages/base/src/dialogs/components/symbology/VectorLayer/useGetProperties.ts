@@ -1,15 +1,15 @@
 // import { GeoJSONFeature } from 'geojson';
 
-import { GeoJSONFeature1 } from '@jupytergis/schema';
+import { GeoJSONFeature1, IJupyterGISModel } from '@jupytergis/schema';
 import { useEffect, useState } from 'react';
 
 interface IUseGetPropertiesProps {
   layerId?: string;
-  model: any; // Replace 'any' with the actual type of your model object
+  model: IJupyterGISModel;
 }
 
 interface IUseGetPropertiesResult {
-  featureProps: any;
+  featureProps: Record<string, Set<any>>;
   isLoading: boolean;
   error?: Error;
 }
