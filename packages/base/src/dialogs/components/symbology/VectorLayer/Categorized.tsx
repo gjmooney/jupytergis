@@ -3,11 +3,10 @@ import ValueSelect from './lego/ValueSelect';
 import { IStopRow, ISymbologyDialogProps } from '../../../symbologyDialog';
 import { useGetProperties } from './useGetProperties';
 import StopContainer from './lego/StopContainer';
-import { VectorUtils } from '../symbologyUtils';
+import { Utils, VectorUtils } from '../symbologyUtils';
 import ColorRamp from '../colorRamp/ColorRamp';
 import { ReadonlyJSONObject } from '@lumino/coreutils';
 import { ExpressionValue } from 'ol/expr/expression';
-import colormap from 'colormap';
 import { GlobalStateDbManager } from '../../../../store';
 
 const Categorized = ({
@@ -102,17 +101,11 @@ const Categorized = ({
 
     const stops = Array.from(featureProps[selectedValue]).sort((a, b) => a - b);
 
-    const colorMap = colormap({
-      colormap: selectedRamp,
-      nshades: stops.length,
-      format: 'rgba'
-    });
-
-    const valueColorPairs: IStopRow[] = [];
-
-    for (let i = 0; i < stops.length; i++) {
-      valueColorPairs.push({ stop: stops[i], output: colorMap[i] });
-    }
+    const valueColorPairs = Utils.getValueColorPairs(
+      stops,
+      selectedRamp,
+      stops.length
+    );
 
     setStopRows(valueColorPairs);
   };

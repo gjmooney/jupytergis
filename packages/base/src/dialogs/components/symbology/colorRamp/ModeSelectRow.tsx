@@ -22,7 +22,6 @@ const ModeSelectRow = ({
           name="class-number-input"
           type="number"
           value={numberOfShades}
-          min={9}
           onChange={event => setNumberOfShades(event.target.value)}
         />
       </div>

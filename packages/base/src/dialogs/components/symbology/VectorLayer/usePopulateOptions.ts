@@ -1,6 +1,6 @@
 import { ReadonlyJSONObject } from '@lumino/coreutils';
 import { useState, useEffect } from 'react';
-import { GlobalStateDbManager } from '../../../../store';
+// import { GlobalStateDbManager } from '../../../../store';
 
 interface IUsePopulateOptionsProps {
   layerId: string;

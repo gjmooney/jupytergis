@@ -1,7 +1,6 @@
 import { IDict, IWebGlLayer } from '@jupytergis/schema';
 import { Button } from '@jupyterlab/ui-components';
 import { ReadonlyJSONObject } from '@lumino/coreutils';
-import colormap from 'colormap';
 import { ExpressionValue } from 'ol/expr/expression';
 import React, { useEffect, useRef, useState } from 'react';
 import { GeoTiffClassifications } from '../../../classificationModes';
@@ -12,6 +11,7 @@ import ColorRamp, { ColorRampOptions } from './ColorRamp';
 import StopRow from './StopRow';
 import { getGdal } from '../../../gdal';
 import { Spinner } from '../../../mainview/spinner';
+import { Utils } from './symbologyUtils';
 
 export interface IBandRow {
   band: number;
@@ -377,17 +377,6 @@ const SingleBandPseudoColor = ({
     const source = context.model.getSource(layer?.parameters?.source);
     const sourceInfo = source?.parameters?.urls[0];
     const nClasses = selectedMode === 'continuous' ? 52 : +numberOfShades;
-    const colorMap = colormap({
-      colormap: selectedRamp,
-      nshades: nClasses,
-      format: 'rgba'
-    });
-
-    if (!sourceInfo.url) {
-      return;
-    }
-
-    const valueColorPairs: IStopRow[] = [];
 
     setIsLoading(true);
     switch (selectedMode) {
@@ -421,9 +410,11 @@ const SingleBandPseudoColor = ({
     }
     setIsLoading(false);
 
-    for (let i = 0; i < stops.length; i++) {
-      valueColorPairs.push({ stop: stops[i], output: colorMap[i] });
-    }
+    const valueColorPairs = Utils.getValueColorPairs(
+      stops,
+      selectedRamp,
+      nClasses
+    );
 
     setStopRows(valueColorPairs);
   };
