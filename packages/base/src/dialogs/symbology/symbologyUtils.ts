@@ -1,5 +1,5 @@
 import { IJGISLayer } from '@jupytergis/schema';
-import { IStopRow } from '../../symbologyDialog';
+import { IStopRow } from './symbologyDialog';
 import colormap from 'colormap';
 
 export namespace VectorUtils {

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { ISymbologyDialogProps } from '../../symbologyDialog';
-import SingleBandPseudoColor from './SingleBandPseudoColor';
+import { ISymbologyDialogProps } from '../symbologyDialog';
+import SingleBandPseudoColor from './types/SingleBandPseudoColor';
 
-const BandRendering = ({
+const TiffRendering = ({
   context,
   state,
   okSignalPromise,
@@ -64,4 +64,4 @@ const BandRendering = ({
   );
 };
 
-export default BandRendering;
+export default TiffRendering;

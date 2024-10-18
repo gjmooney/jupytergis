@@ -1,7 +1,7 @@
 import React from 'react';
-import StopRow from '../../StopRow';
 import { Button } from '@jupyterlab/ui-components';
-import { IStopRow } from '../../../../symbologyDialog';
+import { IStopRow } from '../../symbologyDialog';
+import StopRow from './StopRow';
 
 interface IStopContainerProps {
   selectedMethod: string;

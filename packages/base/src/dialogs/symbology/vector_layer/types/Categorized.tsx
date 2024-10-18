@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import ValueSelect from './lego/ValueSelect';
-import { IStopRow, ISymbologyDialogProps } from '../../../symbologyDialog';
-import { useGetProperties } from './useGetProperties';
-import StopContainer from './lego/StopContainer';
-import { Utils, VectorUtils } from '../symbologyUtils';
-import ColorRamp from '../colorRamp/ColorRamp';
+import ValueSelect from '../components/ValueSelect';
+import { IStopRow, ISymbologyDialogProps } from '../../symbologyDialog';
+import { useGetProperties } from '../../hooks/useGetProperties';
+import StopContainer from '../../components/color_stops/StopContainer';
+import { Utils, VectorUtils } from '../../symbologyUtils';
+import ColorRamp from '../../components/color_ramp/ColorRamp';
 import { ReadonlyJSONObject } from '@lumino/coreutils';
 import { ExpressionValue } from 'ol/expr/expression';
 import { GlobalStateDbManager } from '../../../../store';

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { ISymbologyDialogProps } from '../../../symbologyDialog';
-import Graduated from './Graduated';
-import SimpleSymbol from './SimpleSymbol';
-import Categorized from './Categorized';
+import { ISymbologyDialogProps } from '../symbologyDialog';
+import Graduated from './types/Graduated';
+import SimpleSymbol from './types/SimpleSymbol';
+import Categorized from './types/Categorized';
 
 const VectorRendering = ({
   context,

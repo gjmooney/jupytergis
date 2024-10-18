@@ -1,4 +1,3 @@
-export * from './classificationModes';
 export * from './commands';
 export * from './constants';
 export * from './dialogs/formdialog';
