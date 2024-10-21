@@ -1,13 +1,15 @@
-import { ReadonlyJSONObject } from '@lumino/coreutils';
 import { ExpressionValue } from 'ol/expr/expression';
 import React, { useEffect, useRef, useState } from 'react';
 import { VectorClassifications } from '../../classificationModes';
 import { IStopRow, ISymbologyDialogProps } from '../../symbologyDialog';
-import ColorRamp from '../../components/color_ramp/ColorRamp';
+import ColorRamp, {
+  ColorRampOptions
+} from '../../components/color_ramp/ColorRamp';
 import ValueSelect from '../components/ValueSelect';
 import StopContainer from '../../components/color_stops/StopContainer';
 import { useGetProperties } from '../../hooks/useGetProperties';
 import { Utils, VectorUtils } from '../../symbologyUtils';
+import { IVectorLayer } from '@jupytergis/schema';
 
 const Graduated = ({
   context,
@@ -27,14 +29,15 @@ const Graduated = ({
   const selectedValueRef = useRef<string>();
   const selectedMethodRef = useRef<string>();
   const stopRowsRef = useRef<IStopRow[]>();
-  const layerStateRef = useRef<ReadonlyJSONObject | undefined>();
+  const colorRampOptionsRef = useRef<ColorRampOptions | undefined>();
 
   const [selectedValue, setSelectedValue] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('color');
   const [stopRows, setStopRows] = useState<IStopRow[]>([]);
   const [methodOptions, setMethodOptions] = useState<string[]>(['color']);
-  const [layerState, setLayerState] = useState<
-    ReadonlyJSONObject | undefined
+
+  const [colorRampOptions, setColorRampOptions] = useState<
+    ColorRampOptions | undefined
   >();
 
   if (!layerId) {
@@ -70,8 +73,8 @@ const Graduated = ({
     selectedValueRef.current = selectedValue;
     selectedMethodRef.current = selectedMethod;
     stopRowsRef.current = stopRows;
-    layerStateRef.current = layerState;
-  }, [selectedValue, selectedMethod, stopRows, layerState]);
+    colorRampOptionsRef.current = colorRampOptions;
+  }, [selectedValue, selectedMethod, stopRows, colorRampOptions]);
 
   useEffect(() => {
     populateOptions();
@@ -84,31 +87,23 @@ const Graduated = ({
       setMethodOptions(options);
     }
 
-    const layerState = await state.fetch(`jupytergis:${layerId}`);
+    const layerParams = layer.parameters as IVectorLayer;
+    const value = layerParams.symbologyState?.value
+      ? layerParams.symbologyState.value
+      : Object.keys(featureProps)[0];
 
-    let value, method;
+    const method = layerParams.symbologyState?.method
+      ? layerParams.symbologyState.method
+      : 'color';
 
-    if (layerState) {
-      value = (layerState as ReadonlyJSONObject).graduatedValue as string;
-      method = (layerState as ReadonlyJSONObject).graduatedMethod as string;
-    }
-
-    setLayerState(layerState as ReadonlyJSONObject);
-    setSelectedValue(value ? value : Object.keys(featureProps)[0]);
-    setSelectedMethod(method ? method : 'color');
+    setSelectedValue(value);
+    setSelectedMethod(method);
   };
 
   const handleOk = () => {
     if (!layer.parameters) {
       return;
     }
-
-    state.save(`jupytergis:${layerId}`, {
-      ...layerStateRef.current,
-      renderType: 'Graduated',
-      graduatedValue: selectedValueRef.current,
-      graduatedMethod: selectedMethodRef.current
-    });
 
     const colorExpr: ExpressionValue[] = [];
     colorExpr.push('interpolate');
@@ -142,6 +137,16 @@ const Graduated = ({
       }
     }
 
+    const symbologyState = {
+      renderType: 'Graduated',
+      value: selectedValueRef.current,
+      method: selectedMethodRef.current,
+      colorRamp: colorRampOptionsRef.current?.selectedRamp,
+      nClasses: colorRampOptionsRef.current?.numberOfShades,
+      mode: colorRampOptionsRef.current?.selectedMode
+    };
+
+    layer.parameters.symbologyState = symbologyState;
     layer.parameters.color = newStyle;
 
     context.model.sharedModel.updateLayer(layerId, layer);
@@ -153,6 +158,12 @@ const Graduated = ({
     numberOfShades: string,
     selectedRamp: string
   ) => {
+    setColorRampOptions({
+      selectedRamp,
+      numberOfShades,
+      selectedMode
+    });
+
     let stops;
 
     const values = Array.from(featureProps[selectedValue]);
@@ -229,7 +240,7 @@ const Graduated = ({
         </select>
       </div>
       <ColorRamp
-        layerId={layerId}
+        layerParams={layer.parameters}
         modeOptions={modeOptions}
         classifyFunc={buildColorInfoFromClassification}
         showModeRow={true}

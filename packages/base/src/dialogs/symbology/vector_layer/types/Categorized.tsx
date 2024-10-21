@@ -151,7 +151,7 @@ const Categorized = ({
       />
 
       <ColorRamp
-        layerId={layerId}
+        layerParams={layer.parameters}
         modeOptions={[]}
         classifyFunc={buildColorInfoFromClassification}
         showModeRow={false}

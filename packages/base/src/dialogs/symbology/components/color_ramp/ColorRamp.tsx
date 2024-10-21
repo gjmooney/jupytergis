@@ -3,13 +3,12 @@ import React, { useEffect, useState } from 'react';
 import CanvasSelectComponent from './CanvasSelectComponent';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ReadonlyJSONObject } from '@lumino/coreutils';
-import { GlobalStateDbManager } from '../../../../store';
 import ModeSelectRow from './ModeSelectRow';
+import { IDict } from '@jupytergis/schema';
 
 interface IColorRampProps {
   modeOptions: string[];
-  layerId: string;
+  layerParams: IDict;
   classifyFunc: (
     selectedMode: string,
     numberOfShades: string,
@@ -19,15 +18,21 @@ interface IColorRampProps {
   showModeRow: boolean;
 }
 
+export type ColorRampOptions = {
+  selectedRamp: string;
+  numberOfShades: string;
+  selectedMode: string;
+};
+
 const ColorRamp = ({
-  layerId,
+  layerParams,
   modeOptions,
   classifyFunc,
   showModeRow
 }: IColorRampProps) => {
-  const [selectedRamp, setSelectedRamp] = useState('cool');
-  const [selectedMode, setSelectedMode] = useState('quantile');
-  const [numberOfShades, setNumberOfShades] = useState('9');
+  const [selectedRamp, setSelectedRamp] = useState('');
+  const [selectedMode, setSelectedMode] = useState('');
+  const [numberOfShades, setNumberOfShades] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -35,20 +40,13 @@ const ColorRamp = ({
   }, []);
 
   const populateOptions = async () => {
-    const stateDb = GlobalStateDbManager.getInstance().getStateDb();
-
-    const layerState = (await stateDb?.fetch(
-      `jupytergis:${layerId}`
-    )) as ReadonlyJSONObject;
-
     let nClasses, singleBandMode, colorRamp;
 
-    if (layerState) {
-      nClasses = layerState.numberOfShades as string;
-      singleBandMode = layerState.selectedMode as string;
-      colorRamp = layerState.selectedRamp as string;
+    if (layerParams.symbologyState) {
+      nClasses = layerParams.symbologyState.nClasses;
+      singleBandMode = layerParams.symbologyState.mode;
+      colorRamp = layerParams.symbologyState.colorRamp;
     }
-
     setNumberOfShades(nClasses ? nClasses : '9');
     setSelectedMode(singleBandMode ? singleBandMode : 'equal interval');
     setSelectedRamp(colorRamp ? colorRamp : 'cool');
