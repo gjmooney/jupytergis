@@ -7,7 +7,7 @@ import { Utils, VectorUtils } from '../../symbologyUtils';
 import ColorRamp from '../../components/color_ramp/ColorRamp';
 import { ReadonlyJSONObject } from '@lumino/coreutils';
 import { ExpressionValue } from 'ol/expr/expression';
-import { GlobalStateDbManager } from '../../../../store';
+import { IVectorLayer } from '@jupytergis/schema';
 
 const Categorized = ({
   context,
@@ -17,15 +17,11 @@ const Categorized = ({
   layerId
 }: ISymbologyDialogProps) => {
   const selectedValueRef = useRef<string>();
-  const layerStateRef = useRef<ReadonlyJSONObject | undefined>();
   const stopRowsRef = useRef<IStopRow[]>();
   const colorRampOptionsRef = useRef<ReadonlyJSONObject | undefined>();
 
   const [selectedValue, setSelectedValue] = useState('');
   const [stopRows, setStopRows] = useState<IStopRow[]>([]);
-  const [layerState, setLayerState] = useState<
-    ReadonlyJSONObject | undefined
-  >();
   const [colorRampOptions, setColorRampOptions] = useState<
     ReadonlyJSONObject | undefined
   >();
@@ -63,27 +59,18 @@ const Categorized = ({
   }, [featureProps]);
 
   useEffect(() => {
-    layerStateRef.current = layerState;
     selectedValueRef.current = selectedValue;
     stopRowsRef.current = stopRows;
     colorRampOptionsRef.current = colorRampOptions;
-  }, [layerState, selectedValue, stopRows, colorRampOptions]);
+  }, [selectedValue, stopRows, colorRampOptions]);
 
   const populateOptions = async () => {
-    const stateDb = GlobalStateDbManager.getInstance().getStateDb();
+    const layerParams = layer.parameters as IVectorLayer;
+    const value = layerParams.symbologyState?.value
+      ? layerParams.symbologyState.value
+      : Object.keys(featureProps)[0];
 
-    const layerState = (await stateDb?.fetch(
-      `jupytergis:${layerId}`
-    )) as ReadonlyJSONObject;
-
-    let value;
-
-    if (layerState) {
-      value = layerState.categorizedValue as string;
-    }
-
-    setLayerState(layerState);
-    setSelectedValue(value ? value : Object.keys(featureProps)[0]);
+    setSelectedValue(value);
   };
 
   const buildColorInfoFromClassification = (
@@ -115,13 +102,6 @@ const Categorized = ({
       return;
     }
 
-    state.save(`jupytergis:${layerId}`, {
-      ...layerStateRef.current,
-      renderType: 'Categorized',
-      categorizedValue: selectedValueRef.current,
-      ...colorRampOptionsRef.current
-    });
-
     const colorExpr: ExpressionValue[] = [];
     colorExpr.push('case');
 
@@ -136,6 +116,15 @@ const Categorized = ({
     const newStyle = { ...layer.parameters.color };
     newStyle['circle-fill-color'] = colorExpr;
 
+    const symbologyState = {
+      renderType: 'Categorized',
+      value: selectedValueRef.current,
+      colorRamp: colorRampOptionsRef.current?.selectedRamp,
+      nClasses: colorRampOptionsRef.current?.numberOfShades,
+      mode: colorRampOptionsRef.current?.selectedMode
+    };
+
+    layer.parameters.symbologyState = symbologyState;
     layer.parameters.color = newStyle;
 
     context.model.sharedModel.updateLayer(layerId, layer);
