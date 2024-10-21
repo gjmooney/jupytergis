@@ -88,13 +88,9 @@ const Graduated = ({
     }
 
     const layerParams = layer.parameters as IVectorLayer;
-    const value = layerParams.symbologyState?.value
-      ? layerParams.symbologyState.value
-      : Object.keys(featureProps)[0];
-
-    const method = layerParams.symbologyState?.method
-      ? layerParams.symbologyState.method
-      : 'color';
+    const value =
+      layerParams.symbologyState?.value ?? Object.keys(featureProps)[0];
+    const method = layerParams.symbologyState?.method ?? 'color';
 
     setSelectedValue(value);
     setSelectedMethod(method);

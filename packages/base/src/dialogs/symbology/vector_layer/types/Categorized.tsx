@@ -66,9 +66,8 @@ const Categorized = ({
 
   const populateOptions = async () => {
     const layerParams = layer.parameters as IVectorLayer;
-    const value = layerParams.symbologyState?.value
-      ? layerParams.symbologyState.value
-      : Object.keys(featureProps)[0];
+    const value =
+      layerParams.symbologyState?.value ?? Object.keys(featureProps)[0];
 
     setSelectedValue(value);
   };

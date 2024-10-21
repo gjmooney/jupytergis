@@ -122,15 +122,9 @@ const SingleBandPseudoColor = ({
 
     setLayerState(layerState);
 
-    // Set initial function
     const layerParams = layer.parameters as IWebGlLayer;
-    const band = layerParams.symbologyState?.band
-      ? layerParams.symbologyState.band
-      : 1;
-
-    const interpolation = layerParams.symbologyState?.interpolation
-      ? layerParams.symbologyState.interpolation
-      : 'linear';
+    const band = layerParams.symbologyState?.band ?? 1;
+    const interpolation = layerParams.symbologyState?.interpolation ?? 'linear';
 
     setSelectedBand(band);
     setSelectedFunction(interpolation);
