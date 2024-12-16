@@ -27,7 +27,8 @@ import {
   IJupyterGISDoc,
   IJupyterGISModel,
   ISelection,
-  IUserData
+  IUserData,
+  Pointer
 } from './interfaces';
 import jgisSchema from './schema/jgis.json';
 import { Contents } from '@jupyterlab/services';
@@ -388,6 +389,13 @@ export class JupyterGISModel implements IJupyterGISModel {
   syncSelected(value: { [key: string]: ISelection }, emitter?: string): void {
     this.sharedModel.awareness.setLocalStateField('selected', {
       value,
+      emitter: emitter
+    });
+  }
+
+  syncPointer(pointer?: Pointer, emitter?: string): void {
+    this.sharedModel.awareness.setLocalStateField('pointer', {
+      value: pointer,
       emitter: emitter
     });
   }

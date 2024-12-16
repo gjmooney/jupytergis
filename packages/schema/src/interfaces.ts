@@ -185,6 +185,7 @@ export interface IJupyterGISModel extends DocumentRegistry.IModel {
   ): void;
 
   syncSelected(value: { [key: string]: ISelection }, emitter?: string): void;
+  syncPointer(position: Pointer | undefined, emitter?: string): void;
   setUserToFollow(userId?: number): void;
 
   getClientId(): number;
@@ -204,6 +205,12 @@ export interface IUserData {
 export type IJupyterGISWidget = IDocumentWidget<SplitPanel, IJupyterGISModel>;
 
 export type IJupyterGISTracker = IWidgetTracker<IJupyterGISWidget>;
+
+export type Pointer = {
+  parent: string;
+  x: number;
+  y: number;
+};
 
 export interface IJGISFormSchemaRegistry {
   /**
