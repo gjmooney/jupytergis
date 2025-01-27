@@ -80,6 +80,7 @@ import StatusBar from '../statusbar/StatusBar';
 import { isLightTheme, loadFile, throttle } from '../tools';
 import CollaboratorPointers, { ClientPointer } from './CollaboratorPointers';
 import { FollowIndicator } from './FollowIndicator';
+import TemporalSlider from './TemporalSlider';
 import { MainViewModel } from './mainviewmodel';
 import { Spinner } from './spinner';
 
@@ -1723,7 +1724,7 @@ export class MainView extends React.Component<IProps, IStates> {
           );
         })}
 
-        {this._model.isTemporal && <div>temporal slider wooo</div>}
+        {this._model.isTemporal && <TemporalSlider model={this._model} />}
         <div
           className="jGIS-Mainview"
           style={{
