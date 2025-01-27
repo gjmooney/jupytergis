@@ -1723,6 +1723,7 @@ export class MainView extends React.Component<IProps, IStates> {
           );
         })}
 
+        {this._model.isTemporal && <div>temporal slider wooo</div>}
         <div
           className="jGIS-Mainview"
           style={{
