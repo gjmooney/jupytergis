@@ -100,6 +100,7 @@ interface IStates {
   viewProjection: { code: string; units: string };
   loadingLayer: boolean;
   scale: number;
+  displayTimeBar: boolean;
 }
 
 export class MainView extends React.Component<IProps, IStates> {
@@ -139,20 +140,15 @@ export class MainView extends React.Component<IProps, IStates> {
       clientPointers: {},
       viewProjection: { code: '', units: '' },
       loadingLayer: false,
-      scale: 0
+      scale: 0,
+      displayTimeBar: false
     };
 
     this._model.addFeaturesSignal.connect((_, args) => {
       const json = JSON.parse(args);
-      console.log('json', json);
-      const { id: layerId, selectedFeature, newFilter } = json;
-      console.log('id', layerId);
-      console.log('nf', newFilter);
-      console.log('weee adduing stugg weeowoewoe', layerId);
+      const { id: layerId, selectedFeature } = json;
       const olLayer = this.getLayer(layerId);
       const source = olLayer.getSource() as VectorSource;
-
-      console.log('selectedFeature', selectedFeature);
 
       source.forEachFeature(feature => {
         const time = feature.get(selectedFeature);
@@ -1025,7 +1021,6 @@ export class MainView extends React.Component<IProps, IStates> {
         });
       }
 
-      console.log('filterExpr', filterExpr);
       layerStyle.filter = filterExpr;
     }
 
@@ -1313,6 +1308,13 @@ export class MainView extends React.Component<IProps, IStates> {
 
       this.setState(old => ({ ...old, clientPointers: clientPointers }));
     });
+
+    // Time stuff
+    // TODO: Temporary?
+    const isTemporal = this._model.localState?.isTemporal;
+    if (isTemporal) {
+      this.setState(old => ({ ...old, displayTimeBar: isTemporal }));
+    }
   };
 
   private _onSharedOptionsChanged(): void {
