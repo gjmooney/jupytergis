@@ -134,6 +134,22 @@ export class MainView extends React.Component<IProps, IStates> {
     );
     this._model.zoomToPositionSignal.connect(this._onZoomToPosition, this);
 
+    this._model.updateLayersSignal.connect((_, args) => {
+      // ? could send just the filters object and modify that instead of emitting whole layer
+      const json = JSON.parse(args);
+      console.log('json', json);
+      const { layerId, layer: jgisLayer } = json;
+      console.log('id', layerId);
+      const olLayer = this.getLayer(layerId);
+
+      if (!jgisLayer) {
+        console.log('Layer not found');
+        return;
+      }
+
+      this.updateLayer(layerId, jgisLayer, olLayer);
+    });
+
     this.state = {
       id: this._mainViewModel.id,
       lightTheme: isLightTheme(),
@@ -1117,8 +1133,8 @@ export class MainView extends React.Component<IProps, IStates> {
   async updateLayer(
     id: string,
     layer: IJGISLayer,
-    oldLayer: IDict,
-    mapLayer: Layer
+    mapLayer: Layer,
+    oldLayer?: IDict
   ): Promise<void> {
     const sourceId = layer.parameters?.source;
     const source = this._model.sharedModel.getLayerSource(sourceId);
@@ -1180,7 +1196,7 @@ export class MainView extends React.Component<IProps, IStates> {
         const layerParams = layer.parameters as IHeatmapLayer;
         const heatmap = mapLayer as HeatmapLayer;
 
-        if (oldLayer.feature !== layerParams.feature) {
+        if (oldLayer?.feature !== layerParams.feature) {
           // No way to change 'weight' attribute (feature used for heatmap stuff) so need to replace layer
           this.replaceLayer(id, layer);
           return;
@@ -1503,7 +1519,7 @@ export class MainView extends React.Component<IProps, IStates> {
       }
 
       if (layerTree.includes(id)) {
-        this.updateLayer(id, newLayer, oldLayer, mapLayer);
+        this.updateLayer(id, newLayer, mapLayer, oldLayer);
       } else {
         this.updateLayers(layerTree);
       }
