@@ -551,7 +551,6 @@ export class MainView extends React.Component<IProps, IStates> {
         newSource = new VectorSource({
           features: featureCollection
         });
-        console.log('finish');
 
         break;
       }
