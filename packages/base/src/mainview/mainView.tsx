@@ -1798,7 +1798,7 @@ export class MainView extends React.Component<IProps, IStates> {
         })}
 
         <div className="jGIS-Mainview-Container">
-          {this._model.isTemporalControllerActive && (
+          {this.state.displayTemporalController && (
             <TemporalSlider model={this._model} />
           )}
           <div
