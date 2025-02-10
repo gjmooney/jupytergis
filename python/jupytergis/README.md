@@ -8,9 +8,11 @@
 [docs-badge]: https://readthedocs.org/projects/jupytergis/badge/?version=latest
 [docs]: https://jupytergis.readthedocs.io
 
-⚠️ This extension is work in progress. Features and APIs are subject to change quickly. ⚠️
+⚠️ ⚠️ ⚠️
+This extension is work in progress. Features and APIs are subject to change quickly.
+⚠️ ⚠️ ⚠️
 
-![jupytergis](https://github.com/geojupyter/jupytergis/blob/main/jupytergis.png)
+![jupytergis](https://github.com/geojupyter/jupytergis/blob/main/jupytergis.gif)
 
 ## Features
 
