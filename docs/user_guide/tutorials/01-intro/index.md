@@ -11,11 +11,12 @@ By the end of this tutorial, you will:
 2. Set up the required tools and libraries.
 3. Create a simple map and add layers.
 4. Explore basic geospatial analysis using JupyterGIS.
-   :::
+
+:::
 
 :::{admonition} Prerequisites
 :class: warning
-Before beginning this tutorial, JupyterGIS must be installed on your computer (see [Installation instructions](https://jupytergis.readthedocs.io/en/latest/user_guide/install.html)) or you can use an online version of JupyterGIS (such as [![Jupyterlite badge](https://jupyterlite.rtfd.io/en/latest/_static/badge.svg)](https://jupytergis.readthedocs.io/en/latest/lite/lab/index.html?path=france_hiking.jGIS/)).
+Before beginning this tutorial, JupyterGIS must be installed on your computer (see [Installation instructions](https://jupytergis.readthedocs.io/en/latest/user_guide/install.html)) or you can use an online version of JupyterGIS (such as [![Jupyterlite badge](https://jupyterlite.rtfd.io/en/latest/_static/badge.svg)](https://jupytergis.readthedocs.io/en/latest/lite/lab/index.html)).
 :::
 
 ## Introduction to JupyterGIS
@@ -37,7 +38,7 @@ We will explore the JupyterGIS user interface to help you become familiar with i
 **The objective of this lesson is to understand the fundamentals of the JupyterGIS user interface.**
 :::
 
-![JupyterGIS User Interface explained](../../assets/images/jupyterGIS_interface.png)
+![JupyterGIS User Interface explained](images/jupyterGIS_interface.png)
 
 The elements shown in the figure above are:
 
@@ -66,37 +67,38 @@ jupyter lab
 Follow along to add a vector layer available online.
 
 1. Click on the GIS File Icon in the "Other" section of the Launcher to create a new JGIS project file. You will have a new, blank map.
-   ![JGIS Editor](../../assets/images/JGIS_editor.png)
+   ![JGIS Editor](images/JGIS_editor.png)
    :::{admonition} Why can't I see all the elements in the JupyterGIS User Interface?
    :class: attention
    If you don't see **GIS File** (under the JupyterGIS icon) in the **Other** section of the application launcher, you may have an issue with the JupyterGIS installation or may have forgotten to install it. Please refer to the prerequisites at the top of this tutorial to continue.
    :::
 2. Open Layer Browser (see image below) and select for instance _OpenStreetMap.Mapnik_. An interactive map will appear and you will be able to zoom in and zoom out with your mouse.
-   ![Open Layer Browser](../../assets/images/OpenLayerBrowser.png)
+   ![Open Layer Browser](images/OpenLayerBrowser.png)
 3. Click on the **+** to add a user-defined layer and select "New Shapefile Layer" to add a new vector layer (stored as a shapefile).
-   ![Add a Vector Layer](../../assets/images/addVectorLayer.png)
+   ![Add a Vector Layer](images/addVectorLayer.png)
 4. Set the path of the new shapefile Layer to `https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/georef-united-states-of-america-county/exports/shp` and click **Ok**.
-   ![Set Shapefile Layer](../../assets/images/CreateShapefileLayer.png)
+   ![Set Shapefile Layer](images/CreateShapefileLayer.png)
 5. You will see the new Shapefile Layer on the map. When clicking on the **Custom Shapefile Layer** (see figure below), you will also see the details of the object properties on the right of the map. You can pan and zoom to focus on your area of interest, or automatically focus on your new data layer by right-clicking on the **Custom Shapefile Layer** and selecting "Zoom to Layer".
-   ![View Shapefile Layer](../../assets/images/viewShapefileLayer.png)
+   ![View Shapefile Layer](images/viewShapefileLayer.png)
 
 ## Renaming Sources and Layers
 
 When adding a new source or layer, default names are assigned. It is good practice to rename both the source and layer with meaningful names to avoid confusion when adding similar layers in the future. To rename a source, select it in the GIS Sources List / Browser Panel, and right click to **Rename Source**.
 
 Let's rename the source called 'Custom Shapefile Source' to 'US Counties' so that we can easily identify it in the list when adding a new source.
-![Rename 'Custom Shapefile Source' to 'US Counties'](../../assets/images/renameSource.png)
+![Rename 'Custom Shapefile Source' to 'US Counties'](images/renameSource.png)
 
-```{exercise}
+```{exercise} 1
 :label: Rename-layer
+:nonumber:
 
-- Rename the **Custom Shapefile Layer** with a meaningful name e.g., **US Counties** for the US County Shapefile Layer.
+Rename the **Custom Shapefile Layer** with a meaningful name e.g., **US Counties** for the US County Shapefile Layer.
 
 ```
 
 ```{solution} Rename-layer
 :class: dropdown
-![Rename 'Custom Shapefile Layer' to 'US Counties'](../../assets/images/renameLayer.png)
+![Rename 'Custom Shapefile Layer' to 'US Counties'](images/renameLayer.png)
 ```
 
 :::{admonition} Ordering in the list of Sources versus Layers
@@ -109,21 +111,20 @@ The reason is that sources are ordered alphabetically, while layers are ordered 
 
 Let's do an exercise to practice adding a new layer.
 
-```{exercise-start}
+```{exercise-start} 2
 :label: add-vector-layer
+:nonumber:
 ```
 
-- Add a new Shapefile Layer to your map:
-
-```
-https://docs.geoserver.org/stable/en/user/_downloads/30e405b790e068c43354367cb08e71bc/nyc_roads.zip
-```
-
-- Zoom over New-York (USA) and check if you can see the newly added layer.
-- Rename both the newly added layer and its corresponding source, e.g. 'NYC Roads'.
-- Let's customize this new layer by changing the color. In the GIS Layer/Browser Panel, select the top layer (corresponds to the last layer you added) and right click to **Edit Symbology**. Then change the **Stroke Color** to a color of your choice. You can also change the Stroke Width and check the result after pressing \*_OK_.
-- In a similar way, you can edit the symbology of the 'US Counties' Shapefile Layer we added earlier and change the **Fill Color**, **Stroke Color** and **Stroke Width**.
-- Do you still see the roads in New-York? Try to adjust the **Opacity** value (default is 1) to a lower value for this Shapefile Layer. Can you see all your layers now?
+1. Add a new Shapefile Layer to your map:
+   ```
+   https://docs.geoserver.org/stable/en/user/_downloads/30e405b790e068c43354367cb08e71bc/nyc_roads.zip
+   ```
+2. Zoom over New-York (USA) and check if you can see the newly added layer.
+3. Rename both the newly added layer and its corresponding source, e.g. 'NYC Roads'.
+4. Let's customize this new layer by changing the color. In the GIS Layer/Browser Panel, select the top layer (corresponds to the last layer you added) and right click to **Edit Symbology**. Then change the **Stroke Color** to a color of your choice. You can also change the Stroke Width and check the result after pressing \*_OK_.
+5. In a similar way, you can edit the symbology of the 'US Counties' Shapefile Layer we added earlier and change the **Fill Color**, **Stroke Color** and **Stroke Width**.
+6. Do you still see the roads in New-York? Try to adjust the **Opacity** value (default is 1) to a lower value for this Shapefile Layer. Can you see all your layers now?
 
 ```{exercise-end}
 
@@ -133,17 +134,17 @@ https://docs.geoserver.org/stable/en/user/_downloads/30e405b790e068c43354367cb08
 :class: dropdown
 
 After adding the new Shapefile Layer and zooming over New-York, you should have the following map:
-![View several shapefile Layer on the same map](../../assets/images/severalShapefileLayers.png)
+![View several shapefile Layer on the same map](images/severalShapefileLayers.png)
 
 When you right click to edit the symbology, you should get the following pop-up menu:
-![Edit symbology](../../assets/images/editSymbology.png)
+![Edit symbology](images/editSymbology.png)
 
 And when editing the symbology of the 'US Counties' Shapefile Layer:
-![Adjust Symbology](../../assets/images/adjustSymbology.png)
+![Adjust Symbology](images/adjustSymbology.png)
 
 And updating the opacity (for instance to 0.5) of the US county Shapefile Layer, you can get a map that looks like this (depending on the colors and Stroke width you chose!):
 
-![final map for the intro exercise](../../assets/images/finalIntroMap.png)
+![final map for the intro exercise](images/finalIntroMap.png)
 ```
 
 ## Hiding and Reordering Layers
@@ -151,7 +152,7 @@ And updating the opacity (for instance to 0.5) of the US county Shapefile Layer,
 ### Hiding/Viewing Layers
 
 In the GIS Layers List/Browser Panel, you can select a layer and click the **eye** icon to hide or show the corresponding layer.
-![Hide a layer](../../assets/images/hideLayer.png)
+![Hide a layer](images/hideLayer.png)
 
 ### Reordering Layers
 
@@ -160,7 +161,7 @@ The layers in your Layers List are displayed on the map according to their order
 The order in which the layers have been loaded into the map is probably not logical at this stage. It’s possible that the road layer or/and the country layer are completely hidden because other layers are on top of it.
 
 For example, this layer order:
-![Wrong layer order](../../assets/images/wrongLayerOrder.png)
+![Wrong layer order](images/wrongLayerOrder.png)
 
 would hide all the custom shapefile layers underneath the OpenStreetMap raster layer.
 
@@ -174,7 +175,7 @@ It is important to give meaningful name to your jGIS project.
 
 To rename it, you can click on **File** in the Jupyter toolbar menu and select **Rename JGIS...** to give a new name to your jGIS project.
 
-![Rename jGIS project](../../assets/images/renamejGIS.png)
+![Rename jGIS project](images/renamejGIS.png)
 
 ## Conclusion
 
