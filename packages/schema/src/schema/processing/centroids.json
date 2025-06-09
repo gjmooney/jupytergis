@@ -7,7 +7,7 @@
   "properties": {
     "inputLayer": {
       "type": "string",
-      "description": "The input layer for buffering."
+      "description": "The input layer for centroids."
     }
   }
 }
