@@ -356,4 +356,5 @@ export interface IAnnotation {
 
 export interface IJupyterGISSettings {
   proxyUrl: string;
+  stacApiUrl: string;
 }

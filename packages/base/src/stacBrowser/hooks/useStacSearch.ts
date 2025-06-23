@@ -35,9 +35,12 @@ interface IUseStacSearchReturn {
   handleResultClick: (id: string) => Promise<void>;
   formatResult: (item: IStacItem) => string;
   isLoading: boolean;
+  stacApiUrl: string;
+  setStacApiUrl: (url: string) => void;
 }
 
-const API_URL = 'https://geodes-portal.cnes.fr/api/stac/search';
+// const API_URL = 'https://geodes-portal.cnes.fr/api/stac/search';
+const DEFAULT_API_URL = 'https://geodes-portal.cnes.fr/api/stac/search';
 const XSRF_TOKEN = document.cookie.match(/_xsrf=([^;]+)/)?.[1];
 const STAC_FILTERS_KEY = 'jupytergis:stac-filters';
 
@@ -57,6 +60,7 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
   const [totalResults, setTotalResults] = useState(0);
   const [startTime, setStartTime] = useState<Date | undefined>(undefined);
   const [endTime, setEndTime] = useState<Date | undefined>(undefined);
+  const [stacApiUrl, setStacApiUrl] = useState<string>(DEFAULT_API_URL);
   const [currentBBox, setCurrentBBox] = useState<
     [number, number, number, number]
   >([-180, -90, 180, 90]);
@@ -92,6 +96,24 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
 
     loadStacStateFromDb();
   }, [stateDb]);
+
+  useEffect(() => {
+    const getApiUrlFromSettings = async () => {
+      let settings;
+      if (model) {
+        try {
+          settings = model.getSettings();
+        } catch (e) {
+          console.warn('Failed to get settings from model. Falling back.', e);
+        }
+      }
+
+      const apiUrl = settings?.stacApiUrl ?? DEFAULT_API_URL;
+      setStacApiUrl(apiUrl);
+    };
+
+    getApiUrlFromSettings();
+  }, [model]);
 
   // Save filterState to StateDB on change
   useEffect(() => {
@@ -193,7 +215,7 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
       }
 
       const data = (await fetchWithProxies(
-        API_URL,
+        stacApiUrl,
         model,
         async response => await response.json(),
         //@ts-expect-error Jupyter requires X-XSRFToken header
@@ -282,6 +304,8 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
     handleResultClick,
     formatResult,
     isLoading,
+    stacApiUrl,
+    setStacApiUrl,
   };
 }
 

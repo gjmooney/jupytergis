@@ -8,6 +8,12 @@
       "title": "Proxy URL",
       "description": "The proxy URL to use for external requests.",
       "default": "https://corsproxy.io"
+    },
+    "stacApiUrl": {
+      "type": "string",
+      "title": "STAC API URL",
+      "description": "The STAC API URL to use for STAC search.",
+      "default": "https://geodes-portal.cnes.fr/api/stac/search"
     }
   }
 }
