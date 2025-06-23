@@ -1,5 +1,5 @@
 import { IJupyterGISModel } from '@jupytergis/schema';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import {
   Tabs,
@@ -8,6 +8,8 @@ import {
   TabsTrigger,
 } from '@/src/shared/components/Tabs';
 import useStacSearch from '@/src/stacBrowser/hooks/useStacSearch';
+import CustomFiltersView from './CustomFiltersView';
+import StacApiSelector from './StacApiSelector';
 import StacPanelFilters from './StacPanelFilters';
 import StacPanelResults from './StacPanelResults';
 
@@ -30,45 +32,68 @@ const StacPanelView = ({ model }: IStacViewProps) => {
     handleResultClick,
     formatResult,
     isLoading,
+    stacApi,
+    setStacApi,
   } = useStacSearch({ model });
+
+  useEffect(() => {
+    console.log('apiUrl', stacApi);
+  }, [stacApi]);
 
   if (!model) {
     return null;
   }
 
   return (
-    <Tabs defaultValue="filters" className="jgis-stac-browser-main">
-      <TabsList style={{ borderRadius: 0 }}>
-        <TabsTrigger className="jGIS-layer-browser-category" value="filters">
-          Filters
-        </TabsTrigger>
-        <TabsTrigger
-          className="jGIS-layer-browser-category"
-          value="results"
-        >{`Results (${totalResults})`}</TabsTrigger>
-      </TabsList>
-      <TabsContent value="filters">
-        <StacPanelFilters
-          filterState={filterState}
-          filterSetters={filterSetters}
-          startTime={startTime}
-          setStartTime={setStartTime}
-          endTime={endTime}
-          setEndTime={setEndTime}
-        />
-      </TabsContent>
-      <TabsContent value="results">
-        <StacPanelResults
-          results={results}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          handlePaginationClick={handlePaginationClick}
-          handleResultClick={handleResultClick}
-          formatResult={formatResult}
-          isLoading={isLoading}
-        />
-      </TabsContent>
-    </Tabs>
+    <>
+      <StacApiSelector apiUrl={stacApi} setStacApiUrl={setStacApi} />
+      <Tabs defaultValue="filters" className="jgis-stac-browser-main">
+        <TabsList style={{ borderRadius: 0 }}>
+          <TabsTrigger className="jGIS-layer-browser-category" value="filters">
+            Filters
+          </TabsTrigger>
+          <TabsTrigger
+            className="jGIS-layer-browser-category"
+            value="results"
+          >{`Results (${totalResults})`}</TabsTrigger>
+        </TabsList>
+        {/* TODO: dont do a ternary */}
+        <TabsContent value="filters">
+          {stacApi.apiSource === 'GEODES' ? (
+            <StacPanelFilters
+              filterState={filterState}
+              filterSetters={filterSetters}
+              startTime={startTime}
+              setStartTime={setStartTime}
+              endTime={endTime}
+              setEndTime={setEndTime}
+            />
+          ) : stacApi.apiSource === 'Custom' ? (
+            <CustomFiltersView
+              filterState={filterState}
+              filterSetters={filterSetters}
+              startTime={startTime}
+              setStartTime={setStartTime}
+              endTime={endTime}
+              setEndTime={setEndTime}
+            />
+          ) : (
+            <div>Shouldnt be here</div>
+          )}
+        </TabsContent>
+        <TabsContent value="results">
+          <StacPanelResults
+            results={results}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            handlePaginationClick={handlePaginationClick}
+            handleResultClick={handleResultClick}
+            formatResult={formatResult}
+            isLoading={isLoading}
+          />
+        </TabsContent>
+      </Tabs>
+    </>
   );
 };
 

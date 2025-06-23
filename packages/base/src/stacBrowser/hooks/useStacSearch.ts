@@ -15,6 +15,7 @@ import {
 } from '@/src/stacBrowser/types/types';
 import { GlobalStateDbManager } from '@/src/store';
 import { fetchWithProxies } from '@/src/tools';
+import { SupportedStacApi } from '../components/StacApiSelector';
 
 interface IUseStacSearchProps {
   model: IJupyterGISModel | undefined;
@@ -35,12 +36,15 @@ interface IUseStacSearchReturn {
   handleResultClick: (id: string) => Promise<void>;
   formatResult: (item: IStacItem) => string;
   isLoading: boolean;
-  stacApiUrl: string;
-  setStacApiUrl: (url: string) => void;
+  stacApi: SupportedStacApi;
+  setStacApi: (api: SupportedStacApi) => void;
 }
 
 // const API_URL = 'https://geodes-portal.cnes.fr/api/stac/search';
-const DEFAULT_API_URL = 'https://geodes-portal.cnes.fr/api/stac/search';
+const DEFAULT_API: SupportedStacApi = {
+  apiSource: 'GEODES',
+  url: 'https://geodes-portal.cnes.fr/api/stac/search',
+};
 const XSRF_TOKEN = document.cookie.match(/_xsrf=([^;]+)/)?.[1];
 const STAC_FILTERS_KEY = 'jupytergis:stac-filters';
 
@@ -60,7 +64,7 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
   const [totalResults, setTotalResults] = useState(0);
   const [startTime, setStartTime] = useState<Date | undefined>(undefined);
   const [endTime, setEndTime] = useState<Date | undefined>(undefined);
-  const [stacApiUrl, setStacApiUrl] = useState<string>(DEFAULT_API_URL);
+  const [stacApi, setStacApi] = useState<SupportedStacApi>(DEFAULT_API);
   const [currentBBox, setCurrentBBox] = useState<
     [number, number, number, number]
   >([-180, -90, 180, 90]);
@@ -108,8 +112,8 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
         }
       }
 
-      const apiUrl = settings?.stacApiUrl ?? DEFAULT_API_URL;
-      setStacApiUrl(apiUrl);
+      const apiUrl = settings?.stacApiUrl ?? DEFAULT_API;
+      // setStacApiUrl(apiUrl);
     };
 
     getApiUrlFromSettings();
@@ -215,7 +219,7 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
       }
 
       const data = (await fetchWithProxies(
-        stacApiUrl,
+        stacApi.url,
         model,
         async response => await response.json(),
         //@ts-expect-error Jupyter requires X-XSRFToken header
@@ -304,8 +308,8 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
     handleResultClick,
     formatResult,
     isLoading,
-    stacApiUrl,
-    setStacApiUrl,
+    stacApi: stacApi,
+    setStacApi: setStacApi,
   };
 }
 
