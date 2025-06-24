@@ -105,7 +105,7 @@ export interface IStacQueryBody {
   limit?: number;
   page?: number;
   query: {
-    dataset: {
+    dataset?: {
       in: string[];
     };
     end_datetime: {
@@ -126,20 +126,70 @@ export interface IStacQueryBody {
   ];
 }
 
-export type StacFilterKey =
-  | 'collections'
-  | 'datasets'
-  | 'platforms'
-  | 'products';
+// export type StacFilterKey =
+//   | 'collections'
+//   | 'datasets'
+//   | 'platforms'
+//   | 'products';
 
-// Generic filter state object
-export type StacFilterState = Record<StacFilterKey, Set<string>>;
+export type StacFilterOperator =
+  | '='
+  | '!='
+  | '<'
+  | '>'
+  | '<='
+  | '>='
+  | 'in'
+  | 'startsWith'
+  | 'endsWith'
+  | 'contains';
 
-// Filter state with string[] for saving in StateDB
-export type StacFilterStateStateDb = { [K in keyof StacFilterState]: string[] };
+export type StacFilterOperatorText =
+  | 'eq'
+  | 'neq'
+  | 'lt'
+  | 'lte'
+  | 'gt'
+  | 'gte'
+  | 'in'
+  | 'startsWith'
+  | 'endsWith'
+  | 'contains';
 
-// Generic filter setter object
-export type StacFilterSetters = Record<
-  StacFilterKey,
-  (val: Set<string>) => void
->;
+export const OPERATOR_SYMBOL_TO_TEXT: Record<
+  StacFilterOperator,
+  StacFilterOperatorText
+> = {
+  '=': 'eq',
+  '!=': 'neq',
+  '<': 'lt',
+  '<=': 'lte',
+  '>': 'gt',
+  '>=': 'gte',
+  in: 'in',
+  startsWith: 'startsWith',
+  endsWith: 'endsWith',
+  contains: 'contains',
+};
+
+export interface ICustomFilter {
+  property: string;
+  operator: StacFilterOperatorText;
+  value: string;
+}
+
+export type StacFilterState = {
+  collections: Set<string>;
+  datasets: Set<string>;
+  platforms: Set<string>;
+  products: Set<string>;
+  custom: ICustomFilter[];
+};
+
+export type StacFilterStateStateDb = {
+  [K in keyof StacFilterState]: K extends 'custom' ? ICustomFilter[] : string[];
+};
+
+export type StacFilterSetters = {
+  [K in keyof StacFilterState]: (val: StacFilterState[K]) => void;
+};

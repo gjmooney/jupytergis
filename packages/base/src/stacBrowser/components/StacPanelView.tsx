@@ -8,7 +8,7 @@ import {
   TabsTrigger,
 } from '@/src/shared/components/Tabs';
 import useStacSearch from '@/src/stacBrowser/hooks/useStacSearch';
-import CustomFiltersView from './CustomFiltersView';
+import CustomStacFilters from './CustomStacFilters';
 import StacApiSelector from './StacApiSelector';
 import StacPanelFilters from './StacPanelFilters';
 import StacPanelResults from './StacPanelResults';
@@ -34,6 +34,7 @@ const StacPanelView = ({ model }: IStacViewProps) => {
     isLoading,
     stacApi,
     setStacApi,
+    handleAddCustomFilter,
   } = useStacSearch({ model });
 
   useEffect(() => {
@@ -69,13 +70,16 @@ const StacPanelView = ({ model }: IStacViewProps) => {
               setEndTime={setEndTime}
             />
           ) : stacApi.apiSource === 'Custom' ? (
-            <CustomFiltersView
+            <CustomStacFilters
               filterState={filterState}
               filterSetters={filterSetters}
               startTime={startTime}
               setStartTime={setStartTime}
               endTime={endTime}
               setEndTime={setEndTime}
+              handleAddCustomFilter={handleAddCustomFilter}
+              stacApi={stacApi}
+              setStacApi={setStacApi}
             />
           ) : (
             <div>Shouldnt be here</div>

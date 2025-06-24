@@ -1,5 +1,5 @@
 import { IJGISLayer, IJupyterGISModel } from '@jupytergis/schema';
-import { UUID } from '@lumino/coreutils';
+import { UUID, ReadonlyPartialJSONValue } from '@lumino/coreutils';
 import { startOfYesterday } from 'date-fns';
 import { useEffect, useState } from 'react';
 
@@ -11,7 +11,9 @@ import {
   IStacSearchResult,
   StacFilterState,
   StacFilterSetters,
-  StacFilterStateStateDb,
+  ICustomFilter,
+  StacFilterOperator,
+  OPERATOR_SYMBOL_TO_TEXT,
 } from '@/src/stacBrowser/types/types';
 import { GlobalStateDbManager } from '@/src/store';
 import { fetchWithProxies } from '@/src/tools';
@@ -38,6 +40,11 @@ interface IUseStacSearchReturn {
   isLoading: boolean;
   stacApi: SupportedStacApi;
   setStacApi: (api: SupportedStacApi) => void;
+  handleAddCustomFilter: (
+    property: string,
+    operator: StacFilterOperator,
+    value: string,
+  ) => void;
 }
 
 // const API_URL = 'https://geodes-portal.cnes.fr/api/stac/search';
@@ -73,28 +80,39 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
     datasets: new Set(),
     platforms: new Set(),
     products: new Set(),
+    custom: [],
   });
 
   const filterSetters: StacFilterSetters = {
     collections: val =>
-      setFilterState(s => ({ ...s, collections: new Set(val) })),
-    datasets: val => setFilterState(s => ({ ...s, datasets: new Set(val) })),
-    platforms: val => setFilterState(s => ({ ...s, platforms: new Set(val) })),
-    products: val => setFilterState(s => ({ ...s, products: new Set(val) })),
+      setFilterState(s => ({ ...s, collections: new Set(val as Set<string>) })),
+    datasets: val =>
+      setFilterState(s => ({ ...s, datasets: new Set(val as Set<string>) })),
+    platforms: val =>
+      setFilterState(s => ({ ...s, platforms: new Set(val as Set<string>) })),
+    products: val =>
+      setFilterState(s => ({ ...s, products: new Set(val as Set<string>) })),
+    custom: val =>
+      setFilterState(s => ({ ...s, custom: val as ICustomFilter[] })),
   };
 
   // On mount, fetch filterState and times from StateDB (if present)
   useEffect(() => {
     async function loadStacStateFromDb() {
-      const savedFilterState = (await stateDb?.fetch(
-        STAC_FILTERS_KEY,
-      )) as StacFilterStateStateDb;
+      const savedFilterStateRaw = await stateDb?.fetch(STAC_FILTERS_KEY);
+      const savedFilterState =
+        savedFilterStateRaw &&
+        typeof savedFilterStateRaw === 'object' &&
+        !Array.isArray(savedFilterStateRaw)
+          ? (savedFilterStateRaw as Record<string, unknown>)
+          : {};
 
       setFilterState({
-        collections: new Set((savedFilterState?.collections as string[]) ?? []),
-        datasets: new Set((savedFilterState?.datasets as string[]) ?? []),
-        platforms: new Set((savedFilterState?.platforms as string[]) ?? []),
-        products: new Set((savedFilterState?.products as string[]) ?? []),
+        collections: new Set((savedFilterState.collections as string[]) ?? []),
+        datasets: new Set((savedFilterState.datasets as string[]) ?? []),
+        platforms: new Set((savedFilterState.platforms as string[]) ?? []),
+        products: new Set((savedFilterState.products as string[]) ?? []),
+        custom: (savedFilterState.custom as ICustomFilter[]) ?? [],
       });
     }
 
@@ -127,7 +145,8 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
         datasets: Array.from(filterState.datasets),
         platforms: Array.from(filterState.platforms),
         products: Array.from(filterState.products),
-      });
+        custom: filterState.custom,
+      } as unknown as ReadonlyPartialJSONValue);
     }
 
     saveStacFilterStateToDb();
@@ -180,7 +199,9 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
       page,
       query: {
         latest: { eq: true },
-        dataset: { in: Array.from(filterState.datasets) },
+        ...(filterState.datasets.size > 0 && {
+          dataset: { in: Array.from(filterState.datasets) },
+        }),
         end_datetime: {
           gte: startTime
             ? startTime.toISOString()
@@ -198,6 +219,17 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
         ...(productType.size > 0 && {
           'product:type': { in: Array.from(productType) },
         }),
+        ...Object.fromEntries(
+          filterState.custom
+            .filter(f => f.property && f.operator && f.value)
+            .map(f => {
+              let parsedValue: any = f.value;
+              if (!isNaN(Number(f.value))) {
+                parsedValue = Number(f.value);
+              }
+              return [f.property, { [f.operator]: parsedValue }];
+            }),
+        ),
       },
       sortBy: [{ direction: 'desc', field: 'start_datetime' }],
     };
@@ -293,6 +325,21 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
     return item.properties.title ?? item.id;
   };
 
+  // Add this function to handle adding a custom filter
+  const handleAddCustomFilter = (
+    property: string,
+    operator: StacFilterOperator,
+    value: string,
+  ) => {
+    stateDb?.remove(STAC_FILTERS_KEY);
+
+    const textOperator = OPERATOR_SYMBOL_TO_TEXT[operator];
+    setFilterState(prev => ({
+      ...prev,
+      custom: [...prev.custom, { property, operator: textOperator, value }],
+    }));
+  };
+
   return {
     filterState,
     filterSetters,
@@ -310,6 +357,7 @@ function useStacSearch({ model }: IUseStacSearchProps): IUseStacSearchReturn {
     isLoading,
     stacApi: stacApi,
     setStacApi: setStacApi,
+    handleAddCustomFilter,
   };
 }
 
