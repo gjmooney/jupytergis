@@ -1105,6 +1105,11 @@ export class MainView extends React.Component<IProps, IStates> {
 
         break;
       }
+
+      case 'LandmarkLayer': {
+        // Special layer not for this
+        return;
+      }
     }
 
     // OpenLayers doesn't have name/id field so add it

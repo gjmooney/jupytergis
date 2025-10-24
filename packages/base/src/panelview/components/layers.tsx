@@ -41,6 +41,7 @@ interface IBodyProps {
   model: IJupyterGISModel;
   commands: CommandRegistry;
   state: IStateDB;
+  layerTree?: IJGISLayerTree;
 }
 
 export const LayersBodyComponent: React.FC<IBodyProps> = props => {
@@ -48,7 +49,7 @@ export const LayersBodyComponent: React.FC<IBodyProps> = props => {
   const id = UUID.uuid4();
 
   const [layerTree, setLayerTree] = useState<IJGISLayerTree>(
-    model?.getLayerTree() || [],
+    props.layerTree || model?.getLayerTree() || [],
   );
 
   const notifyCommands = () => {
@@ -209,17 +210,30 @@ export const LayersBodyComponent: React.FC<IBodyProps> = props => {
    */
   useEffect(() => {
     const updateLayers = () => {
-      setLayerTree(model?.getLayerTree() || []);
+      setLayerTree(props.layerTree || model?.getLayerTree() || []);
     };
-    model?.sharedModel.layersChanged.connect(updateLayers);
-    model?.sharedModel.layerTreeChanged.connect(updateLayers);
+
+    // Only listen to changes if layerTree is not provided as prop
+    if (!props.layerTree) {
+      model?.sharedModel.layersChanged.connect(updateLayers);
+      model?.sharedModel.layerTreeChanged.connect(updateLayers);
+    }
 
     updateLayers();
     return () => {
-      model?.sharedModel.layersChanged.disconnect(updateLayers);
-      model?.sharedModel.layerTreeChanged.disconnect(updateLayers);
+      if (!props.layerTree) {
+        model?.sharedModel.layersChanged.disconnect(updateLayers);
+        model?.sharedModel.layerTreeChanged.disconnect(updateLayers);
+      }
     };
-  }, [model]);
+  }, [model, props.layerTree]);
+
+  // Update layerTree when prop changes
+  useEffect(() => {
+    if (props.layerTree) {
+      setLayerTree(props.layerTree);
+    }
+  }, [props.layerTree]);
 
   return (
     <div id="jp-gis-layer-tree" onDrop={_onDrop} onDragOver={_onDragOver}>
