@@ -24,7 +24,11 @@ import React, {
 
 import { CommandIDs, icons } from '@/src/constants';
 import { useGetSymbology } from '@/src/dialogs/symbology/hooks/useGetSymbology';
-import { nonVisibilityIcon, visibilityIcon } from '@/src/icons';
+import {
+  nonVisibilityIcon,
+  targetWithCenterIcon,
+  visibilityIcon,
+} from '@/src/icons';
 import { ILeftPanelClickHandlerParams } from '@/src/panelview/leftpanel';
 import { LegendItem } from './legendItem';
 
@@ -456,6 +460,10 @@ const LayerComponent: React.FC<ILayerProps> = props => {
     gisModel?.sharedModel?.updateLayer(layerId, layer);
   };
 
+  const zoomToLayer = () => {
+    gisModel?.centerOnPosition(layerId);
+  };
+
   const setSelection = (event: ReactMouseEvent<HTMLElement>) => {
     const childId = event.currentTarget.children.namedItem(id)?.id;
     onClick({
@@ -522,6 +530,15 @@ const LayerComponent: React.FC<ILayerProps> = props => {
         <span id={id} className={LAYER_TEXT_CLASS} tabIndex={-2}>
           {name}
         </span>
+
+        {/* zoomies */}
+        <Button title={'Zoom to Layer'} onClick={zoomToLayer} minimal>
+          <LabIcon.resolveReact
+            icon={targetWithCenterIcon}
+            className={LAYER_ICON_CLASS}
+            tag="span"
+          />
+        </Button>
       </div>
 
       {/* Show legend only if supported symbology */}
