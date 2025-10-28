@@ -52,6 +52,8 @@ export const LayersBodyComponent: React.FC<IBodyProps> = props => {
   const model = props.model;
   const id = UUID.uuid4();
 
+  // TODO use layerTree to check if this is for landmarks?
+
   const [layerTree, setLayerTree] = useState<IJGISLayerTree>(
     props.layerTree || model?.getLayerTree() || [],
   );
@@ -239,6 +241,10 @@ export const LayersBodyComponent: React.FC<IBodyProps> = props => {
     }
   }, [props.layerTree]);
 
+  const createStory = () => {
+    props.model.createStory(props.layerTree as string[]);
+  };
+
   return (
     <div id="jp-gis-layer-tree" onDrop={_onDrop} onDragOver={_onDragOver}>
       {layerTree
@@ -262,6 +268,8 @@ export const LayersBodyComponent: React.FC<IBodyProps> = props => {
             />
           ),
         )}
+      {/* use layertree based isLandmarks or something to control rendering this  */}
+      <Button onClick={createStory}>Create Story</Button>
     </div>
   );
 };
@@ -532,7 +540,13 @@ const LayerComponent: React.FC<ILayerProps> = props => {
         </span>
 
         {/* zoomies */}
-        <Button title={'Zoom to Layer'} onClick={zoomToLayer} minimal>
+        <Button
+          title={'Zoom to Layer'}
+          onClick={zoomToLayer}
+          minimal
+          // TODO actually style
+          style={{ marginLeft: 4 }}
+        >
           <LabIcon.resolveReact
             icon={targetWithCenterIcon}
             className={LAYER_ICON_CLASS}
