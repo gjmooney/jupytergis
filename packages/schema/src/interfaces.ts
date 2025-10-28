@@ -26,6 +26,7 @@ import {
   IJGISOptions,
   IJGISSource,
   IJGISSources,
+  IJGISStoryMap,
   SourceType,
 } from './_interface/project/jgis';
 import { IRasterSource } from './_interface/project/sources/rasterSource';
@@ -189,6 +190,8 @@ export interface IJupyterGISModel extends DocumentRegistry.IModel {
 
   pathChanged: ISignal<IJupyterGISModel, string>;
 
+  storiesMap: Map<string, IJGISStoryMap>;
+
   getFeaturesForCurrentTile: ({
     sourceId,
   }: {
@@ -250,6 +253,8 @@ export interface IJupyterGISModel extends DocumentRegistry.IModel {
   toggleTemporalController(): void;
   addFeatureAsMs(id: string, selectedFeature: string): void;
   triggerLayerUpdate(layerId: string, layer: IJGISLayer): void;
+
+  createStory(layerIds: string[]): void;
 
   disposed: ISignal<any, void>;
 }
