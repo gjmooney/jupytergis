@@ -50,6 +50,7 @@ const StacPanel = ({ model }: IStacViewProps) => {
         >{`Results (${totalResults})`}</TabsTrigger>
       </TabsList>
       <TabsContent value="filters">
+        {/* ! StacPanelFilters -> Geodes panel */}
         <StacPanelFilters
           filterState={filterState}
           filterSetters={filterSetters}
