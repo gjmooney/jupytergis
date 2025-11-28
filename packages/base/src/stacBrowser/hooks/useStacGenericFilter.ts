@@ -4,7 +4,12 @@ import { endOfToday, startOfToday } from 'date-fns';
 import { useEffect, useState } from 'react';
 
 import { fetchWithProxies } from '@/src/tools';
-import { IStacAsset, IStacCollection } from '../types/types';
+import {
+  IStacAsset,
+  IStacCollection,
+  IStacItem,
+  IStacSearchResult,
+} from '../types/types';
 
 type FilteredCollection = Pick<IStacCollection, 'id' | 'title'>;
 
@@ -25,11 +30,17 @@ export function useStacGenericFilter({
 }: IUseStacGenericFilterProps) {
   const [queryableProps, setQueryableProps] = useState<[string, any][]>();
   const [collections, setCollections] = useState<FilteredCollection[]>([]);
+  // ! temp
   const [selectedCollection, setSelectedCollection] =
     useState('sentinel-2-l2a');
   const [currentBBox, setCurrentBBox] = useState<
     [number, number, number, number]
   >([-180, -90, 180, 90]);
+  const [results, setResults] = useState<IStacItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
 
   // for collections
   useEffect(() => {
@@ -167,42 +178,80 @@ export function useStacGenericFilter({
       body: JSON.stringify(body),
     };
 
-    const data: any = await fetchWithProxies(
-      'https://stac.dataspace.copernicus.eu/v1/search',
-      model,
-      async response => await response.json(),
-      //@ts-expect-error Jupyter requires X-XSRFToken header
-      options,
-      'internal',
-    );
+    try {
+      setIsLoading(true);
+      const data = (await fetchWithProxies(
+        'https://stac.dataspace.copernicus.eu/v1/search',
+        model,
+        async response => await response.json(),
+        //@ts-expect-error Jupyter requires X-XSRFToken header
+        options,
+        'internal',
+      )) as IStacSearchResult;
 
-    console.log('data', data);
-
-    // Filter assets to only include items with 'overview' or 'thumbnail' roles
-    if (data.features && data.features.length > 0 && data.features[0].assets) {
-      const originalAssets = data.features[0].assets;
-      const filteredAssets: Record<string, any> = {};
-
-      // Iterate through each asset in the assets object
-      for (const [key, asset] of Object.entries(originalAssets)) {
-        const assetObj = asset as IStacAsset;
-        if (assetObj && assetObj.roles) {
-          // Handle both array and string role values
-          const roles = assetObj.roles;
-
-          if (roles.includes('thumbnail') || roles.includes('overview')) {
-            filteredAssets[key] = assetObj;
-          }
-        }
+      if (!data) {
+        console.debug('STAC search failed -- no results found');
+        setResults([]);
+        setTotalPages(1);
+        setTotalResults(0);
+        return;
       }
 
-      console.log('originalAssets', originalAssets);
-      console.log('filteredAssets', filteredAssets);
-      // Replace assets with filtered version
-      data.features[0].assets = filteredAssets;
-    }
+      // Filter assets to only include items with 'overview' or 'thumbnail' roles
+      // ? is this a good idea??
+      if (data.features && data.features.length > 0) {
+        data.features.forEach(feature => {
+          if (feature.assets) {
+            const originalAssets = feature.assets;
+            const filteredAssets: Record<string, any> = {};
 
-    addToMap(data.features[0]);
+            // Iterate through each asset in the assets object
+            for (const [key, asset] of Object.entries(originalAssets)) {
+              if (
+                asset &&
+                typeof asset === 'object' &&
+                'roles' in asset &&
+                Array.isArray(asset.roles)
+              ) {
+                const roles = asset.roles;
+
+                if (roles.includes('thumbnail') || roles.includes('overview')) {
+                  filteredAssets[key] = asset;
+                }
+              }
+            }
+
+            // Replace assets with filtered version
+            feature.assets = filteredAssets;
+          }
+        });
+      }
+
+      console.log('hook data', data);
+      setResults(data.features);
+      // Handle context if available (STAC API extension)
+      if (data.context) {
+        const pages = data.context.matched / data.context.limit;
+        setTotalPages(Math.ceil(pages));
+        setTotalResults(data.context.matched);
+      } else {
+        // Fallback if context is not available
+        setTotalPages(1);
+        setTotalResults(data.features.length);
+      }
+
+      // Add first result to map
+      if (data.features.length > 0) {
+        addToMap(data.features[0]);
+      }
+    } catch (error) {
+      console.error('STAC search failed -- error fetching data:', error);
+      setResults([]);
+      setTotalPages(1);
+      setTotalResults(0);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return {
@@ -211,5 +260,10 @@ export function useStacGenericFilter({
     selectedCollection,
     setSelectedCollection,
     handleSubmit,
+    results,
+    isLoading,
+    totalPages,
+    currentPage,
+    totalResults,
   };
 }
