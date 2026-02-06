@@ -89,6 +89,11 @@
             "type": "object",
             "description": "The color/style override",
             "default": {}
+          },
+          "sourceProperties": {
+            "type": "object",
+            "description": "The symbology source override",
+            "default": {}
           }
         }
       }
