@@ -32,34 +32,31 @@ export function SourcePropertiesField(props: FieldProps): React.ReactElement {
   const fullFormData = context?.formData;
   const formSchemaRegistry = context?.formSchemaRegistry;
   const index = extractLayerOverrideIndex(props.idSchema ?? {});
-  const sourceProperties =
-    index !== undefined && fullFormData?.layerOverride?.[index]
-      ? fullFormData.layerOverride[index].sourceProperties
-      : undefined;
   const model = props.formContext?.model;
   const layerId = fullFormData?.layerOverride?.[index ?? 0]?.targetLayer;
   const layer = model?.getLayer(layerId);
   const sourceID = layer?.parameters?.source;
   const source = model?.getSource(sourceID);
+  const sourceProperties = source?.parameters;
 
   const sourceSchema =
     source?.type && formSchemaRegistry
       ? deepCopy(formSchemaRegistry.getSchemas().get(source.type))
       : undefined;
 
-  console.log('sourceSchema', sourceSchema);
   const SourceForm = getSourceTypeForm(source?.type ?? 'GeoJSONSource');
+  console.log('sourceSchema', sourceSchema);
+  console.log('model?.filePath', model?.filePath);
+  console.log('sourceProperties', sourceProperties);
 
-  // this is sending the segment not the source
-  // or its not sending anything and doing some default shit
   const formProps: ISourceFormProps = {
-    model: model!,
     formContext: 'update',
-    sourceData: sourceProperties,
-    sourceType: source?.type ?? 'GeoJSONSource',
-    schema: { sourceSchema },
+    model: model!,
+    filePath: model?.filePath,
+    schema: sourceSchema,
+    sourceData: sourceProperties ?? undefined,
     syncData: (properties: IDict) => props.onChange(properties),
-    ...(sourceSchema && { schema: sourceSchema }),
+    sourceType: source?.type ?? 'GeoJSONSource',
   };
   return <SourceForm {...formProps} />;
 }
