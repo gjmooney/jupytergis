@@ -160,6 +160,8 @@ interface IStates {
   filterStates: IDict<IJGISFilterItem | undefined>;
   jgisSettings: IJupyterGISSettings;
   isSpectaPresentation: boolean;
+  /** Set in _onSharedOptionsChanged; panels wrapper content does not render until true. */
+  panelsReady: boolean;
 }
 
 export class MainView extends React.Component<IProps, IStates> {
@@ -262,6 +264,7 @@ export class MainView extends React.Component<IProps, IStates> {
       filterStates: {},
       jgisSettings: this._model.jgisSettings,
       isSpectaPresentation: false,
+      panelsReady: false,
     };
 
     this._sources = [];
@@ -1846,6 +1849,10 @@ export class MainView extends React.Component<IProps, IStates> {
       this.updateOptions(options);
       this._isPositionInitialized = true;
     }
+
+    this.setState(old =>
+      old.panelsReady ? old : { ...old, panelsReady: true },
+    );
   }
 
   private async _syncSettingsFromRegistry() {
@@ -2773,48 +2780,49 @@ export class MainView extends React.Component<IProps, IStates> {
               }}
             >
               <div className="jgis-panels-wrapper">
-                {!this.state.isSpectaPresentation ? (
-                  <>
-                    {this._state && (
-                      <LeftPanel
-                        model={this._model}
-                        commands={this._mainViewModel.commands}
-                        state={this._state}
-                        settings={this.state.jgisSettings}
-                      />
-                    )}
-                    {this._formSchemaRegistry && this._annotationModel && (
-                      <RightPanel
-                        model={this._model}
-                        commands={this._mainViewModel.commands}
-                        formSchemaRegistry={this._formSchemaRegistry}
-                        annotationModel={this._annotationModel}
-                        addLayer={this.addLayer.bind(this)}
-                        removeLayer={this.removeLayer.bind(this)}
-                        settings={this.state.jgisSettings}
-                      />
-                    )}
-                  </>
-                ) : this.props.isMobile ? (
-                  <MobileSpectaPanel model={this._model} />
-                ) : (
-                  <div className="jgis-specta-right-panel-container-mod jgis-right-panel-container">
-                    <div
-                      ref={this.spectaContainerRef}
-                      className="jgis-specta-story-panel-container"
-                    >
-                      <StoryViewerPanel
-                        ref={this.storyViewerPanelRef}
-                        model={this._model}
-                        isSpecta={this.state.isSpectaPresentation}
-                        className="jgis-story-viewer-panel-specta-mod"
-                        onSegmentTransitionEnd={() =>
-                          this._clearStoryScrollGuard()
-                        }
-                      />
+                {this.state.panelsReady &&
+                  (!this.state.isSpectaPresentation ? (
+                    <>
+                      {this._state && (
+                        <LeftPanel
+                          model={this._model}
+                          commands={this._mainViewModel.commands}
+                          state={this._state}
+                          settings={this.state.jgisSettings}
+                        />
+                      )}
+                      {this._formSchemaRegistry && this._annotationModel && (
+                        <RightPanel
+                          model={this._model}
+                          commands={this._mainViewModel.commands}
+                          formSchemaRegistry={this._formSchemaRegistry}
+                          annotationModel={this._annotationModel}
+                          addLayer={this.addLayer.bind(this)}
+                          removeLayer={this.removeLayer.bind(this)}
+                          settings={this.state.jgisSettings}
+                        />
+                      )}
+                    </>
+                  ) : this.props.isMobile ? (
+                    <MobileSpectaPanel model={this._model} />
+                  ) : (
+                    <div className="jgis-specta-right-panel-container-mod jgis-right-panel-container">
+                      <div
+                        ref={this.spectaContainerRef}
+                        className="jgis-specta-story-panel-container"
+                      >
+                        <StoryViewerPanel
+                          ref={this.storyViewerPanelRef}
+                          model={this._model}
+                          isSpecta={this.state.isSpectaPresentation}
+                          className="jgis-story-viewer-panel-specta-mod"
+                          onSegmentTransitionEnd={() =>
+                            this._clearStoryScrollGuard()
+                          }
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ))}
               </div>
               <div
                 ref={this.controlsToolbarRef}
