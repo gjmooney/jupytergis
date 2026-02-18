@@ -63,6 +63,7 @@ export class JupyterGISDocumentWidgetFactory extends ABCWidgetFactory<
       }
     }
     const { model } = context;
+    // console.log('model', model.getSelectedStory());
     model.filePath = context.localPath;
     context.pathChanged.connect(() => {
       model.filePath = context.localPath;
@@ -73,6 +74,7 @@ export class JupyterGISDocumentWidgetFactory extends ABCWidgetFactory<
 
     const content = new JupyterGISPanel({
       model,
+      readyPromise: model.sharedModel.initialSyncReady,
       manager: this.options.manager,
       contentFactory: this.options.contentFactory,
       mimeTypeService: this.options.mimeTypeService,

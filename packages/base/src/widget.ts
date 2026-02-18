@@ -104,15 +104,40 @@ export class JupyterGISPanel extends SplitPanel {
     commandRegistry,
     formSchemaRegistry,
     annotationModel,
+    readyPromise,
     ...consoleOption
   }: JupyterGISPanel.IOptions) {
     super({ orientation: 'vertical', spacing: 0 });
 
     this._state = state;
-    this._initModel({ model, commandRegistry });
-    this._initView(formSchemaRegistry, annotationModel);
     this._consoleOption = { commandRegistry, ...consoleOption };
     this._consoleTracker = consoleTracker;
+
+    if (readyPromise) {
+      this._deferredOptions = {
+        model,
+        commandRegistry,
+        formSchemaRegistry,
+        annotationModel,
+      };
+      readyPromise.then(() => this._runDeferredInit());
+    } else {
+      this._initModel({ model, commandRegistry });
+      this._initView(formSchemaRegistry, annotationModel);
+    }
+  }
+
+  private _runDeferredInit(): void {
+    if (this.isDisposed || !this._deferredOptions) {
+      return;
+    }
+    const { model, commandRegistry, formSchemaRegistry, annotationModel } =
+      this._deferredOptions;
+
+    console.log('model.getSelectedStory()', model.getSelectedStory());
+    this._deferredOptions = undefined;
+    this._initModel({ model, commandRegistry });
+    this._initView(formSchemaRegistry, annotationModel);
   }
 
   _initModel(options: {
@@ -131,8 +156,9 @@ export class JupyterGISPanel extends SplitPanel {
     formSchemaRegistry?: IJGISFormSchemaRegistry,
     annotationModel?: IAnnotationModel,
   ) {
+    const mainViewModel = this._mainViewModel!;
     this._jupyterGISMainViewPanel = new JupyterGISMainViewPanel({
-      mainViewModel: this._mainViewModel,
+      mainViewModel,
       state: this._state,
       formSchemaRegistry: formSchemaRegistry,
       annotationModel: annotationModel,
@@ -142,6 +168,11 @@ export class JupyterGISPanel extends SplitPanel {
   }
 
   get jupyterGISMainViewPanel(): JupyterGISMainViewPanel {
+    if (!this._jupyterGISMainViewPanel) {
+      throw new Error(
+        'JupyterGISPanel not ready (initialSyncReady not resolved)',
+      );
+    }
     return this._jupyterGISMainViewPanel;
   }
 
@@ -149,6 +180,11 @@ export class JupyterGISPanel extends SplitPanel {
     ObservableMap<JSONValue>,
     IObservableMap.IChangedArgs<JSONValue>
   > {
+    if (!this._view) {
+      throw new Error(
+        'JupyterGISPanel not ready (initialSyncReady not resolved)',
+      );
+    }
     return this._view.changed;
   }
 
@@ -159,15 +195,21 @@ export class JupyterGISPanel extends SplitPanel {
     if (this.isDisposed) {
       return;
     }
+    this._deferredOptions = undefined;
     if (this._consoleView) {
       this._consoleView.dispose();
     }
     Signal.clearData(this);
-    this._mainViewModel.dispose();
+    this._mainViewModel?.dispose();
     super.dispose();
   }
 
   get currentViewModel(): MainViewModel {
+    if (!this._mainViewModel) {
+      throw new Error(
+        'JupyterGISPanel not ready (initialSyncReady not resolved)',
+      );
+    }
     return this._mainViewModel;
   }
 
@@ -251,9 +293,15 @@ export class JupyterGISPanel extends SplitPanel {
   }
 
   private _state: IStateDB | undefined;
-  private _mainViewModel: MainViewModel;
-  private _view: ObservableMap<JSONValue>;
-  private _jupyterGISMainViewPanel: JupyterGISMainViewPanel;
+  private _mainViewModel?: MainViewModel;
+  private _view?: ObservableMap<JSONValue>;
+  private _jupyterGISMainViewPanel?: JupyterGISMainViewPanel;
+  private _deferredOptions?: {
+    model: IJupyterGISModel;
+    commandRegistry: CommandRegistry;
+    formSchemaRegistry?: IJGISFormSchemaRegistry;
+    annotationModel?: IAnnotationModel;
+  };
   private _consoleView?: ConsoleView;
   private _consoleOpened = false;
   private _consoleOption: Partial<ConsoleView.IOptions>;
@@ -268,5 +316,7 @@ export namespace JupyterGISPanel {
     consoleTracker?: IConsoleTracker;
     formSchemaRegistry?: IJGISFormSchemaRegistry;
     annotationModel?: IAnnotationModel;
+    /** When set, _initModel and _initView run after this promise resolves. */
+    readyPromise?: Promise<void>;
   }
 }

@@ -63,9 +63,13 @@ export class JupyterGISModel implements IJupyterGISModel {
     const { annotationModel, sharedModel, settingRegistry } = options;
 
     if (sharedModel) {
+      // console.log('sharedmodel exist');/
       this._sharedModel = sharedModel;
+      // console.log('sharedModel.stories', sharedModel.stories);
     } else {
       this._sharedModel = JupyterGISDoc.create();
+      // not populated
+      // console.log('this._sharedModel.stories', this._sharedModel.stories);
       this._sharedModel.changed.connect(this._onSharedModelChanged);
     }
     this.sharedModel.awareness.on('change', this._onClientStateChanged);
@@ -317,6 +321,7 @@ export class JupyterGISModel implements IJupyterGISModel {
   }
 
   fromString(data: string): void {
+    // console.trace();
     const jsonData: IJGISContent = JSON.parse(data);
     const ajv = new Ajv();
     const validate = ajv.compile(jgisSchema);
@@ -329,7 +334,7 @@ export class JupyterGISModel implements IJupyterGISModel {
       }
       console.warn(errorMsg);
     }
-
+    // console.log('[debug] jsonData.stories', jsonData.stories);
     this.sharedModel.transact(() => {
       this.sharedModel.sources = jsonData.sources ?? {};
       this.sharedModel.layers = jsonData.layers ?? {};

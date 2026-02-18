@@ -81,6 +81,8 @@ export class JupyterGISModelFactory implements DocumentRegistry.IModelFactory<Ju
   createNew(
     options: DocumentRegistry.IModelOptions<IJupyterGISDoc>,
   ): JupyterGISModel {
+    // un populated
+    // console.log('options.sharedModel', options.sharedModel);
     return new JupyterGISModel({
       sharedModel: options.sharedModel,
       languagePreference: options.languagePreference,

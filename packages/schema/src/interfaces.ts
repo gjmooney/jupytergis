@@ -180,6 +180,9 @@ export interface IJupyterGISDoc extends YDocument<IJupyterGISDocChange> {
   storyMapsChanged: ISignal<IJupyterGISDoc, IJGISStoryMapDocChange>;
   layerTreeChanged: ISignal<IJupyterGISDoc, IJGISLayerTreeDocChange>;
   metadataChanged: ISignal<IJupyterGISDoc, MapChange>;
+
+  /** Resolves once all observers (layers, layerTree, sources, stories, options, metadata) have fired at least once. */
+  readonly initialSyncReady: Promise<void>;
 }
 
 export interface IJupyterGISDocChange extends DocumentChange {
