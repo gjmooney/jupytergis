@@ -1,26 +1,64 @@
-import { IDict } from '@jupytergis/schema';
-import { RJSFSchema, UiSchema } from '@rjsf/utils';
+import { UiSchema } from '@rjsf/utils';
+import React, { useMemo } from 'react';
 
-import { BaseForm } from './baseform';
+import { deepCopy } from '@/src/tools';
+import type { IBaseFormProps } from '@/src/types';
+import { SchemaForm } from './SchemaForm';
+import { processBaseSchema, removeFormEntry } from './schemaUtils';
+import { useSchemaFormState } from './useSchemaFormState';
 
-/**
- * The form to modify story map properties.
- */
-export class StoryEditorPropertiesForm extends BaseForm {
-  protected processSchema(
-    data: IDict<any> | undefined,
-    schema: RJSFSchema,
-    uiSchema: UiSchema,
-  ): void {
-    super.processSchema(data, schema, uiSchema);
-    this.removeFormEntry('storySegments', data, schema, uiSchema);
+export function StoryEditorPropertiesForm(
+  props: IBaseFormProps,
+): React.ReactElement | null {
+  const {
+    schema: schemaProp,
+    sourceData,
+    syncData,
+    model,
+    filePath,
+    formContext,
+    cancel,
+  } = props;
 
-    uiSchema.presentationBgColor = {
-      'ui:widget': 'color',
-    };
+  const {
+    formData,
+    schema,
+    formContextValue,
+    hasSchema,
+    handleChangeBase,
+    handleSubmitBase,
+  } = useSchemaFormState({ sourceData, schemaProp, model, syncData, cancel });
 
-    uiSchema.presentationTextColor = {
-      'ui:widget': 'color',
-    };
+  const uiSchema = useMemo(() => {
+    const builtUiSchema: UiSchema = {};
+    const dataCopy = deepCopy(formData);
+    removeFormEntry('storySegments', dataCopy, schema, builtUiSchema);
+    processBaseSchema(
+      dataCopy,
+      schema,
+      builtUiSchema,
+      formContext,
+      removeFormEntry,
+    );
+    builtUiSchema.presentationBgColor = { 'ui:widget': 'color' };
+    builtUiSchema.presentationTextColor = { 'ui:widget': 'color' };
+
+    return builtUiSchema;
+  }, [schema, formData, formContext]);
+
+  if (!hasSchema) {
+    return null;
   }
+
+  return (
+    <SchemaForm
+      schema={schema}
+      formData={formData}
+      onChange={handleChangeBase}
+      onSubmit={handleSubmitBase}
+      formContext={formContextValue}
+      filePath={filePath}
+      uiSchema={uiSchema}
+    />
+  );
 }
