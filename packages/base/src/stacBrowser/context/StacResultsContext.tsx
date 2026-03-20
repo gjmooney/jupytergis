@@ -49,6 +49,8 @@ interface IStacResultsContext {
     method?: string,
   ) => Promise<void>;
   executeQueryWithPage: (pageNumber: number) => Promise<void>;
+  hoveredResultId?: string;
+  setHoveredResultId: (id?: string) => void;
 }
 
 const StacResultsContext = createContext<IStacResultsContext | undefined>(
@@ -79,6 +81,9 @@ export function StacResultsProvider({
   >([]);
   const [selectedUrl, setSelectedUrlState] = useState('');
   const [currentPage, setCurrentPageState] = useState(1);
+  const [hoveredResultId, setHoveredResultIdState] = useState<
+    string | undefined
+  >();
   const currentPageRef = useRef(1);
 
   // Store hook-specific functions in refs (these are set by the hooks)
@@ -129,6 +134,7 @@ export function StacResultsProvider({
       setResultsState(newResults);
       setTotalResults(newTotalResults);
       setTotalPages(newTotalPages);
+      setHoveredResultIdState(undefined);
     },
     [],
   );
@@ -152,7 +158,22 @@ export function StacResultsProvider({
     setPaginationLinksState([]);
     setTotalResults('0');
     setTotalPages(0);
+    setHoveredResultIdState(undefined);
   }, []);
+
+  const setHoveredResultId = useCallback(
+    (id?: string) => {
+      setHoveredResultIdState(id);
+      if (!model) {
+        return;
+      }
+      model.sharedModel.awareness.setLocalStateField('hoveredStacResultId', {
+        value: id,
+        emitter: model.getClientId().toString(),
+      });
+    },
+    [model],
+  );
 
   const setCurrentPage = useCallback((page: number) => {
     setCurrentPageState(page);
@@ -220,6 +241,7 @@ export function StacResultsProvider({
           async (response: Response) => await response.json(),
           //@ts-expect-error Jupyter requires X-XSRFToken header
           options,
+          // 'internal',
         )) as IStacSearchResult;
 
         if (!data) {
@@ -229,39 +251,41 @@ export function StacResultsProvider({
         }
 
         // Filter assets to only include items with 'overview' or 'thumbnail' roles
-        if (data.features && data.features.length > 0) {
-          data.features.forEach((feature: IStacItem) => {
-            if (feature.assets) {
-              const originalAssets = feature.assets;
-              const filteredAssets: Record<string, IStacAsset> = {};
+        // if (data.features && data.features.length > 0) {
+        //   data.features.forEach((feature: IStacItem) => {
+        //     if (feature.assets) {
+        //       const originalAssets = feature.assets;
+        //       const filteredAssets: Record<string, IStacAsset> = {};
 
-              for (const [key, asset] of Object.entries(originalAssets)) {
-                if (
-                  asset &&
-                  typeof asset === 'object' &&
-                  'roles' in asset &&
-                  Array.isArray(asset.roles)
-                ) {
-                  const roles = asset.roles;
+        //       for (const [key, asset] of Object.entries(originalAssets)) {
+        //         if (
+        //           asset &&
+        //           typeof asset === 'object' &&
+        //           'roles' in asset &&
+        //           Array.isArray(asset.roles)
+        //         ) {
+        //           const roles = asset.roles;
 
-                  if (
-                    roles.includes('thumbnail') ||
-                    roles.includes('overview')
-                  ) {
-                    filteredAssets[key] = asset;
-                  }
-                }
-              }
+        //           if (
+        //             roles.includes('thumbnail') ||
+        //             roles.includes('overview')
+        //           ) {
+        //             filteredAssets[key] = asset;
+        //           }
+        //         }
+        //       }
 
-              feature.assets = filteredAssets;
-            }
-          });
-        }
+        //       feature.assets = filteredAssets;
+        //     }
+        //   });
+        // }
 
         // Sort features by id before setting results
         const sortedFeatures = [...data.features].sort((a, b) =>
           a.id.localeCompare(b.id),
         );
+        console.log('sortedFeatures', sortedFeatures);
+        model.addStacItem('result', JSON.stringify(data));
 
         // Calculate total results from context if available
         let totalResultsFromQuery: string;
@@ -358,7 +382,8 @@ export function StacResultsProvider({
   );
 
   const defaultAddToMap = useCallback(
-    (stacData: IStacItem): void => {
+    (stacData: IStacItem[]): void => {
+      console.log('default');
       if (!model) {
         return;
       }
@@ -368,7 +393,8 @@ export function StacResultsProvider({
         type: 'StacLayer',
         parameters: { data: stacData },
         visible: true,
-        name: stacData.properties?.title ?? stacData.id,
+        // Used by `mainView.tsx` to render footprints-only for POC.
+        name: 'stac-footprints',
       };
 
       model.addLayer(layerId, layerModel);
@@ -385,14 +411,18 @@ export function StacResultsProvider({
 
       const currentResults = results;
       const result = currentResults.find((r: IStacItem) => r.id === id);
-
+      console.log('[debug] result', result);
       if (result) {
-        // Use registered override if available, otherwise use default
-        if (addToMapRef.current) {
-          addToMapRef.current(result);
-        } else {
-          defaultAddToMap(result);
-        }
+        // // model.addStacItem('result', JSON.stringify(result));
+        // // Use registered override if available, otherwise use default
+        // if (addToMapRef.current) {
+        //   addToMapRef.current(result);
+        // } else {
+        //   defaultAddToMap(results);
+        // }
+        // POC behavior: always create a single layer with footprints for ALL
+        // results (not just the clicked item).
+        defaultAddToMap(results);
       }
     },
     [model, results, defaultAddToMap],
@@ -426,6 +456,8 @@ export function StacResultsProvider({
         registerBuildQuery,
         executeQuery,
         executeQueryWithPage,
+        hoveredResultId,
+        setHoveredResultId,
       }}
     >
       {children}

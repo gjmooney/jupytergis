@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import asyncio
+import inspect
 import json
 import logging
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Callable, Dict, Iterable, List, Literal, Optional
 from uuid import uuid4
 import requests
+import numpy as np
 
 from pycrdt import Array, Map
 from pydantic import BaseModel
@@ -35,6 +39,84 @@ from jupytergis_core.schema import (
 )
 
 logger = logging.getLogger(__file__)
+
+
+@dataclass
+class ExtentBounds:
+    west: float
+    south: float
+    east: float
+    north: float
+
+
+def _slice_dataarray_by_bbox(
+    data_array: Any,
+    *,
+    west: float,
+    south: float,
+    east: float,
+    north: float,
+    x_name: str,
+    y_name: str,
+) -> Any:
+    y_values = data_array.coords[y_name].values
+    if y_values[0] <= y_values[-1]:
+        y_slice = slice(south, north)
+    else:
+        y_slice = slice(north, south)
+
+    sliced = data_array.sel({x_name: slice(west, east), y_name: y_slice})
+    return sliced
+
+
+def _resample_dataarray_to_viewport(
+    data_array: Any,
+    *,
+    x_name: str,
+    y_name: str,
+    viewport_width: int | None,
+    viewport_height: int | None,
+    method: str = "linear",
+) -> Any:
+    """Resample a DataArray to an approximate viewport-sized grid."""
+    if not viewport_width or not viewport_height:
+        return data_array
+    if viewport_width <= 0 or viewport_height <= 0:
+        return data_array
+
+    x_values = data_array.coords[x_name].values
+    y_values = data_array.coords[y_name].values
+    if len(x_values) < 2 or len(y_values) < 2:
+        return data_array
+
+    x_target = np.linspace(float(x_values[0]), float(x_values[-1]), viewport_width)
+    y_target = np.linspace(float(y_values[0]), float(y_values[-1]), viewport_height)
+    return data_array.interp({x_name: x_target, y_name: y_target}, method=method)
+
+
+def _extract_viewport_size(options: dict[str, Any]) -> tuple[int | None, int | None]:
+    """Best-effort viewport size extraction from options payload."""
+    width = options.get("width")
+    height = options.get("height")
+
+    if isinstance(width, (int, float)) and isinstance(height, (int, float)):
+        return int(width), int(height)
+
+    viewport = options.get("viewport")
+    if isinstance(viewport, dict):
+        width = viewport.get("width")
+        height = viewport.get("height")
+        if isinstance(width, (int, float)) and isinstance(height, (int, float)):
+            return int(width), int(height)
+
+    size = options.get("size")
+    if isinstance(size, dict):
+        width = size.get("width")
+        height = size.get("height")
+        if isinstance(width, (int, float)) and isinstance(height, (int, float)):
+            return int(width), int(height)
+
+    return None, None
 
 
 def reversed_tree(root):
@@ -86,6 +168,7 @@ class GISDocument(CommWidget):
         )
         self.ydoc["layerTree"] = self._layerTree = Array()
         self.ydoc["metadata"] = self._metadata = Map()
+        self.ydoc["stacItem"] = self._stacItem = Map()
 
         if latitude is not None:
             self._options["latitude"] = latitude
@@ -103,6 +186,13 @@ class GISDocument(CommWidget):
             self._options["projection"] = projection
 
     @property
+    def sources(self) -> Dict:
+        """
+        Get the sources list
+        """
+        return self._sources.to_py()
+
+    @property
     def layers(self) -> Dict:
         """
         Get the layer list
@@ -115,6 +205,299 @@ class GISDocument(CommWidget):
         Get the layer tree
         """
         return self._layerTree.to_py()
+
+    @property
+    def extent(self) -> ExtentBounds | None:
+        """
+        Get the extent
+        """
+        extent = self._options.to_py().get("extent")
+        if isinstance(extent, list) and len(extent) == 4:
+            return ExtentBounds(
+                west=extent[0], south=extent[1], east=extent[2], north=extent[3]
+            )
+        return None
+
+    def _map_extent_bbox_in_data_crs(
+        self, data_crs: str
+    ) -> tuple[float, float, float, float] | None:
+        """
+        Current map view as ``(west, south, east, north)`` in ``data_crs``.
+
+        Used by :meth:`bind_extent_slice_callback` and
+        :meth:`list_stack_items_in_extent`.
+        """
+        extent = self.extent
+        if extent is None:
+            return None
+        west, south, east, north = (
+            extent.west,
+            extent.south,
+            extent.east,
+            extent.north,
+        )
+        map_crs = str(self._options.to_py().get("projection", "EPSG:3857"))
+        if map_crs.upper() != data_crs.upper():
+            try:
+                from pyproj import Transformer
+            except ImportError as e:  # pragma: no cover
+                raise ImportError(
+                    "pyproj is required to transform the map extent to data CRS."
+                ) from e
+            transformer = Transformer.from_crs(map_crs, data_crs, always_xy=True)
+            west, south = transformer.transform(west, south)
+            east, north = transformer.transform(east, north)
+        return west, south, east, north
+
+    @property
+    def stacItem(self) -> Dict:
+        """
+        Get the layer list
+        """
+        stac_item = self._stacItem.to_py()
+
+        # `stacItem` is stored as a wrapper like:
+        #   {"result": "<json string>"}
+        # Parse the inner JSON so notebook display is readable.
+        if (
+            isinstance(stac_item, dict)
+            and 'result' in stac_item
+            and isinstance(stac_item['result'], str)
+        ):
+            try:
+                return json.loads(stac_item['result'])
+            except json.JSONDecodeError:
+                pass
+
+        return stac_item
+
+    def bind_extent_slice_callback(
+        self,
+        data_array: Any,
+        on_slice: Callable[[Any], None],
+        *,
+        data_crs: str = "EPSG:4326",
+        x_name: str = "lon",
+        y_name: str = "lat",
+        process: Callable[[Any], Any] | None = None,
+        compute: bool = False,
+        strict_process: bool = False,
+        viewport_width: int | None = None,
+        viewport_height: int | None = None,
+        resample_method: str = "linear",
+        auto_viewport_from_options: bool = True,
+        add_tiler_layer_on_compute: bool = False,
+        replace_previous_tiler_layer: bool = True,
+        tiler_layer_kwargs: dict[str, Any] | None = None,
+    ) -> str:
+        """
+        Call ``on_slice`` with a DataArray slice when ``options.extent`` changes.
+
+        Optionally transform the slice with ``process`` (e.g. NDWI) and
+        eagerly evaluate with ``compute`` before invoking ``on_slice``.
+
+        If ``process`` raises and ``strict_process`` is ``False`` (default),
+        the callback falls back to the unprocessed spatial slice so state
+        updates still happen while debugging.
+        """
+        print(
+            "Registering extent slice callback (data_crs=%s, x_name=%s, y_name=%s, compute=%s)",
+            data_crs,
+            x_name,
+            y_name,
+            compute,
+        )
+        previous_tiler_layer_id: str | None = None
+        tiler_layer_kwargs = tiler_layer_kwargs or {}
+
+        def _on_options_change(change: Any, _transaction: Any) -> None:
+            nonlocal previous_tiler_layer_id
+            try:
+                print("Received options change event (change=%s)", change)
+                keys = getattr(change, "keys", None)
+                if not keys or "extent" not in keys:
+                    print("Ignoring options change without extent update")
+                    return
+
+                extent = self.extent
+                if extent is None:
+                    print("No valid extent in options, skipping callback")
+                    return
+                print(
+                    "Extent changed: west=%s, south=%s, east=%s, north=%s",
+                    extent.west,
+                    extent.south,
+                    extent.east,
+                    extent.north,
+                )
+
+                if x_name not in data_array.coords or y_name not in data_array.coords:
+                    print(
+                        "DataArray missing coords x=%s y=%s available=%s",
+                        x_name,
+                        y_name,
+                        list(data_array.coords),
+                    )
+                    raise KeyError(
+                        f"Coordinates '{x_name}' and '{y_name}' must exist on DataArray."
+                    )
+
+                bbox = self._map_extent_bbox_in_data_crs(data_crs)
+                if bbox is None:
+                    print("No valid extent in options, skipping callback")
+                    return
+                west, south, east, north = bbox
+
+                print(
+                    "Slicing DataArray using bbox west=%s south=%s east=%s north=%s",
+                    west,
+                    south,
+                    east,
+                    north,
+                )
+                sliced = _slice_dataarray_by_bbox(
+                    data_array,
+                    west=west,
+                    south=south,
+                    east=east,
+                    north=north,
+                    x_name=x_name,
+                    y_name=y_name,
+                )
+                effective_width = viewport_width
+                effective_height = viewport_height
+                if auto_viewport_from_options and (
+                    effective_width is None or effective_height is None
+                ):
+                    options = self._options.to_py()
+                    auto_width, auto_height = _extract_viewport_size(options)
+                    if effective_width is None:
+                        effective_width = auto_width
+                    if effective_height is None:
+                        effective_height = auto_height
+                sliced = _resample_dataarray_to_viewport(
+                    sliced,
+                    x_name=x_name,
+                    y_name=y_name,
+                    viewport_width=effective_width,
+                    viewport_height=effective_height,
+                    method=resample_method,
+                )
+                if process is not None:
+                    print("Applying slice post-processing callback")
+                    try:
+                        sliced = process(sliced)
+                    except Exception as process_error:
+                        if strict_process:
+                            raise
+                        print(
+                            "Slice process callback failed; using unprocessed slice. "
+                            "Set strict_process=True to raise. error=%r",
+                            process_error,
+                        )
+                        print(
+                            "[GISDocument] process callback failed; "
+                            "using unprocessed slice. "
+                            f"error={process_error!r}"
+                        )
+                if compute:
+                    print("Computing processed slice eagerly")
+                    sliced = sliced.compute()
+                    if add_tiler_layer_on_compute:
+                        add_tiler_layer = getattr(self, "add_tiler_layer", None)
+                        if add_tiler_layer is None:
+                            print(
+                                "add_tiler_layer_on_compute=True but add_tiler_layer is not available on this document."
+                            )
+                        else:
+                            if (
+                                replace_previous_tiler_layer
+                                and previous_tiler_layer_id is not None
+                            ):
+                                try:
+                                    self.remove_layer(previous_tiler_layer_id)
+                                except Exception as remove_error:
+                                    print(
+                                        "Could not remove previous generated tiler layer. error=%r",
+                                        remove_error,
+                                    )
+                            layer_result = add_tiler_layer(
+                                sliced,
+                                **tiler_layer_kwargs,
+                            )
+                            if inspect.isawaitable(layer_result):
+                                async def _add_layer_async():
+                                    nonlocal previous_tiler_layer_id
+                                    added = await layer_result
+                                    if isinstance(added, str):
+                                        previous_tiler_layer_id = added
+
+                                asyncio.create_task(_add_layer_async())
+                            elif isinstance(layer_result, str):
+                                previous_tiler_layer_id = layer_result
+                print("Slice complete, invoking on_slice callback")
+                on_slice(sliced)
+                print("on_slice callback finished")
+            except Exception as e:
+                print("Extent slice callback failed")
+                # Surface callback failures directly in notebook output.
+                print(f"[GISDocument] extent slice callback failed: {e!r}")
+
+        subscription_id = self._options.observe(_on_options_change)
+        print("Extent callback registered with id=%s", subscription_id)
+        return subscription_id
+
+    def bind_extent_debug_observer(self, *, print_to_stdout: bool = True) -> str:
+        """
+        Log every ``options.extent`` change event.
+
+        Useful for notebook debugging when checking whether map pan/zoom events
+        are propagated to the document.
+        """
+
+        def _on_options_change(change: Any, _transaction: Any) -> None:
+            keys = getattr(change, "keys", None)
+            if not keys or "extent" not in keys:
+                return
+            extent_change = keys.get("extent")
+            old_extent = (
+                extent_change.get("oldValue")
+                if isinstance(extent_change, dict)
+                else None
+            )
+            new_extent = (
+                extent_change.get("newValue")
+                if isinstance(extent_change, dict)
+                else None
+            )
+            print(
+                "Extent observer event: old=%s new=%s current=%s",
+                old_extent,
+                new_extent,
+                self.extent,
+            )
+            if print_to_stdout:
+                print(
+                    "[GISDocument] extent changed "
+                    f"old={old_extent} new={new_extent} current={self.extent}"
+                )
+
+        subscription_id = self._options.observe(_on_options_change)
+        print("Extent debug observer registered with id=%s", subscription_id)
+        return subscription_id
+
+    def unbind_extent_slice_callback(self, subscription_id: str) -> None:
+        """Remove an extent slice callback registered by bind_extent_slice_callback."""
+        print("Unregistering extent callback id=%s", subscription_id)
+        self._options.unobserve(subscription_id)
+
+    def unbind_extent_debug_observer(self, subscription_id: str) -> None:
+        """Remove an extent debug observer registered by bind_extent_debug_observer."""
+        print(
+            "Unregistering extent debug observer id=%s",
+            subscription_id,
+        )
+        self._options.unobserve(subscription_id)
 
     def sidecar(
         self,
@@ -148,6 +531,7 @@ class GISDocument(CommWidget):
         virtual_file = self.to_py()
         virtual_file["layerTree"] = reversed_tree(virtual_file["layerTree"])
         del virtual_file["metadata"]
+        del virtual_file["stacItem"]
 
         return export_project_to_qgis(path, virtual_file)
 
@@ -859,6 +1243,7 @@ class GISDocument(CommWidget):
             "layerTree": self._layerTree.to_py(),
             "options": self._options.to_py(),
             "metadata": self._metadata.to_py(),
+            "stacItem": self._stacItem.to_py(),
         }
 
 

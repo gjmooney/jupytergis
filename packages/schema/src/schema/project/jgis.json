@@ -31,6 +31,10 @@
         }
       },
       "additionalProperties": false
+    },
+    "stacItem": {
+      "type": "object",
+      "additionalProperties": true
     }
   },
   "definitions": {
@@ -163,6 +167,12 @@
           "items": {
             "type": "string"
           }
+        },
+        "showGradient": {
+          "type": "boolean",
+          "title": "Use gradient background",
+          "description": "Toggle the gradient background in presentation mode.",
+          "default": true
         },
         "presentationBgColor": {
           "type": "string",

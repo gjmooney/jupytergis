@@ -72,6 +72,10 @@ export class JupyterGISModel implements IJupyterGISModel {
       this._metadataChangedHandler,
       this,
     );
+    this._sharedModel.stacItemChanged.connect(
+      this._stacItemChangedHandler,
+      this,
+    );
     this.annotationModel = annotationModel;
     this.settingRegistry = settingRegistry;
     this._pathChanged = new Signal<JupyterGISModel, string>(this);
@@ -273,6 +277,10 @@ export class JupyterGISModel implements IJupyterGISModel {
     return this._sharedMetadataChanged;
   }
 
+  get sharedStacItemChanged(): ISignal<this, MapChange> {
+    return this._sharedStacItemChanged;
+  }
+
   get zoomToPositionSignal(): ISignal<this, string> {
     return this._zoomToPositionSignal;
   }
@@ -293,12 +301,24 @@ export class JupyterGISModel implements IJupyterGISModel {
     this._sharedMetadataChanged.emit(args);
   }
 
+  private _stacItemChangedHandler(_: IJupyterGISDoc, args: MapChange): void {
+    this._sharedStacItemChanged.emit(args);
+  }
+
   addMetadata(key: string, value: string): void {
     this.sharedModel.setMetadata(key, value);
   }
 
   removeMetadata(key: string): void {
     this.sharedModel.removeMetadata(key);
+  }
+
+  addStacItem(key: string, value: string): void {
+    this.sharedModel.setStacItem(key, value);
+  }
+
+  removeStacItem(key: string): void {
+    this.sharedModel.removeStacItem(key);
   }
 
   dispose(): void {
@@ -343,6 +363,7 @@ export class JupyterGISModel implements IJupyterGISModel {
         projection: 'EPSG:3857',
       };
       this.sharedModel.metadata = jsonData.metadata ?? {};
+      this.sharedModel.stacItem = jsonData.stacItem ?? {};
     });
     this.dirty = true;
   }
@@ -374,6 +395,7 @@ export class JupyterGISModel implements IJupyterGISModel {
       layerTree: this.sharedModel.layerTree,
       options: this.sharedModel.options,
       metadata: this.sharedModel.metadata,
+      stacItem: this.sharedModel.stacItem,
     };
   }
 
@@ -1049,6 +1071,7 @@ export class JupyterGISModel implements IJupyterGISModel {
     Map<number, IJupyterGISClientState>
   >(this);
   private _sharedMetadataChanged = new Signal<this, MapChange>(this);
+  private _sharedStacItemChanged = new Signal<this, MapChange>(this);
   private _zoomToPositionSignal = new Signal<this, string>(this);
 
   private _addFeatureAsMsSignal = new Signal<this, string>(this);

@@ -50,6 +50,14 @@ export const CLASS_NAME = 'jupytergis-notebook-widget';
 
 export class YJupyterGISModel extends JupyterYModel {
   jupyterGISModel: JupyterGISModel;
+
+  /**
+   * Same Awareness as @jupyter/ydoc JupyterGISDoc so YCommProvider forwards
+   * awareness updates to the kernel.
+   */
+  get awareness() {
+    return this.jupyterGISModel?.sharedModel?.awareness;
+  }
 }
 
 export class YJupyterGISLuminoWidget extends Panel {

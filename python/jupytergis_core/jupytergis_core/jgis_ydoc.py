@@ -17,6 +17,7 @@ class YJGIS(YBaseDoc):
         self._ydoc["options"] = self._yoptions = Map()
         self._ydoc["layerTree"] = self._ylayerTree = Array()
         self._ydoc["metadata"] = self._ymetadata = Map()
+        self._ydoc["stacItem"] = self._ystacItem = Map()
 
     def version(self) -> str:
         return SCHEMA_VERSION
@@ -32,6 +33,7 @@ class YJGIS(YBaseDoc):
         stories = self._ystories.to_py()
         options = self._yoptions.to_py()
         meta = self._ymetadata.to_py()
+        stacItem = self._ystacItem.to_py()
         layers_tree = self._ylayerTree.to_py()
         return json.dumps(
             dict(
@@ -42,6 +44,7 @@ class YJGIS(YBaseDoc):
                 options=options,
                 layerTree=layers_tree,
                 metadata=meta,
+                stacItem=stacItem,
             ),
             sort_keys=True,
             indent=2,
@@ -83,6 +86,9 @@ class YJGIS(YBaseDoc):
             self._ymetadata.clear()
             self._ymetadata.update(valueDict.get("metadata", {}))
 
+            self._ystacItem.clear()
+            self._ystacItem.update(valueDict.get("stacItem", {}))
+
     def observe(self, callback: Callable[[str, Any], None]):
         self.unobserve()
         self._subscriptions[self._ystate] = self._ystate.observe(
@@ -105,4 +111,7 @@ class YJGIS(YBaseDoc):
         )
         self._subscriptions[self._ymetadata] = self._ymetadata.observe_deep(
             partial(callback, "meta")
+        )
+        self._subscriptions[self._ystacItem] = self._ystacItem.observe_deep(
+            partial(callback, "stacItem")
         )
