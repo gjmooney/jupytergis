@@ -32,7 +32,8 @@ export const DEFAULT_JGIS_DOCUMENT_CONTENT = `{
 	"sources": {},
 	"options": {"latitude": 0, "longitude": 0, "zoom": 0, "bearing": 0, "pitch": 0, "projection": "EPSG:3857", "storyMapPresentationMode": false},
 	"layerTree": [],
-	"metadata": {}
+	"metadata": {},
+	"stacItem": {}
 }`;
 
 export class JupyterGISDoc
@@ -48,6 +49,7 @@ export class JupyterGISDoc
     this._sources = this.ydoc.getMap<Y.Map<any>>('sources');
     this._stories = this.ydoc.getMap<Y.Map<any>>('stories');
     this._metadata = this.ydoc.getMap<string>('metadata');
+    this._stacItem = this.ydoc.getMap<string>('stacItem');
 
     this.undoManager.addToScope(this._layers);
     this.undoManager.addToScope(this._sources);
@@ -64,6 +66,7 @@ export class JupyterGISDoc
     this._stories.observeDeep(this._storyMapsObserver.bind(this));
     this._options.observe(this._optionsObserver.bind(this));
     this._metadata.observe(this._metaObserver.bind(this));
+    this._stacItem.observe(this._stacItemObserver.bind(this));
   }
 
   get initialSyncReady(): Promise<void> {
@@ -85,8 +88,9 @@ export class JupyterGISDoc
     const sources = this._sources.toJSON();
     const stories = this._stories.toJSON();
     const metadata = this._metadata.toJSON();
+    const stacItem = this._stacItem.toJSON();
 
-    return { layers, layerTree, sources, stories, options, metadata };
+    return { layers, layerTree, sources, stories, options, metadata, stacItem };
   }
 
   setSource(value: JSONObject | string): void {
@@ -127,6 +131,11 @@ export class JupyterGISDoc
       const metadata = value['metadata'] ?? {};
       Object.entries(metadata).forEach(([key, val]) =>
         this._metadata.set(key, val as string),
+      );
+
+      const stacItem = value['stacItem'] ?? {};
+      Object.entries(stacItem).forEach(([key, val]) =>
+        this._stacItem.set(key, val as string),
       );
     });
   }
@@ -400,6 +409,20 @@ export class JupyterGISDoc
     }
   }
 
+  getStacItem(key: string): string | undefined {
+    return this._stacItem.get(key);
+  }
+
+  setStacItem(key: string, value: string): void {
+    this.transact(() => void this._stacItem.set(key, value));
+  }
+
+  removeStacItem(key: string): void {
+    if (this._stacItem.has(key)) {
+      this._stacItem.delete(key);
+    }
+  }
+
   get metadata(): JSONObject {
     return JSONExt.deepCopy(this._metadata.toJSON());
   }
@@ -412,8 +435,24 @@ export class JupyterGISDoc
     });
   }
 
+  get stacItem(): { [k: string]: string } {
+    return JSONExt.deepCopy(this._stacItem.toJSON());
+  }
+
+  set stacItem(stacItem: { [k: string]: string }) {
+    this.transact(() => {
+      for (const [key, value] of Object.entries(stacItem)) {
+        this._stacItem.set(key, value);
+      }
+    });
+  }
+
   get metadataChanged(): ISignal<IJupyterGISDoc, MapChange> {
     return this._metadataChanged;
+  }
+
+  get stacItemChanged(): ISignal<IJupyterGISDoc, MapChange> {
+    return this._stacItemChanged;
   }
 
   static create(): IJupyterGISDoc {
@@ -537,12 +576,26 @@ export class JupyterGISDoc
     this._metadataChanged.emit(changes);
   };
 
+  private _stacItemObserver = (event: Y.YMapEvent<string>): void => {
+    const changes = new Map();
+    event.changes.keys.forEach((event, key) => {
+      changes.set(key, {
+        action: event.action,
+        oldValue: event.oldValue,
+        newValue: this._stacItem.get(key),
+      });
+    });
+    console.log('changes', changes);
+    this._stacItemChanged.emit(changes);
+  };
+
   private _layers: Y.Map<any>;
   private _layerTree: Y.Array<IJGISLayerItem>;
   private _sources: Y.Map<any>;
   private _stories: Y.Map<any>;
   private _options: Y.Map<any>;
   private _metadata: Y.Map<string>;
+  private _stacItem: Y.Map<string>;
 
   private _optionsChanged = new Signal<IJupyterGISDoc, MapChange>(this);
   private _layersChanged = new Signal<IJupyterGISDoc, IJGISLayerDocChange>(
@@ -560,6 +613,7 @@ export class JupyterGISDoc
     IJGISStoryMapDocChange
   >(this);
   private _metadataChanged = new Signal<IJupyterGISDoc, MapChange>(this);
+  private _stacItemChanged = new Signal<IJupyterGISDoc, MapChange>(this);
 
   private _initialSyncReadyPromise: Promise<void>;
   private _initialSyncReadyResolve: () => void;

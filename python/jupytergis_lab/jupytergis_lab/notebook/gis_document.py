@@ -86,6 +86,7 @@ class GISDocument(CommWidget):
         )
         self.ydoc["layerTree"] = self._layerTree = Array()
         self.ydoc["metadata"] = self._metadata = Map()
+        self.ydoc["stacItem"] = self._stacItem = Map()
 
         if latitude is not None:
             self._options["latitude"] = latitude
@@ -115,6 +116,28 @@ class GISDocument(CommWidget):
         Get the layer tree
         """
         return self._layerTree.to_py()
+
+    @property
+    def stacItem(self) -> Dict:
+        """
+        Get the layer list
+        """
+        stac_item = self._stacItem.to_py()
+
+        # `stacItem` is stored as a wrapper like:
+        #   {"result": "<json string>"}
+        # Parse the inner JSON so notebook display is readable.
+        if (
+            isinstance(stac_item, dict)
+            and 'result' in stac_item
+            and isinstance(stac_item['result'], str)
+        ):
+            try:
+                return json.loads(stac_item['result'])
+            except json.JSONDecodeError:
+                pass
+
+        return stac_item
 
     def sidecar(
         self,
@@ -148,6 +171,7 @@ class GISDocument(CommWidget):
         virtual_file = self.to_py()
         virtual_file["layerTree"] = reversed_tree(virtual_file["layerTree"])
         del virtual_file["metadata"]
+        del virtual_file["stacItem"]
 
         return export_project_to_qgis(path, virtual_file)
 
@@ -859,6 +883,7 @@ class GISDocument(CommWidget):
             "layerTree": self._layerTree.to_py(),
             "options": self._options.to_py(),
             "metadata": self._metadata.to_py(),
+            "stacItem": self._stacItem.to_py(),
         }
 
 

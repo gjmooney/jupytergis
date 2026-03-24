@@ -128,6 +128,7 @@ export interface IJupyterGISDoc extends YDocument<IJupyterGISDocChange> {
   stories: IJGISStoryMaps;
   layerTree: IJGISLayerTree;
   metadata: any;
+  stacItem: any;
 
   readonly editable: boolean;
   readonly toJGISEndpoint?: string;
@@ -176,12 +177,17 @@ export interface IJupyterGISDoc extends YDocument<IJupyterGISDocChange> {
   setMetadata(key: string, value: string | IAnnotation): void;
   removeMetadata(key: string): void;
 
+  getStacItem(key: string): string | undefined;
+  setStacItem(key: string, value: string): void;
+  removeStacItem(key: string): void;
+
   optionsChanged: ISignal<IJupyterGISDoc, MapChange>;
   layersChanged: ISignal<IJupyterGISDoc, IJGISLayerDocChange>;
   sourcesChanged: ISignal<IJupyterGISDoc, IJGISSourceDocChange>;
   storyMapsChanged: ISignal<IJupyterGISDoc, IJGISStoryMapDocChange>;
   layerTreeChanged: ISignal<IJupyterGISDoc, IJGISLayerTreeDocChange>;
   metadataChanged: ISignal<IJupyterGISDoc, MapChange>;
+  stacItemChanged: ISignal<IJupyterGISDoc, MapChange>;
   initialSyncReady: Promise<void>;
 }
 
@@ -218,6 +224,7 @@ export interface IJupyterGISModel extends DocumentRegistry.IModel {
   sharedLayerTreeChanged: ISignal<IJupyterGISDoc, IJGISLayerTreeDocChange>;
   sharedSourcesChanged: ISignal<IJupyterGISDoc, IJGISSourceDocChange>;
   sharedMetadataChanged: ISignal<IJupyterGISModel, MapChange>;
+  sharedStacItemChanged: ISignal<IJupyterGISModel, MapChange>;
   zoomToPositionSignal: ISignal<IJupyterGISModel, string>;
   addFeatureAsMsSignal: ISignal<IJupyterGISModel, string>;
   updateLayerSignal: ISignal<IJupyterGISModel, string>;
@@ -295,6 +302,9 @@ export interface IJupyterGISModel extends DocumentRegistry.IModel {
 
   addMetadata(key: string, value: string): void;
   removeMetadata(key: string): void;
+
+  addStacItem(key: string, value: string): void;
+  removeStacItem(key: string): void;
   centerOnPosition(id: string): void;
 
   toggleMode(mode: Modes): void;
