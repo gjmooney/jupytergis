@@ -40,6 +40,8 @@ def load_config() -> ProxyConfig:
                 "https://geodes.cnes.fr",
                 "https://gdh-portal-prod.cnes.fr",
                 "https://geodes-portal.cnes.fr/api/stac/",
+                "https://api.stac.teledetection.fr",
+                "https://stac.dataspace.copernicus.eu/v1/"
             },
         ),
     )

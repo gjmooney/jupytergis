@@ -19,6 +19,7 @@ import {
 const GEODES_URL = 'https://geodes-portal.cnes.fr/api/stac/';
 const COPERNICUS_URL = 'https://stac.dataspace.copernicus.eu/v1/';
 const WORLDPOP_URL = 'https://api.stac.worldpop.org/';
+const MTD_URL = 'https://api.stac.teledetection.fr';
 
 // Provider configuration - in the future this will come from STAC index
 interface IProvider {
@@ -30,6 +31,7 @@ const PROVIDERS: IProvider[] = [
   { url: COPERNICUS_URL, name: 'Copernicus' },
   { url: GEODES_URL, name: 'GEODES' },
   { url: WORLDPOP_URL, name: 'WorldPop' },
+  { url: MTD_URL, name: 'TeleDetection' },
 ];
 
 // URL to panel component mapping for extensibility

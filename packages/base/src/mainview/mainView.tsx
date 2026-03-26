@@ -113,7 +113,13 @@ import { CommandIDs } from '@/src/constants';
 import { LoadingOverlay } from '@/src/shared/components/loading';
 import useMediaQuery from '@/src/shared/hooks/useMediaQuery';
 import StatusBar from '@/src/statusbar/StatusBar';
-import { debounce, isLightTheme, loadFile, throttle } from '@/src/tools';
+import {
+  debounce,
+  isLightTheme,
+  loadFile,
+  loadGeoTiff,
+  throttle,
+} from '@/src/tools';
 import CollaboratorPointers, { ClientPointer } from './CollaboratorPointers';
 import { FollowIndicator } from './FollowIndicator';
 import TemporalSlider from './TemporalSlider';
@@ -850,11 +856,24 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
               sourceInfo.url?.startsWith('https://');
 
             if (isRemote) {
+              // Avoid browser CORS issues by fetching the GeoTIFF via the
+              // configured proxy strategy, then pass a blob/object URL to
+              // geotiff.
+              const geotiff = await loadGeoTiff(
+                { url: sourceInfo.url },
+                this._model,
+              );
+
+              if (!geotiff?.file) {
+                throw new Error(`Failed to load GeoTIFF: ${sourceInfo.url}`);
+              }
+
               return {
                 ...addNoData(sourceInfo),
                 min: sourceInfo.min,
                 max: sourceInfo.max,
-                url: sourceInfo.url,
+                geotiff,
+                url: URL.createObjectURL(geotiff.file),
               };
             } else {
               const geotiff = await loadFile({
@@ -1189,11 +1208,14 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       }
       case 'StacLayer': {
         layerParameters = layer.parameters as IStacLayer;
+        layerParameters.opacity = layerParameters.opacity
+          ? layerParameters.opacity
+          : 1;
 
         newMapLayer = new StacLayer({
           displayPreview: true,
           data: layerParameters.data,
-          opacity: layerParameters.opacity,
+          opacity: layerParameters.opacity ?? 1,
           visible: layer.visible,
           assets: Object.keys(layerParameters.data.assets),
           extent: layerParameters.data.bbox,

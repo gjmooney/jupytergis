@@ -96,6 +96,7 @@ export function useStacFilterExtension({
               };
             },
           );
+          console.log('restoredFilters', restoredFilters);
           setSelectedQueryables(restoredFilters);
         }
         if (savedFilterState.filterOperator) {
@@ -319,6 +320,7 @@ export function useStacFilterExtension({
 
   // Handle search when filters change
   useEffect(() => {
+    console.debug('[debug] filter extension hook effect too much');
     if (model && !isFirstRender && selectedCollection !== '') {
       const queryBody = buildQuery();
       const searchUrl = baseUrl.endsWith('/')
@@ -327,8 +329,6 @@ export function useStacFilterExtension({
       executeQuery(queryBody, searchUrl);
     }
   }, [
-    model,
-    isFirstRender,
     selectedCollection,
     selectedQueryables,
     filterOperator,

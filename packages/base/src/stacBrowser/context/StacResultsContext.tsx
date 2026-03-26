@@ -220,6 +220,7 @@ export function StacResultsProvider({
           async (response: Response) => await response.json(),
           //@ts-expect-error Jupyter requires X-XSRFToken header
           options,
+          // 'internal',
         )) as IStacSearchResult;
 
         if (!data) {
@@ -387,6 +388,7 @@ export function StacResultsProvider({
       const result = currentResults.find((r: IStacItem) => r.id === id);
 
       if (result) {
+        model.addStacItem('result', JSON.stringify(result));
         // Use registered override if available, otherwise use default
         if (addToMapRef.current) {
           addToMapRef.current(result);
