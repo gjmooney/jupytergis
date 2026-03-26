@@ -230,34 +230,34 @@ export function StacResultsProvider({
         }
 
         // Filter assets to only include items with 'overview' or 'thumbnail' roles
-        if (data.features && data.features.length > 0) {
-          data.features.forEach((feature: IStacItem) => {
-            if (feature.assets) {
-              const originalAssets = feature.assets;
-              const filteredAssets: Record<string, IStacAsset> = {};
+        // if (data.features && data.features.length > 0) {
+        //   data.features.forEach((feature: IStacItem) => {
+        //     if (feature.assets) {
+        //       const originalAssets = feature.assets;
+        //       const filteredAssets: Record<string, IStacAsset> = {};
 
-              for (const [key, asset] of Object.entries(originalAssets)) {
-                if (
-                  asset &&
-                  typeof asset === 'object' &&
-                  'roles' in asset &&
-                  Array.isArray(asset.roles)
-                ) {
-                  const roles = asset.roles;
+        //       for (const [key, asset] of Object.entries(originalAssets)) {
+        //         if (
+        //           asset &&
+        //           typeof asset === 'object' &&
+        //           'roles' in asset &&
+        //           Array.isArray(asset.roles)
+        //         ) {
+        //           const roles = asset.roles;
 
-                  if (
-                    roles.includes('thumbnail') ||
-                    roles.includes('overview')
-                  ) {
-                    filteredAssets[key] = asset;
-                  }
-                }
-              }
+        //           if (
+        //             roles.includes('thumbnail') ||
+        //             roles.includes('overview')
+        //           ) {
+        //             filteredAssets[key] = asset;
+        //           }
+        //         }
+        //       }
 
-              feature.assets = filteredAssets;
-            }
-          });
-        }
+        //       feature.assets = filteredAssets;
+        //     }
+        //   });
+        // }
 
         // Sort features by id before setting results
         const sortedFeatures = [...data.features].sort((a, b) =>

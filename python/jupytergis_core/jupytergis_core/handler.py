@@ -246,17 +246,102 @@ class ProxyHandler(APIHandler):
             validate_cert = host not in self.proxy_config.exempt_domains
             logger.info("validate_cert: %s", validate_cert)
 
+            # Forward browser Range requests so large COGs don't require
+            # downloading the full file through the proxy.
+            forward_headers: Dict[str, str] = {}
+            range_header = self.request.headers.get("Range")
+            if range_header:
+                forward_headers["Range"] = range_header
+
+            # Some servers also behave better with conditional headers.
+            if self.request.headers.get("If-None-Match"):
+                forward_headers["If-None-Match"] = self.request.headers.get(
+                    "If-None-Match"
+                )  # type: ignore[assignment]
+            if self.request.headers.get("If-Modified-Since"):
+                forward_headers["If-Modified-Since"] = self.request.headers.get(
+                    "If-Modified-Since"
+                )  # type: ignore[assignment]
+
+            # Forward a couple of commonly-required headers for upstream CDNs/WAFs.
+            user_agent = self.request.headers.get("User-Agent")
+            if user_agent:
+                forward_headers["User-Agent"] = user_agent
+
+            accept = self.request.headers.get("Accept")
+            if accept:
+                forward_headers["Accept"] = accept
+
+            accept_language = self.request.headers.get("Accept-Language")
+            if accept_language:
+                forward_headers["Accept-Language"] = accept_language
+
+            referer = self.request.headers.get("Referer")
+            if referer:
+                forward_headers["Referer"] = referer
+
+            origin = self.request.headers.get("Origin")
+            if origin:
+                forward_headers["Origin"] = origin
+
             request = HTTPRequest(
                 url=url,
                 method=method,
                 body=body,
-                headers={"Content-Type": "application/json"} if body else None,
+                headers=(
+                    {**forward_headers, "Content-Type": "application/json"}
+                    if body
+                    else forward_headers or None
+                ),
                 validate_cert=validate_cert,
                 allow_nonstandard_methods=False,
                 decompress_response=True,
             )
 
-            return await self.http_client.fetch(request)
+            # Forward upstream non-2xx responses instead of raising exceptions.
+            # This helps diagnose COG/range-related failures.
+            response = await self.http_client.fetch(request, raise_error=False)
+
+            # Some upstreams (or network paths) may reject byte-range reads
+            # with AccessDenied. If we forwarded a Range header, retry without
+            # it so GeoTIFF/COG readers can fall back to full-file reads.
+            if range_header and response.code == 403:
+                body_bytes: bytes = (
+                    response.body
+                    if isinstance(response.body, (bytes, bytearray))
+                    else b""
+                )
+                if b"AccessDenied" in body_bytes or b"Access Denied" in body_bytes:
+                    logger.info(
+                        "Retrying proxy request without Range after upstream AccessDenied. URL=%s",
+                        url,
+                    )
+
+                    forward_headers_no_range = dict(forward_headers)
+                    forward_headers_no_range.pop("Range", None)
+
+                    request_no_range = HTTPRequest(
+                        url=url,
+                        method=method,
+                        body=body,
+                        headers=(
+                            {
+                                **forward_headers_no_range,
+                                "Content-Type": "application/json",
+                            }
+                            if body
+                            else forward_headers_no_range or None
+                        ),
+                        validate_cert=validate_cert,
+                        allow_nonstandard_methods=False,
+                        decompress_response=True,
+                    )
+
+                    response = await self.http_client.fetch(
+                        request_no_range, raise_error=False
+                    )
+
+            return response
 
         except tornado.httpclient.HTTPClientError as e:
             logger.error("Upstream error: %d %s", e.code, e.message)

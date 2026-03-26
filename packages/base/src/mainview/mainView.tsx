@@ -1076,6 +1076,41 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     this._ready = true;
   }
 
+  private _buildInternalProxyUrl(url: string): string {
+    return `${window.location.origin}/jupytergis_core/proxy?url=${encodeURIComponent(
+      url,
+    )}`;
+  }
+
+  private _proxyStacAssetData(stacData: any): any {
+    if (!stacData || typeof stacData !== 'object' || !stacData.assets) {
+      return stacData;
+    }
+
+    const proxiedAssets: Record<string, any> = {};
+    for (const [assetKey, assetValue] of Object.entries(stacData.assets)) {
+      const asset = assetValue as any;
+      if (
+        asset &&
+        typeof asset === 'object' &&
+        typeof asset.href === 'string' &&
+        (asset.href.startsWith('http://') || asset.href.startsWith('https://'))
+      ) {
+        proxiedAssets[assetKey] = {
+          ...asset,
+          href: this._buildInternalProxyUrl(asset.href),
+        };
+      } else {
+        proxiedAssets[assetKey] = assetValue;
+      }
+    }
+
+    return {
+      ...stacData,
+      assets: proxiedAssets,
+    };
+  }
+
   /**
    * Build the map layer.
    *
@@ -1211,20 +1246,22 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
         layerParameters.opacity = layerParameters.opacity
           ? layerParameters.opacity
           : 1;
+        const proxiedStacData = this._proxyStacAssetData(layerParameters.data);
+        // Render only the requested asset key.
+        const desiredAssetKey = 'B03';
+        const assetsToRender = proxiedStacData.assets?.[desiredAssetKey]
+          ? [desiredAssetKey]
+          : [];
 
+        console.log('[debug] assetsToRender', assetsToRender);
         newMapLayer = new StacLayer({
           displayPreview: true,
-          data: layerParameters.data,
+          data: proxiedStacData,
           opacity: layerParameters.opacity ?? 1,
           visible: layer.visible,
-          assets: Object.keys(layerParameters.data.assets),
-          extent: layerParameters.data.bbox,
+          assets: assetsToRender,
+          extent: proxiedStacData.bbox,
         });
-
-        this.setState(old => ({
-          ...old,
-          metadata: layerParameters.data.properties,
-        }));
 
         break;
       }
