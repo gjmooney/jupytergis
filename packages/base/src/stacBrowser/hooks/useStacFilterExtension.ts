@@ -1,6 +1,6 @@
 import { IJupyterGISModel } from '@jupytergis/schema';
 import { endOfToday, startOfToday } from 'date-fns';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import useIsFirstRender from '@/src/shared/hooks/useIsFirstRender';
 import { useStacResultsContext } from '@/src/stacBrowser/context/StacResultsContext';
@@ -59,6 +59,7 @@ export function useStacFilterExtension({
     currentBBox,
     useWorldBBox,
     setUseWorldBBox,
+    hasLoadedInitialSearchState,
   } = useStacSearch({
     model,
   });
@@ -72,10 +73,12 @@ export function useStacFilterExtension({
   const [filterOperator, setFilterOperator] = useState<FilterOperator>('and');
 
   const stateDb = GlobalStateDbManager.getInstance().getStateDb();
+  const hasLoadedInitialFilterStateRef = useRef(false);
 
   // On mount, load saved filter state from StateDB (if present)
   useEffect(() => {
     async function loadFilterExtensionStateFromDb() {
+      hasLoadedInitialFilterStateRef.current = false;
       const savedFilterState = (await stateDb?.fetch(
         STAC_FILTER_EXTENSION_STATE_KEY,
       )) as IStacFilterExtensionStateDb | undefined;
@@ -103,6 +106,10 @@ export function useStacFilterExtension({
           setFilterOperator(savedFilterState.filterOperator);
         }
       }
+
+      // Unblock the "search when filters change" effect after the initial
+      // async state load completes (even if no saved state exists).
+      hasLoadedInitialFilterStateRef.current = true;
     }
 
     loadFilterExtensionStateFromDb();
@@ -319,14 +326,125 @@ export function useStacFilterExtension({
   }, [model, executeQuery, buildQuery, baseUrl]);
 
   // Handle search when filters change
+  const effectRunCountRef = useRef(0);
+  const executeQueryRef = useRef(executeQuery);
+  const lastAutoQueryKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
-    console.debug('[debug] filter extension hook effect too much');
-    if (model && !isFirstRender && selectedCollection !== '') {
+    executeQueryRef.current = executeQuery;
+  }, [executeQuery]);
+
+  const prevDepsRef = useRef<{
+    selectedCollection: string;
+    selectedQueryables: typeof selectedQueryables;
+    filterOperator: FilterOperator;
+    startTime: typeof startTime;
+    endTime: typeof endTime;
+    currentBBox: typeof currentBBox;
+    baseUrl: typeof baseUrl;
+    queryableFields: typeof queryableFields;
+    limit: typeof limit;
+    buildQuery: typeof buildQuery;
+  } | null>(null);
+
+  useEffect(() => {
+    effectRunCountRef.current += 1;
+
+    const prev = prevDepsRef.current;
+    const changed: string[] = [];
+
+    if (!prev) {
+      changed.push('first run');
+    } else {
+      if (prev.selectedCollection !== selectedCollection) {
+        changed.push('selectedCollection(ref)');
+      }
+      if (prev.selectedQueryables !== selectedQueryables) {
+        changed.push('selectedQueryables(ref)');
+      }
+      if (prev.filterOperator !== filterOperator) {
+        changed.push('filterOperator(ref)');
+      }
+      if (prev.startTime !== startTime) {
+        changed.push('startTime(ref)');
+      }
+      if (prev.endTime !== endTime) {
+        changed.push('endTime(ref)');
+      }
+      if (prev.currentBBox !== currentBBox) {
+        changed.push('currentBBox(ref)');
+      }
+      if (prev.baseUrl !== baseUrl) {
+        changed.push('baseUrl');
+      }
+      if (prev.queryableFields !== queryableFields) {
+        changed.push('queryableFields(ref)');
+      }
+      if (prev.limit !== limit) {
+        changed.push('limit');
+      }
+      if (prev.buildQuery !== buildQuery) {
+        changed.push('buildQuery(ref)');
+      }
+    }
+
+    prevDepsRef.current = {
+      selectedCollection,
+      selectedQueryables,
+      filterOperator,
+      startTime,
+      endTime,
+      currentBBox,
+      baseUrl,
+      queryableFields,
+      limit,
+      buildQuery,
+    };
+
+    const isQueryableFieldsHydrationRun = Boolean(
+      prev &&
+      prev.queryableFields === undefined &&
+      queryableFields !== undefined,
+    );
+
+    const shouldExecute = Boolean(
+      model &&
+      hasLoadedInitialFilterStateRef.current &&
+      hasLoadedInitialSearchState &&
+      !isFirstRender &&
+      selectedCollection !== '' &&
+      !isQueryableFieldsHydrationRun,
+    );
+
+    // console.debug('[debug] stac filter effect', {
+    //   run: effectRunCountRef.current,
+    //   shouldExecute,
+    //   isQueryableFieldsHydrationRun,
+    //   changed,
+    // });
+
+    if (shouldExecute) {
       const queryBody = buildQuery();
       const searchUrl = baseUrl.endsWith('/')
         ? `${baseUrl}search`
         : `${baseUrl}/search`;
-      executeQuery(queryBody, searchUrl);
+      const autoQueryKey = `${searchUrl}::${JSON.stringify(queryBody)}`;
+
+      // Prevent duplicate consecutive auto-queries during initialization churn.
+      if (lastAutoQueryKeyRef.current === autoQueryKey) {
+        return;
+      }
+      lastAutoQueryKeyRef.current = autoQueryKey;
+
+      // console.debug('[debug] stac filter executing search', {
+      //   selectedCollection,
+      //   searchUrl,
+      //   filterOperator,
+      //   bbox: currentBBox,
+      //   queryableFilters: Object.keys(selectedQueryables),
+      // });
+
+      void executeQueryRef.current(queryBody, searchUrl);
     }
   }, [
     selectedCollection,
@@ -336,8 +454,8 @@ export function useStacFilterExtension({
     endTime,
     currentBBox,
     buildQuery,
-    executeQuery,
     baseUrl,
+    hasLoadedInitialSearchState,
   ]);
 
   return {
