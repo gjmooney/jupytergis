@@ -257,6 +257,7 @@ export function addCommands(
         'ShapefileLayer',
         'WebGlLayer',
         'VectorTileLayer',
+        'StacLayer',
       ].includes(selectedLayer.type);
 
       if (current.model.currentMode === 'identifying' && !canIdentify) {

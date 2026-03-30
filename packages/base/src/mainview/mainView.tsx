@@ -1076,40 +1076,40 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     this._ready = true;
   }
 
-  private _buildInternalProxyUrl(url: string): string {
-    return `${window.location.origin}/jupytergis_core/proxy?url=${encodeURIComponent(
-      url,
-    )}`;
-  }
+  // private _buildInternalProxyUrl(url: string): string {
+  //   return `${window.location.origin}/jupytergis_core/proxy?url=${encodeURIComponent(
+  //     url,
+  //   )}`;
+  // }
 
-  private _proxyStacAssetData(stacData: any): any {
-    if (!stacData || typeof stacData !== 'object' || !stacData.assets) {
-      return stacData;
-    }
+  // private _proxyStacAssetData(stacData: any): any {
+  //   if (!stacData || typeof stacData !== 'object' || !stacData.assets) {
+  //     return stacData;
+  //   }
 
-    const proxiedAssets: Record<string, any> = {};
-    for (const [assetKey, assetValue] of Object.entries(stacData.assets)) {
-      const asset = assetValue as any;
-      if (
-        asset &&
-        typeof asset === 'object' &&
-        typeof asset.href === 'string' &&
-        (asset.href.startsWith('http://') || asset.href.startsWith('https://'))
-      ) {
-        proxiedAssets[assetKey] = {
-          ...asset,
-          href: this._buildInternalProxyUrl(asset.href),
-        };
-      } else {
-        proxiedAssets[assetKey] = assetValue;
-      }
-    }
+  //   const proxiedAssets: Record<string, any> = {};
+  //   for (const [assetKey, assetValue] of Object.entries(stacData.assets)) {
+  //     const asset = assetValue as any;
+  //     if (
+  //       asset &&
+  //       typeof asset === 'object' &&
+  //       typeof asset.href === 'string' &&
+  //       (asset.href.startsWith('http://') || asset.href.startsWith('https://'))
+  //     ) {
+  //       proxiedAssets[assetKey] = {
+  //         ...asset,
+  //         href: this._buildInternalProxyUrl(asset.href),
+  //       };
+  //     } else {
+  //       proxiedAssets[assetKey] = assetValue;
+  //     }
+  //   }
 
-    return {
-      ...stacData,
-      assets: proxiedAssets,
-    };
-  }
+  //   return {
+  //     ...stacData,
+  //     assets: proxiedAssets,
+  //   };
+  // }
 
   /**
    * Build the map layer.
@@ -1242,27 +1242,98 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
         break;
       }
       case 'StacLayer': {
-        layerParameters = layer.parameters as IStacLayer;
-        layerParameters.opacity = layerParameters.opacity
-          ? layerParameters.opacity
-          : 1;
-        const proxiedStacData = this._proxyStacAssetData(layerParameters.data);
-        // Render only the requested asset key.
-        const desiredAssetKey = 'B03';
-        const assetsToRender = proxiedStacData.assets?.[desiredAssetKey]
-          ? [desiredAssetKey]
-          : [];
+        // const proxiedStacData = this._proxyStacAssetData(layerParameters.data);
+        // // Render all assets matching Sentinel-2 band keys like B01, B02, etc.
+        // const assetsToRender = Object.keys(
+        //   layerParameters.data.assets ?? {},
+        // ).filter(key => key.startsWith('B0'));
 
-        console.log('[debug] assetsToRender', assetsToRender);
+        // newMapLayer = new StacLayer({
+        //   displayPreview: true,
+        //   data: proxiedStacData,
+        //   opacity: layerParameters.opacity ?? 1,
+        //   visible: layer.visible,
+        //   assets: assetsToRender,
+        //   extent: proxiedStacData.bbox,
+        // });
+
+        layerParameters = layer.parameters as IStacLayer;
+
+        const footprintsOnly = layer.name === 'stac-footprints';
+
+        const stacData: any = layerParameters.data;
+        const stacEntries: any[] = Array.isArray(stacData)
+          ? stacData
+          : stacData
+            ? [stacData]
+            : [];
+
+        const assetKeySet = new Set<string>();
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        let hasAnyBbox = false;
+
+        for (const entry of stacEntries) {
+          if (!entry || typeof entry !== 'object') {
+            continue;
+          }
+
+          const assets = (entry as any).assets;
+          if (assets && typeof assets === 'object') {
+            for (const key of Object.keys(assets)) {
+              assetKeySet.add(key);
+            }
+          }
+
+          const bbox = (entry as any).bbox;
+          if (Array.isArray(bbox) && bbox.length === 4) {
+            const [west, south, east, north] = bbox;
+            minX = Math.min(minX, west);
+            minY = Math.min(minY, south);
+            maxX = Math.max(maxX, east);
+            maxY = Math.max(maxY, north);
+            hasAnyBbox = true;
+          }
+        }
+
+        const assetsToRender = Array.from(assetKeySet);
+        const computedExtent = hasAnyBbox
+          ? ([minX, minY, maxX, maxY] as [number, number, number, number])
+          : undefined;
+
+        const stacRoot = stacEntries[0];
+        const children = stacEntries.length > 1 ? (stacEntries as any[]) : null;
+
+        const assetsOption = footprintsOnly
+          ? []
+          : assetsToRender.length > 0
+            ? assetsToRender
+            : null;
+
+        const childrenOptions = {
+          assets: assetsOption,
+        };
+
         newMapLayer = new StacLayer({
-          displayPreview: true,
-          data: proxiedStacData,
-          opacity: layerParameters.opacity ?? 1,
-          visible: layer.visible,
-          assets: assetsToRender,
-          extent: proxiedStacData.bbox,
+          // displayFootprint: true,
+          // displayOverview: true, // this is just for CoGs?
+          displayPreview: true, // true does show the preview at least
+          // data: stacRoot,
+          // children,
+          // opacity: layerParameters.opacity ?? 1,
+          // visible: layer.visible,
+          // assets: assetsOption,
+          // childrenOptions,
+          extent: computedExtent,
+          url: 'https://stac.dataspace.copernicus.eu/v1/collections/sentinel-2-l2a/items/S2B_MSIL2A_20260330T081559_N0512_R121_T48XVR_20260330T102542',
         });
 
+        this.setState(old => ({
+          ...old,
+          metadata: stacEntries[0]?.properties,
+        }));
         break;
       }
 
@@ -1795,6 +1866,14 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       return;
     }
 
+    const hoveredResultId = (localState as any).hoveredStacResultId?.value as
+      | string
+      | undefined;
+    if (hoveredResultId !== this._hoveredStacResultId) {
+      this._hoveredStacResultId = hoveredResultId;
+      this._updateStacFootprintHoverStyles();
+    }
+
     const remoteUser = localState.remoteUser;
     // If we are in following mode, we update our position and selection
     if (remoteUser) {
@@ -1908,6 +1987,53 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       );
     }
   };
+
+  private _updateStacFootprintHoverStyles(): void {
+    if (!this._Map) {
+      return;
+    }
+
+    const boundsLayers = this._getStacBoundsLayers(
+      this._Map.getLayers().getArray(),
+    );
+    const hoveredId = this._hoveredStacResultId;
+
+    for (const boundsLayer of boundsLayers) {
+      const stac = boundsLayer.get('stac') as any;
+      const stacId =
+        stac?.id ??
+        (typeof stac?.getId === 'function' ? stac.getId() : undefined);
+      const layerUid = String(getUid(boundsLayer));
+
+      if (!this._stacFootprintDefaultStyles.has(layerUid)) {
+        this._stacFootprintDefaultStyles.set(layerUid, boundsLayer.getStyle());
+      }
+
+      if (hoveredId && stacId === hoveredId) {
+        boundsLayer.setStyle(this._hoveredFootprintStyle);
+      } else {
+        const defaultStyle = this._stacFootprintDefaultStyles.get(layerUid);
+        boundsLayer.setStyle(defaultStyle ?? null);
+      }
+    }
+  }
+
+  private _getStacBoundsLayers(layers: any[]): VectorLayer[] {
+    const result: VectorLayer[] = [];
+    for (const layer of layers) {
+      if (!layer) {
+        continue;
+      }
+      if (layer instanceof LayerGroup) {
+        result.push(...this._getStacBoundsLayers(layer.getLayers().getArray()));
+        continue;
+      }
+      if (layer.get?.('bounds') === true && layer.get?.('stac')) {
+        result.push(layer as VectorLayer);
+      }
+    }
+    return result;
+  }
 
   private _onSharedOptionsChanged(): void {
     // ! would prefer a model ready signal or something, this feels hacky
@@ -2390,12 +2516,39 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       // Handle StacLayer that hasn't been added to the map yet
       if (jgisLayer?.type === 'StacLayer') {
         const layerParams = jgisLayer.parameters as IStacLayer;
-        const stacBbox = layerParams.data?.bbox;
+        const stacData: any = layerParams.data;
+        const stacEntries: any[] = Array.isArray(stacData)
+          ? stacData
+          : stacData
+            ? [stacData]
+            : [];
 
-        if (stacBbox && stacBbox.length === 4) {
-          // STAC bbox format: [west, south, east, north] in EPSG:4326
-          const [west, south, east, north] = stacBbox;
-          const bboxExtent = [west, south, east, north];
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        let hasAnyBbox = false;
+
+        for (const entry of stacEntries) {
+          const bbox = entry?.bbox;
+          if (Array.isArray(bbox) && bbox.length === 4) {
+            // STAC bbox format: [west, south, east, north] in EPSG:4326
+            const [west, south, east, north] = bbox;
+            minX = Math.min(minX, west);
+            minY = Math.min(minY, south);
+            maxX = Math.max(maxX, east);
+            maxY = Math.max(maxY, north);
+            hasAnyBbox = true;
+          }
+        }
+
+        if (hasAnyBbox) {
+          const bboxExtent = [minX, minY, maxX, maxY] as [
+            number,
+            number,
+            number,
+            number,
+          ];
 
           // Convert from EPSG:4326 to view projection
           const viewProjection = this._Map.getView().getProjection();
@@ -2602,6 +2755,87 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
 
   private _identifyFeature(e: MapBrowserEvent<any>) {
     if (this._model.currentMode !== 'identifying') {
+      return;
+    }
+
+    // POC: allow clicking ol-stac footprint bounds without requiring
+    // a specific layer selection from the layer list.
+    let foundStacFootprint = false;
+    let clickedStac: any = undefined;
+    let clickedGeometry: Geometry | undefined = undefined;
+
+    this._Map.forEachFeatureAtPixel(
+      e.pixel,
+      (feature: FeatureLike, layer: any) => {
+        const boundsLayer = layer?.get?.('bounds') === true;
+        const stac = layer?.get?.('stac');
+        console.log('stac', stac);
+        if (boundsLayer && stac) {
+          foundStacFootprint = true;
+          clickedStac = stac;
+          if (feature instanceof RenderFeature) {
+            clickedGeometry = toGeometry(feature);
+          } else if ('getGeometry' in feature) {
+            clickedGeometry = (feature as any).getGeometry?.() ?? undefined;
+          } else {
+            clickedGeometry = undefined;
+          }
+          return true;
+        }
+        return false;
+      },
+    );
+
+    if (foundStacFootprint && clickedStac) {
+      const properties =
+        typeof clickedStac.getProperties === 'function'
+          ? clickedStac.getProperties()
+          : (clickedStac.properties ?? {});
+
+      const stacId =
+        clickedStac.id ??
+        (typeof clickedStac.getId === 'function'
+          ? clickedStac.getId()
+          : undefined);
+
+      const identified = stacId ? { ...properties, id: stacId } : properties;
+
+      this._model.syncIdentifiedFeatures(
+        [identified] as any,
+        this._mainViewModel.id,
+      );
+
+      if (clickedGeometry) {
+        this._model.highlightFeatureSignal.emit(clickedGeometry);
+      }
+
+      // POC: create a footprints-only layer for *all* current results.
+      // StacResultsContext stores the latest results under stacItem.result.
+      // try {
+      //   const content = this._model.getContent?.();
+      //   const stacItemStore = content?.stacItem ?? {};
+      //   const rawResults = stacItemStore?.result;
+      //   if (typeof rawResults === 'string') {
+      //     const allResults = JSON.parse(rawResults) as unknown;
+      //     if (Array.isArray(allResults)) {
+      //       // const layerId = UUID.uuid4();
+      //       // const layerModel: IJGISLayer = {
+      //       //   type: 'StacLayer',
+      //       //   parameters: { data: allResults },
+      //       //   visible: true,
+      //       //   name: 'stac-footprints',
+      //       // };
+      //       // this._model.addLayer(layerId, layerModel);
+      //       // this._model.centerOnPosition(layerId);
+      //     }
+      //   }
+      // } catch (error: any) {
+      //   console.warn(
+      //     'Failed to create stac-footprints layer from model results',
+      //     error,
+      //   );
+      // }
+
       return;
     }
 
@@ -2927,6 +3161,17 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
   private _clickCoords: Coordinate;
   private _commands: CommandRegistry;
   private _isPositionInitialized = false;
+  private _hoveredStacResultId: string | undefined = undefined;
+  private _stacFootprintDefaultStyles = new Map<string, any>();
+  private _hoveredFootprintStyle = new Style({
+    stroke: new Stroke({
+      color: '#ff3300',
+      width: 3,
+    }),
+    fill: new Fill({
+      color: 'rgba(255, 51, 0, 0.2)',
+    }),
+  });
   private divRef = React.createRef<HTMLDivElement>(); // Reference of render div
   private controlsToolbarRef = React.createRef<HTMLDivElement>();
   private spectaContainerRef = React.createRef<HTMLDivElement>();

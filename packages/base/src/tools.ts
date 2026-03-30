@@ -421,38 +421,38 @@ export const fetchWithProxies = async <T>(
 
   for (const strat of strategyOrder) {
     const proxyUrl = strategies[strat](url);
-    console.debug('[debug] fetchWithProxies attempt', {
-      originalUrl: url,
-      strategy: strat,
-      proxyUrl,
-    });
+    // console.debug('[debug] fetchWithProxies attempt', {
+    //   originalUrl: url,
+    //   strategy: strat,
+    //   proxyUrl,
+    // });
     try {
       const response = await fetch(proxyUrl, options);
       if (!response.ok) {
-        console.debug('[debug] fetchWithProxies failed response (non-ok)', {
-          originalUrl: url,
-          strategy: strat,
-          proxyUrl,
-          status: response.status,
-          statusText: response.statusText,
-        });
+        // console.debug('[debug] fetchWithProxies failed response (non-ok)', {
+        //   originalUrl: url,
+        //   strategy: strat,
+        //   proxyUrl,
+        //   status: response.status,
+        //   statusText: response.statusText,
+        // });
         continue;
       }
-      console.debug('[debug] fetchWithProxies success', {
-        originalUrl: url,
-        strategy: strat,
-        proxyUrl,
-        status: response.status,
-        statusText: response.statusText,
-      });
+      // console.debug('[debug] fetchWithProxies success', {
+      //   originalUrl: url,
+      //   strategy: strat,
+      //   proxyUrl,
+      //   status: response.status,
+      //   statusText: response.statusText,
+      // });
       return await parseResponse(response);
     } catch (error) {
-      console.debug('[debug] fetchWithProxies error (exception)', {
-        originalUrl: url,
-        strategy: strat,
-        proxyUrl,
-        error,
-      });
+      // console.debug('[debug] fetchWithProxies error (exception)', {
+      //   originalUrl: url,
+      //   strategy: strat,
+      //   proxyUrl,
+      //   error,
+      // });
     }
   }
 

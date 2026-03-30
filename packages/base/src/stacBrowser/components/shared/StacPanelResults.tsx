@@ -53,6 +53,7 @@ const StacPanelResults = () => {
     setCurrentPage,
     totalPages,
     executeQueryWithPage,
+    setHoveredResultId,
   } = useStacResultsContext();
 
   const isNext = paginationLinks.some(link => link.rel === 'next');
@@ -67,6 +68,7 @@ const StacPanelResults = () => {
           <PaginationItem>
             <PaginationPrevious
               onClick={() => {
+                setHoveredResultId(undefined);
                 setCurrentPage(Math.max(currentPage - 1, 1));
                 handlePaginationClick('previous');
               }}
@@ -95,6 +97,7 @@ const StacPanelResults = () => {
                     <PaginationLink
                       isActive={pageNumber === currentPage}
                       onClick={async () => {
+                        setHoveredResultId(undefined);
                         setCurrentPage(pageNumber);
                         await executeQueryWithPage(pageNumber);
                       }}
@@ -117,6 +120,7 @@ const StacPanelResults = () => {
           <PaginationItem>
             <PaginationNext
               onClick={() => {
+                setHoveredResultId(undefined);
                 setCurrentPage(currentPage + 1);
                 handlePaginationClick('next');
               }}
@@ -134,6 +138,8 @@ const StacPanelResults = () => {
               key={result.id}
               className="jgis-stac-browser-results-item"
               onClick={() => handleResultClick(result.id)}
+              onMouseEnter={() => setHoveredResultId(result.id)}
+              onMouseLeave={() => setHoveredResultId(undefined)}
             >
               {formatResult(result)}
             </Button>

@@ -29,8 +29,14 @@ interface IStacFilterExtensionStateDb {
   filterOperator?: FilterOperator;
 }
 
+interface IStacCollectionsCacheStateDb {
+  collectionsJson: string;
+}
+
 const STAC_FILTER_EXTENSION_STATE_KEY =
   'jupytergis:stac-filter-extension-state';
+const STAC_COLLECTIONS_CACHE_STATE_KEY_PREFIX =
+  'jupytergis:stac-filter-extension-collections-cache:';
 
 interface IUseStacFilterExtensionProps {
   model?: IJupyterGISModel;
@@ -163,40 +169,80 @@ export function useStacFilterExtension({
         return;
       }
 
-      const collectionsUrl = baseUrl.endsWith('/')
-        ? `${baseUrl}collections`
-        : `${baseUrl}/collections`;
-      const allCollections: IStacCollection[] = [];
-      let nextUrl: string | undefined = collectionsUrl;
+      // TEMP: keep original cache + pagination logic here for quick restore.
+      // const collectionsCacheStateKey = `${STAC_COLLECTIONS_CACHE_STATE_KEY_PREFIX}${baseUrl}`;
+      // const cachedCollectionsState = (await stateDb?.fetch(
+      //   collectionsCacheStateKey,
+      // )) as IStacCollectionsCacheStateDb | undefined;
+      // if (cachedCollectionsState?.collectionsJson) {
+      //   const parsedCachedCollections = JSON.parse(
+      //     cachedCollectionsState.collectionsJson,
+      //   ) as IStacCollection[];
+      //   const cachedCollections: FilteredCollection[] = parsedCachedCollections
+      //     .map((collection: IStacCollection) => ({
+      //       title: collection.title ?? collection.id,
+      //       id: collection.id,
+      //     }))
+      //     .sort((a: FilteredCollection, b: FilteredCollection) => {
+      //       const titleA = a.title?.toLowerCase() ?? '';
+      //       const titleB = b.title?.toLowerCase() ?? '';
+      //       return titleA.localeCompare(titleB);
+      //     });
+      //
+      //   setCollections(cachedCollections);
+      //   if (cachedCollections.length > 0 && !(selectedCollection === '')) {
+      //     setSelectedCollection(cachedCollections[0].id);
+      //   }
+      //   return;
+      // }
+      //
+      // const collectionsUrl = baseUrl.endsWith('/')
+      //   ? `${baseUrl}collections`
+      //   : `${baseUrl}/collections`;
+      // const allCollections: IStacCollection[] = [];
+      // let nextUrl: string | undefined = collectionsUrl;
+      //
+      // while (nextUrl) {
+      //   const data = (await fetchWithProxies(
+      //     nextUrl,
+      //     model,
+      //     async response => await response.json(),
+      //     undefined,
+      //   )) as IStacCollectionsReturn | null;
+      //
+      //   if (!data) {
+      //     break;
+      //   }
+      //
+      //   allCollections.push(...(data.collections ?? []));
+      //
+      //   const nextLink = data.links?.find(link => link.rel === 'next');
+      //   if (!nextLink?.href) {
+      //     break;
+      //   }
+      //
+      //   nextUrl = new URL(nextLink.href, nextUrl).toString();
+      // }
+      //
+      // const uniqueCollections = Array.from(
+      //   new Map(
+      //     allCollections.map(collection => [collection.id, collection]),
+      //   ).values(),
+      // );
+      //
+      // await stateDb?.save(collectionsCacheStateKey, {
+      //   collectionsJson: JSON.stringify(uniqueCollections),
+      // });
 
-      while (nextUrl) {
-        const data = (await fetchWithProxies(
-          nextUrl,
-          model,
-          async response => await response.json(),
-          undefined,
-        )) as IStacCollectionsReturn | null;
-
-        if (!data) {
-          break;
-        }
-
-        allCollections.push(...(data.collections ?? []));
-
-        const nextLink = data.links?.find(link => link.rel === 'next');
-        if (!nextLink?.href) {
-          break;
-        }
-
-        nextUrl = new URL(nextLink.href, nextUrl).toString();
-        console.log('nextUrl', nextUrl);
-      }
-
-      const uniqueCollections = Array.from(
-        new Map(
-          allCollections.map(collection => [collection.id, collection]),
-        ).values(),
-      );
+      const collectionsUrl =
+        'https://stac.dataspace.copernicus.eu/v1/collections?offset=60';
+      const data = (await fetchWithProxies(
+        collectionsUrl,
+        model,
+        async response => await response.json(),
+        undefined,
+      )) as IStacCollectionsReturn | null;
+      const uniqueCollections = data?.collections ?? [];
 
       const collections: FilteredCollection[] = uniqueCollections
         .map((collection: IStacCollection) => ({
@@ -208,6 +254,18 @@ export function useStacFilterExtension({
           const titleB = b.title?.toLowerCase() ?? '';
           return titleA.localeCompare(titleB);
         });
+
+      const collectionItems = await fetchWithProxies(
+        'https://stac.dataspace.copernicus.eu/v1/collections/sentinel-2-l2a/items',
+        model,
+        async response => await response.json(),
+        undefined,
+      );
+
+      console.log('collectionItems', collectionItems);
+      if (collectionItems) {
+        // model.addStacItem('result', JSON.stringify(collectionItems.features));
+      }
 
       setCollections(collections);
       // Set first collection as default if one isn't loaded
