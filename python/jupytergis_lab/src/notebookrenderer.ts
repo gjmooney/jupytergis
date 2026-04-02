@@ -49,7 +49,15 @@ export interface ICommMetadata {
 export const CLASS_NAME = 'jupytergis-notebook-widget';
 
 export class YJupyterGISModel extends JupyterYModel {
-  jupyterGISModel: JupyterGISModel;
+  jupyterGISModel!: JupyterGISModel;
+
+  /**
+   * Same Awareness as @jupyter/ydoc JupyterGISDoc so YCommProvider forwards
+   * viewport/selection/pointer updates to the kernel.
+   */
+  get awareness() {
+    return this.jupyterGISModel?.sharedModel?.awareness;
+  }
 }
 
 export class YJupyterGISLuminoWidget extends Panel {
@@ -236,6 +244,11 @@ export const notebookRendererPlugin: JupyterFrontEndPlugin<void> = {
 
         this.ydoc = this.jupyterGISModel.sharedModel.ydoc;
         this.sharedModel = new JupyterYDoc(commMetadata, this.ydoc);
+
+        console.log(
+          '[YJupyterGISModel] shared Awareness for YCommProvider clientID=%s',
+          this.jupyterGISModel.sharedModel.awareness.clientID,
+        );
       }
     }
 
