@@ -244,11 +244,6 @@ export const notebookRendererPlugin: JupyterFrontEndPlugin<void> = {
 
         this.ydoc = this.jupyterGISModel.sharedModel.ydoc;
         this.sharedModel = new JupyterYDoc(commMetadata, this.ydoc);
-
-        console.log(
-          '[YJupyterGISModel] shared Awareness for YCommProvider clientID=%s',
-          this.jupyterGISModel.sharedModel.awareness.clientID,
-        );
       }
     }
 
