@@ -115,6 +115,7 @@ import useMediaQuery from '@/src/shared/hooks/useMediaQuery';
 import StatusBar from '@/src/statusbar/StatusBar';
 import {
   debounce,
+  fetchWithProxies,
   isLightTheme,
   loadFile,
   loadGeoTiff,
@@ -458,6 +459,7 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
         const latLng = toLonLat(center, projection);
         const bearing = view.getRotation();
         const resolution = view.getResolution();
+        const extent = view.calculateExtent();
 
         const updatedOptions: Partial<IJGISOptions> = {
           latitude: latLng[1],
@@ -465,9 +467,10 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
           bearing,
           projection: projection.getCode(),
           zoom,
+          extent,
         };
 
-        updatedOptions.extent = view.calculateExtent();
+        // updatedOptions.extent = view.calculateExtent();
 
         this._model.setOptions({
           ...currentOptions,
@@ -1242,33 +1245,24 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
         break;
       }
       case 'StacLayer': {
-        // const proxiedStacData = this._proxyStacAssetData(layerParameters.data);
-        // // Render all assets matching Sentinel-2 band keys like B01, B02, etc.
-        // const assetsToRender = Object.keys(
-        //   layerParameters.data.assets ?? {},
-        // ).filter(key => key.startsWith('B0'));
-
-        // newMapLayer = new StacLayer({
-        //   displayPreview: true,
-        //   data: proxiedStacData,
-        //   opacity: layerParameters.opacity ?? 1,
-        //   visible: layer.visible,
-        //   assets: assetsToRender,
-        //   extent: proxiedStacData.bbox,
-        // });
-
         layerParameters = layer.parameters as IStacLayer;
 
         const footprintsOnly = layer.name === 'stac-footprints';
 
-        const stacData: any = layerParameters.data;
+        const stacData: any = JSON.parse(
+          this._model.getContent().stacItem?.result,
+        );
+        // const stacData: any = layerParameters.data;
+
         const stacEntries: any[] = Array.isArray(stacData)
           ? stacData
-          : stacData
-            ? [stacData]
-            : [];
+          : stacData?.type === 'FeatureCollection' &&
+              Array.isArray(stacData.features)
+            ? stacData.features
+            : stacData
+              ? [stacData]
+              : [];
 
-        const assetKeySet = new Set<string>();
         let minX = Infinity;
         let minY = Infinity;
         let maxX = -Infinity;
@@ -1278,13 +1272,6 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
         for (const entry of stacEntries) {
           if (!entry || typeof entry !== 'object') {
             continue;
-          }
-
-          const assets = (entry as any).assets;
-          if (assets && typeof assets === 'object') {
-            for (const key of Object.keys(assets)) {
-              assetKeySet.add(key);
-            }
           }
 
           const bbox = (entry as any).bbox;
@@ -1298,36 +1285,31 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
           }
         }
 
-        const assetsToRender = Array.from(assetKeySet);
         const computedExtent = hasAnyBbox
           ? ([minX, minY, maxX, maxY] as [number, number, number, number])
           : undefined;
+        console.log('stac feature bbox union extent', computedExtent);
 
-        const stacRoot = stacEntries[0];
-        const children = stacEntries.length > 1 ? (stacEntries as any[]) : null;
-
-        const assetsOption = footprintsOnly
-          ? []
-          : assetsToRender.length > 0
-            ? assetsToRender
-            : null;
+        console.log('stacEntries', stacEntries);
 
         const childrenOptions = {
-          assets: assetsOption,
+          displayFootprint: true,
+          displayPreview: !footprintsOnly,
+          displayOverview: !footprintsOnly,
         };
 
         newMapLayer = new StacLayer({
-          // displayFootprint: true,
+          displayFootprint: true,
           // displayOverview: true, // this is just for CoGs?
           displayPreview: true, // true does show the preview at least
-          // data: stacRoot,
-          // children,
-          // opacity: layerParameters.opacity ?? 1,
-          // visible: layer.visible,
+          data: stacData,
+          // children: stacData?.type === 'FeatureCollection' ? stacData : null,
+          opacity: layerParameters.opacity ?? 1,
+          visible: layer.visible,
           // assets: assetsOption,
-          // childrenOptions,
+          childrenOptions,
           extent: computedExtent,
-          url: 'https://stac.dataspace.copernicus.eu/v1/collections/sentinel-2-l2a/items/S2B_MSIL2A_20260330T081559_N0512_R121_T48XVR_20260330T102542',
+          // url: 'https://stac.dataspace.copernicus.eu/v1/collections/sentinel-2-l2a/items/S2B_MSIL2A_20260330T081559_N0512_R121_T48XVR_20260330T102542',
         });
 
         this.setState(old => ({
@@ -2811,30 +2793,30 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
 
       // POC: create a footprints-only layer for *all* current results.
       // StacResultsContext stores the latest results under stacItem.result.
-      // try {
-      //   const content = this._model.getContent?.();
-      //   const stacItemStore = content?.stacItem ?? {};
-      //   const rawResults = stacItemStore?.result;
-      //   if (typeof rawResults === 'string') {
-      //     const allResults = JSON.parse(rawResults) as unknown;
-      //     if (Array.isArray(allResults)) {
-      //       // const layerId = UUID.uuid4();
-      //       // const layerModel: IJGISLayer = {
-      //       //   type: 'StacLayer',
-      //       //   parameters: { data: allResults },
-      //       //   visible: true,
-      //       //   name: 'stac-footprints',
-      //       // };
-      //       // this._model.addLayer(layerId, layerModel);
-      //       // this._model.centerOnPosition(layerId);
-      //     }
-      //   }
-      // } catch (error: any) {
-      //   console.warn(
-      //     'Failed to create stac-footprints layer from model results',
-      //     error,
-      //   );
-      // }
+      try {
+        const content = this._model.getContent?.();
+        const stacItemStore = content?.stacItem ?? {};
+        const rawResults = stacItemStore?.result;
+        if (typeof rawResults === 'string') {
+          const allResults = JSON.parse(rawResults) as unknown;
+          if (Array.isArray(allResults)) {
+            const layerId = UUID.uuid4();
+            const layerModel: IJGISLayer = {
+              type: 'StacLayer',
+              parameters: { data: allResults },
+              visible: true,
+              name: 'stac-footprints',
+            };
+            this._model.addLayer(layerId, layerModel);
+            this._model.centerOnPosition(layerId);
+          }
+        }
+      } catch (error: any) {
+        console.warn(
+          'Failed to create stac-footprints layer from model results',
+          error,
+        );
+      }
 
       return;
     }
