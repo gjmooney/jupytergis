@@ -4,7 +4,7 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Optional
+from typing import Any, Callable, Dict, Iterable, List, Literal, Optional
 from uuid import uuid4
 import requests
 
@@ -56,6 +56,8 @@ def _slice_dataarray_by_bbox(
     x_name: str,
     y_name: str,
 ) -> Any:
+    logger.debug("SLICE BT")
+    print("FUCKING GOGOGOGOGOGO")
     y_values = data_array.coords[y_name].values
     if y_values[0] <= y_values[-1]:
         y_slice = slice(south, north)
@@ -132,6 +134,13 @@ class GISDocument(CommWidget):
             self._options["projection"] = projection
 
     @property
+    def sources(self) -> Dict:
+        """
+        Get the sources list
+        """
+        return self._sources.to_py()
+
+    @property
     def layers(self) -> Dict:
         """
         Get the layer list
@@ -156,6 +165,37 @@ class GISDocument(CommWidget):
                 west=extent[0], south=extent[1], east=extent[2], north=extent[3]
             )
         return None
+
+    def _map_extent_bbox_in_data_crs(
+        self, data_crs: str
+    ) -> tuple[float, float, float, float] | None:
+        """
+        Current map view as ``(west, south, east, north)`` in ``data_crs``.
+
+        Used by :meth:`bind_extent_slice_callback` and
+        :meth:`list_stack_items_in_extent`.
+        """
+        extent = self.extent
+        if extent is None:
+            return None
+        west, south, east, north = (
+            extent.west,
+            extent.south,
+            extent.east,
+            extent.north,
+        )
+        map_crs = str(self._options.to_py().get("projection", "EPSG:3857"))
+        if map_crs.upper() != data_crs.upper():
+            try:
+                from pyproj import Transformer
+            except ImportError as e:  # pragma: no cover
+                raise ImportError(
+                    "pyproj is required to transform the map extent to data CRS."
+                ) from e
+            transformer = Transformer.from_crs(map_crs, data_crs, always_xy=True)
+            west, south = transformer.transform(west, south)
+            east, north = transformer.transform(east, north)
+        return west, south, east, north
 
     @property
     def stacItem(self) -> Dict:
@@ -187,94 +227,163 @@ class GISDocument(CommWidget):
         data_crs: str = "EPSG:4326",
         x_name: str = "lon",
         y_name: str = "lat",
+        process: Callable[[Any], Any] | None = None,
+        compute: bool = False,
+        strict_process: bool = False,
     ) -> str:
         """
         Call ``on_slice`` with a DataArray slice when ``options.extent`` changes.
+
+        Optionally transform the slice with ``process`` (e.g. NDWI) and
+        eagerly evaluate with ``compute`` before invoking ``on_slice``.
+
+        If ``process`` raises and ``strict_process`` is ``False`` (default),
+        the callback falls back to the unprocessed spatial slice so state
+        updates still happen while debugging.
         """
         logger.debug(
-            "Registering extent slice callback (data_crs=%s, x_name=%s, y_name=%s)",
+            "Registering extent slice callback (data_crs=%s, x_name=%s, y_name=%s, compute=%s)",
             data_crs,
             x_name,
             y_name,
+            compute,
         )
 
         def _on_options_change(change: Any, _transaction: Any) -> None:
-            logger.debug("Received options change event (change=%s)", change)
-            keys = getattr(change, "keys", None)
-            if not keys or "extent" not in keys:
-                logger.debug("Ignoring options change without extent update")
-                return
+            try:
+                logger.debug("Received options change event (change=%s)", change)
+                keys = getattr(change, "keys", None)
+                if not keys or "extent" not in keys:
+                    logger.debug("Ignoring options change without extent update")
+                    return
 
-            extent = self.extent
-            if extent is None:
-                logger.debug("No valid extent in options, skipping callback")
-                return
-            logger.info(
-                "Extent changed: west=%s, south=%s, east=%s, north=%s",
-                extent.west,
-                extent.south,
-                extent.east,
-                extent.north,
-            )
+                extent = self.extent
+                if extent is None:
+                    logger.debug("No valid extent in options, skipping callback")
+                    return
+                logger.info(
+                    "Extent changed: west=%s, south=%s, east=%s, north=%s",
+                    extent.west,
+                    extent.south,
+                    extent.east,
+                    extent.north,
+                )
 
-            if x_name not in data_array.coords or y_name not in data_array.coords:
+                if x_name not in data_array.coords or y_name not in data_array.coords:
+                    logger.debug(
+                        "DataArray missing coords x=%s y=%s available=%s",
+                        x_name,
+                        y_name,
+                        list(data_array.coords),
+                    )
+                    raise KeyError(
+                        f"Coordinates '{x_name}' and '{y_name}' must exist on DataArray."
+                    )
+
+                bbox = self._map_extent_bbox_in_data_crs(data_crs)
+                if bbox is None:
+                    logger.debug("No valid extent in options, skipping callback")
+                    return
+                west, south, east, north = bbox
+
                 logger.debug(
-                    "DataArray missing coords x=%s y=%s available=%s",
-                    x_name,
-                    y_name,
-                    list(data_array.coords),
+                    "Slicing DataArray using bbox west=%s south=%s east=%s north=%s",
+                    west,
+                    south,
+                    east,
+                    north,
                 )
-                raise KeyError(
-                    f"Coordinates '{x_name}' and '{y_name}' must exist on DataArray."
+                sliced = _slice_dataarray_by_bbox(
+                    data_array,
+                    west=west,
+                    south=south,
+                    east=east,
+                    north=north,
+                    x_name=x_name,
+                    y_name=y_name,
                 )
-
-            west = extent.west
-            south = extent.south
-            east = extent.east
-            north = extent.north
-
-            map_crs = str(self._options.to_py().get("projection", "EPSG:3857"))
-            if map_crs.upper() != data_crs.upper():
-                logger.debug("Converting extent from %s to %s", map_crs, data_crs)
-                try:
-                    from pyproj import Transformer
-                except ImportError as e:  # pragma: no cover
-                    raise ImportError(
-                        "pyproj is required for CRS conversion in extent callbacks."
-                    ) from e
-                transformer = Transformer.from_crs(
-                    map_crs, data_crs, always_xy=True
-                )
-                west, south = transformer.transform(west, south)
-                east, north = transformer.transform(east, north)
-
-            logger.debug(
-                "Slicing DataArray using bbox west=%s south=%s east=%s north=%s",
-                west,
-                south,
-                east,
-                north,
-            )
-            sliced = _slice_dataarray_by_bbox(
-                data_array,
-                west=west,
-                south=south,
-                east=east,
-                north=north,
-                x_name=x_name,
-                y_name=y_name,
-            )
-            logger.debug("Slice complete, invoking on_slice callback")
-            on_slice(sliced)
-            logger.debug("on_slice callback finished")
+                if process is not None:
+                    logger.debug("Applying slice post-processing callback")
+                    try:
+                        sliced = process(sliced)
+                    except Exception as process_error:
+                        if strict_process:
+                            raise
+                        logger.warning(
+                            "Slice process callback failed; using unprocessed slice. "
+                            "Set strict_process=True to raise. error=%r",
+                            process_error,
+                        )
+                        print(
+                            "[GISDocument] process callback failed; "
+                            "using unprocessed slice. "
+                            f"error={process_error!r}"
+                        )
+                if compute:
+                    logger.debug("Computing processed slice eagerly")
+                    sliced = sliced.compute()
+                logger.debug("Slice complete, invoking on_slice callback")
+                on_slice(sliced)
+                logger.debug("on_slice callback finished")
+            except Exception as e:
+                logger.info("Extent slice callback failed")
+                # Surface callback failures directly in notebook output.
+                print(f"[GISDocument] extent slice callback failed: {e!r}")
 
         subscription_id = self._options.observe(_on_options_change)
         logger.debug("Extent callback registered with id=%s", subscription_id)
         return subscription_id
 
+    def bind_extent_debug_observer(self, *, print_to_stdout: bool = True) -> str:
+        """
+        Log every ``options.extent`` change event.
+
+        Useful for notebook debugging when checking whether map pan/zoom events
+        are propagated to the document.
+        """
+
+        def _on_options_change(change: Any, _transaction: Any) -> None:
+            keys = getattr(change, "keys", None)
+            if not keys or "extent" not in keys:
+                return
+            extent_change = keys.get("extent")
+            old_extent = (
+                extent_change.get("oldValue")
+                if isinstance(extent_change, dict)
+                else None
+            )
+            new_extent = (
+                extent_change.get("newValue")
+                if isinstance(extent_change, dict)
+                else None
+            )
+            logger.info(
+                "Extent observer event: old=%s new=%s current=%s",
+                old_extent,
+                new_extent,
+                self.extent,
+            )
+            if print_to_stdout:
+                print(
+                    "[GISDocument] extent changed "
+                    f"old={old_extent} new={new_extent} current={self.extent}"
+                )
+
+        subscription_id = self._options.observe(_on_options_change)
+        logger.debug("Extent debug observer registered with id=%s", subscription_id)
+        return subscription_id
+
     def unbind_extent_slice_callback(self, subscription_id: str) -> None:
         """Remove an extent slice callback registered by bind_extent_slice_callback."""
         logger.debug("Unregistering extent callback id=%s", subscription_id)
+        self._options.unobserve(subscription_id)
+
+    def unbind_extent_debug_observer(self, subscription_id: str) -> None:
+        """Remove an extent debug observer registered by bind_extent_debug_observer."""
+        logger.debug(
+            "Unregistering extent debug observer id=%s",
+            subscription_id,
+        )
         self._options.unobserve(subscription_id)
 
     def sidecar(

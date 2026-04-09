@@ -285,7 +285,7 @@ export function StacResultsProvider({
           a.id.localeCompare(b.id),
         );
         console.log('sortedFeatures', sortedFeatures);
-        model.addStacItem('result', JSON.stringify(sortedFeatures));
+        model.addStacItem('result', JSON.stringify(data));
 
         // Calculate total results from context if available
         let totalResultsFromQuery: string;
