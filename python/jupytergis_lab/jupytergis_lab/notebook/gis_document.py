@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import inspect
 import json
 import logging
 from dataclasses import dataclass
@@ -285,6 +287,9 @@ class GISDocument(CommWidget):
         viewport_height: int | None = None,
         resample_method: str = "linear",
         auto_viewport_from_options: bool = True,
+        add_tiler_layer_on_compute: bool = False,
+        replace_previous_tiler_layer: bool = True,
+        tiler_layer_kwargs: dict[str, Any] | None = None,
     ) -> str:
         """
         Call ``on_slice`` with a DataArray slice when ``options.extent`` changes.
@@ -303,8 +308,11 @@ class GISDocument(CommWidget):
             y_name,
             compute,
         )
+        previous_tiler_layer_id: str | None = None
+        tiler_layer_kwargs = tiler_layer_kwargs or {}
 
         def _on_options_change(change: Any, _transaction: Any) -> None:
+            nonlocal previous_tiler_layer_id
             try:
                 print("Received options change event (change=%s)", change)
                 keys = getattr(change, "keys", None)
@@ -396,6 +404,38 @@ class GISDocument(CommWidget):
                 if compute:
                     print("Computing processed slice eagerly")
                     sliced = sliced.compute()
+                    if add_tiler_layer_on_compute:
+                        add_tiler_layer = getattr(self, "add_tiler_layer", None)
+                        if add_tiler_layer is None:
+                            print(
+                                "add_tiler_layer_on_compute=True but add_tiler_layer is not available on this document."
+                            )
+                        else:
+                            if (
+                                replace_previous_tiler_layer
+                                and previous_tiler_layer_id is not None
+                            ):
+                                try:
+                                    self.remove_layer(previous_tiler_layer_id)
+                                except Exception as remove_error:
+                                    print(
+                                        "Could not remove previous generated tiler layer. error=%r",
+                                        remove_error,
+                                    )
+                            layer_result = add_tiler_layer(
+                                sliced,
+                                **tiler_layer_kwargs,
+                            )
+                            if inspect.isawaitable(layer_result):
+                                async def _add_layer_async():
+                                    nonlocal previous_tiler_layer_id
+                                    added = await layer_result
+                                    if isinstance(added, str):
+                                        previous_tiler_layer_id = added
+
+                                asyncio.create_task(_add_layer_async())
+                            elif isinstance(layer_result, str):
+                                previous_tiler_layer_id = layer_result
                 print("Slice complete, invoking on_slice callback")
                 on_slice(sliced)
                 print("on_slice callback finished")
