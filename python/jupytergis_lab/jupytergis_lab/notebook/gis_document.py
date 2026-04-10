@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional
 from uuid import uuid4
 import requests
+import numpy as np
 
 from pycrdt import Array, Map
 from pydantic import BaseModel
@@ -56,7 +57,6 @@ def _slice_dataarray_by_bbox(
     x_name: str,
     y_name: str,
 ) -> Any:
-    logger.debug("SLICE BT")
     print("FUCKING GOGOGOGOGOGO")
     y_values = data_array.coords[y_name].values
     if y_values[0] <= y_values[-1]:
@@ -64,7 +64,58 @@ def _slice_dataarray_by_bbox(
     else:
         y_slice = slice(north, south)
 
-    return data_array.sel({x_name: slice(west, east), y_name: y_slice})
+    sliced = data_array.sel({x_name: slice(west, east), y_name: y_slice})
+    return sliced
+
+
+def _resample_dataarray_to_viewport(
+    data_array: Any,
+    *,
+    x_name: str,
+    y_name: str,
+    viewport_width: int | None,
+    viewport_height: int | None,
+    method: str = "linear",
+) -> Any:
+    """Resample a DataArray to an approximate viewport-sized grid."""
+    if not viewport_width or not viewport_height:
+        return data_array
+    if viewport_width <= 0 or viewport_height <= 0:
+        return data_array
+
+    x_values = data_array.coords[x_name].values
+    y_values = data_array.coords[y_name].values
+    if len(x_values) < 2 or len(y_values) < 2:
+        return data_array
+
+    x_target = np.linspace(float(x_values[0]), float(x_values[-1]), viewport_width)
+    y_target = np.linspace(float(y_values[0]), float(y_values[-1]), viewport_height)
+    return data_array.interp({x_name: x_target, y_name: y_target}, method=method)
+
+
+def _extract_viewport_size(options: dict[str, Any]) -> tuple[int | None, int | None]:
+    """Best-effort viewport size extraction from options payload."""
+    width = options.get("width")
+    height = options.get("height")
+
+    if isinstance(width, (int, float)) and isinstance(height, (int, float)):
+        return int(width), int(height)
+
+    viewport = options.get("viewport")
+    if isinstance(viewport, dict):
+        width = viewport.get("width")
+        height = viewport.get("height")
+        if isinstance(width, (int, float)) and isinstance(height, (int, float)):
+            return int(width), int(height)
+
+    size = options.get("size")
+    if isinstance(size, dict):
+        width = size.get("width")
+        height = size.get("height")
+        if isinstance(width, (int, float)) and isinstance(height, (int, float)):
+            return int(width), int(height)
+
+    return None, None
 
 
 def reversed_tree(root):
@@ -230,6 +281,10 @@ class GISDocument(CommWidget):
         process: Callable[[Any], Any] | None = None,
         compute: bool = False,
         strict_process: bool = False,
+        viewport_width: int | None = None,
+        viewport_height: int | None = None,
+        resample_method: str = "linear",
+        auto_viewport_from_options: bool = True,
     ) -> str:
         """
         Call ``on_slice`` with a DataArray slice when ``options.extent`` changes.
@@ -241,7 +296,7 @@ class GISDocument(CommWidget):
         the callback falls back to the unprocessed spatial slice so state
         updates still happen while debugging.
         """
-        logger.debug(
+        print(
             "Registering extent slice callback (data_crs=%s, x_name=%s, y_name=%s, compute=%s)",
             data_crs,
             x_name,
@@ -251,17 +306,17 @@ class GISDocument(CommWidget):
 
         def _on_options_change(change: Any, _transaction: Any) -> None:
             try:
-                logger.debug("Received options change event (change=%s)", change)
+                print("Received options change event (change=%s)", change)
                 keys = getattr(change, "keys", None)
                 if not keys or "extent" not in keys:
-                    logger.debug("Ignoring options change without extent update")
+                    print("Ignoring options change without extent update")
                     return
 
                 extent = self.extent
                 if extent is None:
-                    logger.debug("No valid extent in options, skipping callback")
+                    print("No valid extent in options, skipping callback")
                     return
-                logger.info(
+                print(
                     "Extent changed: west=%s, south=%s, east=%s, north=%s",
                     extent.west,
                     extent.south,
@@ -270,7 +325,7 @@ class GISDocument(CommWidget):
                 )
 
                 if x_name not in data_array.coords or y_name not in data_array.coords:
-                    logger.debug(
+                    print(
                         "DataArray missing coords x=%s y=%s available=%s",
                         x_name,
                         y_name,
@@ -282,11 +337,11 @@ class GISDocument(CommWidget):
 
                 bbox = self._map_extent_bbox_in_data_crs(data_crs)
                 if bbox is None:
-                    logger.debug("No valid extent in options, skipping callback")
+                    print("No valid extent in options, skipping callback")
                     return
                 west, south, east, north = bbox
 
-                logger.debug(
+                print(
                     "Slicing DataArray using bbox west=%s south=%s east=%s north=%s",
                     west,
                     south,
@@ -302,14 +357,33 @@ class GISDocument(CommWidget):
                     x_name=x_name,
                     y_name=y_name,
                 )
+                effective_width = viewport_width
+                effective_height = viewport_height
+                if auto_viewport_from_options and (
+                    effective_width is None or effective_height is None
+                ):
+                    options = self._options.to_py()
+                    auto_width, auto_height = _extract_viewport_size(options)
+                    if effective_width is None:
+                        effective_width = auto_width
+                    if effective_height is None:
+                        effective_height = auto_height
+                sliced = _resample_dataarray_to_viewport(
+                    sliced,
+                    x_name=x_name,
+                    y_name=y_name,
+                    viewport_width=effective_width,
+                    viewport_height=effective_height,
+                    method=resample_method,
+                )
                 if process is not None:
-                    logger.debug("Applying slice post-processing callback")
+                    print("Applying slice post-processing callback")
                     try:
                         sliced = process(sliced)
                     except Exception as process_error:
                         if strict_process:
                             raise
-                        logger.warning(
+                        print(
                             "Slice process callback failed; using unprocessed slice. "
                             "Set strict_process=True to raise. error=%r",
                             process_error,
@@ -320,18 +394,18 @@ class GISDocument(CommWidget):
                             f"error={process_error!r}"
                         )
                 if compute:
-                    logger.debug("Computing processed slice eagerly")
+                    print("Computing processed slice eagerly")
                     sliced = sliced.compute()
-                logger.debug("Slice complete, invoking on_slice callback")
+                print("Slice complete, invoking on_slice callback")
                 on_slice(sliced)
-                logger.debug("on_slice callback finished")
+                print("on_slice callback finished")
             except Exception as e:
-                logger.info("Extent slice callback failed")
+                print("Extent slice callback failed")
                 # Surface callback failures directly in notebook output.
                 print(f"[GISDocument] extent slice callback failed: {e!r}")
 
         subscription_id = self._options.observe(_on_options_change)
-        logger.debug("Extent callback registered with id=%s", subscription_id)
+        print("Extent callback registered with id=%s", subscription_id)
         return subscription_id
 
     def bind_extent_debug_observer(self, *, print_to_stdout: bool = True) -> str:
@@ -357,7 +431,7 @@ class GISDocument(CommWidget):
                 if isinstance(extent_change, dict)
                 else None
             )
-            logger.info(
+            print(
                 "Extent observer event: old=%s new=%s current=%s",
                 old_extent,
                 new_extent,
@@ -370,17 +444,17 @@ class GISDocument(CommWidget):
                 )
 
         subscription_id = self._options.observe(_on_options_change)
-        logger.debug("Extent debug observer registered with id=%s", subscription_id)
+        print("Extent debug observer registered with id=%s", subscription_id)
         return subscription_id
 
     def unbind_extent_slice_callback(self, subscription_id: str) -> None:
         """Remove an extent slice callback registered by bind_extent_slice_callback."""
-        logger.debug("Unregistering extent callback id=%s", subscription_id)
+        print("Unregistering extent callback id=%s", subscription_id)
         self._options.unobserve(subscription_id)
 
     def unbind_extent_debug_observer(self, subscription_id: str) -> None:
         """Remove an extent debug observer registered by bind_extent_debug_observer."""
-        logger.debug(
+        print(
             "Unregistering extent debug observer id=%s",
             subscription_id,
         )
