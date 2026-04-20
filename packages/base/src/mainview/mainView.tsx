@@ -233,10 +233,23 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       this._onSharedOptionsChanged,
       this,
     );
-    this._model.clientStateChanged.connect(
-      this._onClientSharedStateChanged,
+    this._model.temporalControllerActiveChanged.connect(
+      this._handleTemporalControllerActiveChanged,
       this,
     );
+    const remoteUserSignals = [
+      this._model.remoteUserChanged,
+      this._model.viewportStateChanged,
+    ];
+    remoteUserSignals.forEach(signal =>
+      signal.connect(this._handleRemoteUserChanged, this),
+    );
+    this._model.pointerChanged.connect(this._handlePointerChanged, this);
+    this._model.selectedChanged.connect(
+      this._handleTemporalControllerActiveChanged,
+      this,
+    );
+    this._model.selectedChanged.connect(this._handleSelectedChanged, this);
     this._model.sharedLayersChanged.connect(this._onLayersChanged, this);
     this._model.sharedLayerTreeChanged.connect(this._onLayerTreeChange, this);
     this._model.sharedSourcesChanged.connect(this._onSourcesChange, this);
@@ -264,12 +277,12 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       this._syncSettingsFromRegistry();
     });
 
-    // Watch isIdentifying and clear the highlight when Identify Tool is turned off
-    this._model.sharedModel.awareness.on('change', () => {
-      if (this._model.currentMode !== 'identifying' && this._highlightLayer) {
-        this._highlightLayer.getSource()?.clear();
-      }
-    });
+    // Watch identify-related awareness changes and clear highlight when
+    // Identify tool is turned off.
+    this._model.identifiedFeaturesChanged.connect(
+      this._clearHighlightWhenIdentifyDisabled,
+      this,
+    );
 
     this.state = {
       id: this._mainViewModel.id,
@@ -313,6 +326,10 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     const zoom = options.zoom !== undefined ? options.zoom : 1;
 
     await this.generateMap(center, zoom, projection);
+    this._handleRemoteUserChanged();
+    this._handlePointerChanged();
+    this._handleTemporalControllerActiveChanged();
+    this._handleSelectedChanged();
     this._mainViewModel.initSignal();
     if (window.jupytergisMaps !== undefined && this._documentPath) {
       window.jupytergisMaps[this._documentPath] = this._Map;
@@ -347,8 +364,25 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       this,
     );
 
-    this._model.clientStateChanged.disconnect(
-      this._onClientSharedStateChanged,
+    this._model.temporalControllerActiveChanged.disconnect(
+      this._handleTemporalControllerActiveChanged,
+      this,
+    );
+    const remoteUserSignals = [
+      this._model.remoteUserChanged,
+      this._model.viewportStateChanged,
+    ];
+    remoteUserSignals.forEach(signal =>
+      signal.disconnect(this._handleRemoteUserChanged, this),
+    );
+    this._model.pointerChanged.disconnect(this._handlePointerChanged, this);
+    this._model.selectedChanged.disconnect(
+      this._handleTemporalControllerActiveChanged,
+      this,
+    );
+    this._model.selectedChanged.disconnect(this._handleSelectedChanged, this);
+    this._model.identifiedFeaturesChanged.disconnect(
+      this._clearHighlightWhenIdentifyDisabled,
       this,
     );
 
@@ -2140,17 +2174,92 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     }
   }
 
-  private _onClientSharedStateChanged = (
-    sender: IJupyterGISModel,
-    clients: Map<number, IJupyterGISClientState>,
-  ): void => {
+  private _handleSelectedChanged = (): void => {
+    const localState = this._model.localState;
+    if (!localState) {
+      return;
+    }
+
+    const selectedLayers = localState.selected?.value;
+    if (!selectedLayers) {
+      return;
+    }
+
+    const selectedLayerID = Object.keys(selectedLayers)[0];
+    const JGISLayer = this._model.getLayer(selectedLayerID);
+    this._handleDrawVectorLayerSelectionChanged(JGISLayer);
+  };
+
+  /* check if the currently selected layer is a drawVector layer
+  and update isDrawVectorLayer to remove the display of the 
+  geometry selection overlay if required */
+  private _handleDrawVectorLayerSelectionChanged(
+    layer: IJGISLayer | undefined,
+  ): void {
+    if (layer && !this._model.checkIfIsADrawVectorLayer(layer)) {
+      this._model.editingVectorLayer = false;
+      this._updateEditingVectorLayer();
+    }
+  }
+
+  private _handleTemporalControllerActiveChanged(): void {
+    const localState = this._model.localState;
+    if (!localState) {
+      return;
+    }
+
+    const isTemporalControllerActive =
+      localState.isTemporalControllerActive === true;
+    const selectedLayers = localState.selected?.value;
+    const selectedLayerId = selectedLayers
+      ? (Object.keys(selectedLayers)[0] ?? null)
+      : null;
+    const layerType = selectedLayerId
+      ? this._model.getLayer(selectedLayerId)?.type
+      : null;
+    const isSelectionValid =
+      !!selectedLayers &&
+      Object.keys(selectedLayers).length === 1 &&
+      !this._model.getSource(selectedLayerId!) &&
+      ['VectorLayer', 'HeatmapLayer'].includes(layerType ?? '');
+    const displayTemporalController =
+      isTemporalControllerActive && isSelectionValid;
+
+    if (displayTemporalController !== this.state.displayTemporalController) {
+      this.setState(old => ({ ...old, displayTemporalController }));
+      this._mainViewModel.commands.notifyCommandChanged(
+        CommandIDs.temporalController,
+      );
+    }
+
+    /* check if the currently selected layer is a drawVector layer
+    and update isDrawVectorLayer to remove the display of the geometry selection overlay if required*/
+    // const selectedLayers = localState?.selected?.value;
+    if (!selectedLayers) {
+      return;
+    }
+
+    const selectedLayerID = Object.keys(selectedLayers)[0];
+    const JGISLayer = this._model.getLayer(selectedLayerID);
+    if (JGISLayer && !this._model.checkIfIsADrawVectorLayer(JGISLayer)) {
+      this._model.editingVectorLayer = false;
+      this._updateEditingVectorLayer();
+    }
+  }
+
+  private _handleRemoteUserChanged(): void {
     const localState = this._model.localState;
     if (!localState) {
       return;
     }
 
     const remoteUser = localState.remoteUser;
-    // If we are in following mode, we update our position and selection
+    const clients = this._model.sharedModel.awareness.getStates() as Map<
+      number,
+      IJupyterGISClientState
+    >;
+
+    // If we are in following mode, update UI and viewport from the remote user.
     if (remoteUser) {
       const remoteState = clients.get(remoteUser);
       if (!remoteState) {
@@ -2165,42 +2274,40 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       }
 
       const remoteViewport = remoteState.viewportState;
-
       if (remoteViewport.value) {
         const { x, y } = remoteViewport.value.coordinates;
         const zoom = remoteViewport.value.zoom;
-
         this._moveToPosition({ x, y }, zoom, 0);
       }
-    } else {
-      // If we are unfollowing a remote user, we reset our center and zoom to their previous values
-      if (this.state.remoteUser !== null) {
-        this.setState(old => ({
-          ...old,
-          remoteUser: null,
-        }));
-        const viewportState = localState.viewportState?.value;
-
-        if (viewportState) {
-          this._moveToPosition(viewportState.coordinates, viewportState.zoom);
-        }
-      }
+      return;
     }
 
-    // cursors
+    // If we are unfollowing, reset to local viewport and clear follow UI.
+    if (this.state.remoteUser !== null) {
+      this.setState(old => ({
+        ...old,
+        remoteUser: null,
+      }));
+      const viewportState = localState.viewportState?.value;
+      if (viewportState) {
+        this._moveToPosition(viewportState.coordinates, viewportState.zoom);
+      }
+    }
+  }
+
+  private _handlePointerChanged(): void {
+    const clients = this._model.sharedModel.awareness.getStates() as Map<
+      number,
+      IJupyterGISClientState
+    >;
+    const clientPointers = { ...this.state.clientPointers };
+
     clients.forEach((client, clientId) => {
-      if (!client?.user) {
+      if (!client?.user || this._model.getClientId() === clientId) {
         return;
       }
 
       const pointer = client.pointer?.value;
-
-      // We already display our own cursor on mouse move
-      if (this._model.getClientId() === clientId) {
-        return;
-      }
-
-      const clientPointers = { ...this.state.clientPointers };
       let currentClientPointer = clientPointers[clientId];
 
       if (pointer) {
@@ -2208,7 +2315,6 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
           pointer.coordinates.x,
           pointer.coordinates.y,
         ]);
-
         const lonLat = toLonLat([pointer.coordinates.x, pointer.coordinates.y]);
 
         if (!currentClientPointer) {
@@ -2243,34 +2349,10 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       } else {
         delete clientPointers[clientId];
       }
-
-      this.setState(old => ({ ...old, clientPointers }));
     });
 
-    // Compute displayTemporalController: active AND current selection is valid
-    const isTemporalControllerActive = !!localState.isTemporalControllerActive;
-    const selectedLayers = localState.selected?.value;
-    const selectedLayerId = selectedLayers
-      ? (Object.keys(selectedLayers)[0] ?? null)
-      : null;
-    const layerType = selectedLayerId
-      ? this._model.getLayer(selectedLayerId)?.type
-      : null;
-    const isSelectionValid =
-      !!selectedLayers &&
-      Object.keys(selectedLayers).length === 1 &&
-      !this._model.getSource(selectedLayerId!) &&
-      ['VectorLayer', 'HeatmapLayer'].includes(layerType ?? '');
-    const displayTemporalController =
-      isTemporalControllerActive && isSelectionValid;
-
-    if (displayTemporalController !== this.state.displayTemporalController) {
-      this.setState(old => ({ ...old, displayTemporalController }));
-      this._mainViewModel.commands.notifyCommandChanged(
-        CommandIDs.temporalController,
-      );
-    }
-  };
+    this.setState(old => ({ ...old, clientPointers }));
+  }
 
   private _onSharedOptionsChanged(): void {
     if (!this._Map) {
@@ -2544,6 +2626,12 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       }
     }
   };
+
+  private _clearHighlightWhenIdentifyDisabled(): void {
+    if (this._model.currentMode !== 'identifying' && this._highlightLayer) {
+      this._highlightLayer.getSource()?.clear();
+    }
+  }
 
   /**
    * Handler for when story maps change in the model.
