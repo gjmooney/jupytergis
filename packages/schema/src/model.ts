@@ -86,6 +86,8 @@ export class JupyterGISModel implements IJupyterGISModel {
     this._pathChanged = new Signal<JupyterGISModel, string>(this);
     this._settingsChanged = new Signal<JupyterGISModel, string>(this);
 
+    this._editingVectorLayer = false;
+
     this._jgisSettings = { ...DEFAULT_SETTINGS };
 
     this._viewState = {};
@@ -424,6 +426,7 @@ export class JupyterGISModel implements IJupyterGISModel {
   readonly flyToGeometrySignal = new Signal<this, any>(this);
   readonly highlightFeatureSignal = new Signal<this, any>(this);
   readonly updateBboxSignal = new Signal<this, any>(this);
+  readonly editingVectorLayerChanged = new Signal<this, boolean>(this);
 
   getContent(): IJGISContent {
     return {
@@ -556,11 +559,6 @@ export class JupyterGISModel implements IJupyterGISModel {
     }
 
     this._addLayerTreeItem(id, groupName, position);
-
-    this.syncSelected(
-      { [id]: { type: 'layer' } },
-      this.getClientId().toString(),
-    );
   }
 
   /**
@@ -1243,6 +1241,28 @@ export class JupyterGISModel implements IJupyterGISModel {
     this.updateLayerSignal.emit(JSON.stringify({ layerId, layer }));
   };
 
+  checkIfIsADrawVectorLayer(layer: IJGISLayer): boolean {
+    const selectedSource = this.getSource(layer.parameters?.source);
+
+    return (
+      selectedSource?.type === 'GeoJSONSource' &&
+      selectedSource?.parameters?.data?.type === 'FeatureCollection'
+    );
+  }
+
+  updateEditingVectorLayer(): void {
+    this.editingVectorLayerChanged.emit(this._editingVectorLayer);
+  }
+
+  get editingVectorLayer(): boolean {
+    return this._editingVectorLayer;
+  }
+
+  set editingVectorLayer(editingVectorLayer: boolean) {
+    this._editingVectorLayer = editingVectorLayer;
+    this.editingVectorLayerChanged.emit(this._editingVectorLayer);
+  }
+
   get geolocation(): JgisCoordinates {
     return this._geolocation;
   }
@@ -1327,6 +1347,8 @@ export class JupyterGISModel implements IJupyterGISModel {
     this,
     { type: SelectionType; itemId: string } | null
   >(this);
+
+  private _editingVectorLayer: boolean;
 
   static worker: Worker;
 
