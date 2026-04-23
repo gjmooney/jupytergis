@@ -77,7 +77,7 @@ import {
   DoubleClickZoom,
   Select,
 } from 'ol/interaction';
-import Draw from 'ol/interaction/Draw';
+import Draw, { DrawEvent } from 'ol/interaction/Draw';
 import Modify from 'ol/interaction/Modify';
 import Snap from 'ol/interaction/Snap';
 import {
@@ -137,6 +137,10 @@ import {
 import StatusBar from '@/src/workspace/statusbar/StatusBar';
 import CollaboratorPointers, { ClientPointer } from './CollaboratorPointers';
 import { FollowIndicator } from './FollowIndicator';
+import {
+  createGeoJSONFeaturePatcher,
+  type PatchGeoJSONFeatureProperties,
+} from './geoJsonFeaturePatch';
 import TemporalSlider from './TemporalSlider';
 import { MainViewModel } from './mainviewmodel';
 import {
@@ -252,6 +256,10 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     this._mainViewModel.viewSettingChanged.connect(this._onViewChanged, this);
 
     this._model = this._mainViewModel.jGISModel;
+    this.patchGeoJSONFeatureProperties = createGeoJSONFeaturePatcher({
+      model: this._model,
+      persistAndRefreshSource: this.persistAndRefreshSource,
+    });
     this._model.themeChanged.connect(this._handleThemeChange, this);
 
     this._model.sharedOptionsChanged.connect(
@@ -3470,6 +3478,7 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       type: this._currentDrawGeometry,
       source: this._currentVectorSource,
     });
+    this._draw.on('drawend', this._handleDrawEnd);
     this._select = new Select();
     this._modify = new Modify({
       features: this._select.getFeatures(),
@@ -3487,6 +3496,14 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     this._select.setActive(false);
     this._modify.setActive(false);
     this._snap.setActive(true);
+  };
+
+  private _handleDrawEnd = (event: DrawEvent): void => {
+    const feature = event.feature as Feature<Geometry>;
+    feature.set('_id', UUID.uuid4());
+    feature.set('_createdAt', new Date().toISOString());
+    feature.set('_creatorClientId', this._model.getClientId().toString());
+    feature.set('_fromDrawTool', true);
   };
 
   _editVectorLayer = () => {
@@ -3677,8 +3694,8 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
                             addLayer={this.addLayer.bind(this)}
                             removeLayer={this.removeLayer.bind(this)}
                             settings={this.state.jgisSettings}
-                            persistAndRefreshSource={
-                              this.persistAndRefreshSource
+                            patchGeoJSONFeatureProperties={
+                              this.patchGeoJSONFeatureProperties
                             }
                           />
                         )}
@@ -3799,6 +3816,8 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     this._model.sharedModel.updateSource(id, source);
     await this.updateSource(id, source);
   };
+
+  patchGeoJSONFeatureProperties: PatchGeoJSONFeatureProperties;
 }
 
 // ! TODO make mainview a modern react component instead of a class
