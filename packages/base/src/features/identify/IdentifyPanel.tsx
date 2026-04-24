@@ -1,8 +1,10 @@
+import { Button } from '@/src/shared/components/Button';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IDict, IJupyterGISModel } from '@jupytergis/schema';
 import { User } from '@jupyterlab/services';
 import { LabIcon, caretDownIcon } from '@jupyterlab/ui-components';
+import { CirclePlus, Pencil } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 interface IIdentifyComponentProps {
@@ -40,7 +42,10 @@ function useIdentifyPropertyEditor(args: {
     propertyUpdates: IDict<any>,
   ) => Promise<boolean>;
   setFeatures: React.Dispatch<React.SetStateAction<IDict<any> | undefined>>;
-}): { editorState: IPropertyEditorState; editorActions: IPropertyEditorActions } {
+}): {
+  editorState: IPropertyEditorState;
+  editorActions: IPropertyEditorActions;
+} {
   const { model, patchGeoJSONFeatureProperties, setFeatures } = args;
 
   const [editingFeatureIndex, setEditingFeatureIndex] = useState<number | null>(
@@ -171,20 +176,23 @@ const FeatureRow: React.FC<IFeatureRowProps> = ({
   onEditProperty,
 }) => {
   return (
-    <div className="jgis-identify-grid-body">
-      <strong>{propertyKey}:</strong>
-      <span>{String(value)}</span>
+    <div className="identify-v2-row">
+      <strong className="identify-v2-col-key">{propertyKey}</strong>
+      <span className="identify-v2-col-value">{String(value)}</span>
       {showEditButton && (
-        <button
+        <Button
           type="button"
+          className="identify-v2-col-actions"
           title="Edit property"
+          variant="icon"
+          size="icon-md"
           onClick={event => {
             event.stopPropagation();
             onEditProperty(propertyKey, value);
           }}
         >
-          Edit
-        </button>
+          <Pencil />
+        </Button>
       )}
     </div>
   );
@@ -204,9 +212,10 @@ const PropertyRowEditor: React.FC<IPropertyRowEditorProps> = ({
   editorActions,
 }) => {
   return (
-    <div className="jgis-identify-grid-body">
+    <div className="identify-v2-row identify-v2-row--editor">
       <PropertyFields editorState={editorState} editorActions={editorActions} />
       <button
+        className="identify-v2-col-actions"
         onClick={() => editorActions.onSaveProperty(feature, rowIndex)}
         disabled={
           !editorState.newPropertyKey.trim() || editorState.isSavingProperty
@@ -214,7 +223,12 @@ const PropertyRowEditor: React.FC<IPropertyRowEditorProps> = ({
       >
         Save
       </button>
-      <button onClick={editorActions.onCancelProperty}>Cancel</button>
+      <button
+        className="identify-v2-col-actions"
+        onClick={editorActions.onCancelProperty}
+      >
+        Cancel
+      </button>
     </div>
   );
 };
@@ -243,7 +257,7 @@ const FeatureCardHeader: React.FC<IFeatureCardHeaderProps> = ({
     typeof feature?.y !== 'number';
 
   return (
-    <div className="jgis-identify-grid-item-header">
+    <div className="jgis-identify-grid-item-header identify-v2-card-header">
       <span onClick={() => onToggleVisibility(rowIndex)}>
         <LabIcon.resolveReact
           icon={caretDownIcon}
@@ -254,7 +268,7 @@ const FeatureCardHeader: React.FC<IFeatureCardHeaderProps> = ({
       </span>
 
       <button
-        className="jgis-highlight-button"
+        className="jgis-highlight-button identify-v2-highlight"
         onClick={e => {
           e.stopPropagation();
           onHighlightFeature(feature);
@@ -317,7 +331,11 @@ const FeaturePropertyList: React.FC<IFeaturePropertyListProps> = ({
               value={value}
               showEditButton={isFeatureEditable && !key.startsWith('_')}
               onEditProperty={(propertyKey, propertyValue) =>
-                editorActions.onEditProperty(rowIndex, propertyKey, propertyValue)
+                editorActions.onEditProperty(
+                  rowIndex,
+                  propertyKey,
+                  propertyValue,
+                )
               }
             />
           );
@@ -341,9 +359,13 @@ const AddPropertyEditor: React.FC<IAddPropertyEditorProps> = ({
 }) => {
   if (editorState.editorMode === 'add') {
     return (
-      <div className="jgis-identify-grid-body">
-        <PropertyFields editorState={editorState} editorActions={editorActions} />
+      <div className="identify-v2-row identify-v2-row--editor">
+        <PropertyFields
+          editorState={editorState}
+          editorActions={editorActions}
+        />
         <button
+          className="identify-v2-col-actions"
           onClick={() => editorActions.onSaveProperty(feature, rowIndex)}
           disabled={
             !editorState.newPropertyKey.trim() || editorState.isSavingProperty
@@ -351,16 +373,26 @@ const AddPropertyEditor: React.FC<IAddPropertyEditorProps> = ({
         >
           Save
         </button>
-        <button onClick={editorActions.onCancelProperty}>Cancel</button>
+        <button
+          className="identify-v2-col-actions"
+          onClick={editorActions.onCancelProperty}
+        >
+          Cancel
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="jgis-identify-grid-body">
-      <button onClick={() => editorActions.onStartAddProperty(rowIndex)}>
-        +
-      </button>
+    <div className="identify-v2-row identify-v2-row--add">
+      <Button
+        className="identify-v2-col-actions"
+        onClick={() => editorActions.onStartAddProperty(rowIndex)}
+        variant="icon"
+        size="icon-md"
+      >
+        <CirclePlus />
+      </Button>
     </div>
   );
 };
@@ -377,12 +409,16 @@ const PropertyFields: React.FC<IPropertyFieldsProps> = ({
   return (
     <>
       <input
+        className="identify-v2-col-key"
         type="text"
         placeholder="key"
         value={editorState.newPropertyKey}
-        onChange={event => editorActions.onNewPropertyKeyChange(event.target.value)}
+        onChange={event =>
+          editorActions.onNewPropertyKeyChange(event.target.value)
+        }
       />
       <input
+        className="identify-v2-col-value"
         type="text"
         placeholder="value"
         value={editorState.newPropertyValue}
@@ -428,7 +464,7 @@ const FeatureCard: React.FC<IFeatureCardProps> = ({
         };
 
   return (
-    <div className="jgis-identify-grid-item">
+    <div className="jgis-identify-grid-item identify-v2-card">
       <FeatureCardHeader
         feature={feature}
         rowIndex={rowIndex}
@@ -561,7 +597,7 @@ export const IdentifyPanelComponent: React.FC<IIdentifyComponentProps> = ({
 
   return (
     <div
-      className="jgis-identify-wrapper"
+      className="identify-v2-wrapper"
       style={{
         border: model?.localState?.remoteUser
           ? `solid 3px ${remoteUser?.color}`
