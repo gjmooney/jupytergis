@@ -791,7 +791,7 @@ div.jGIS-toolbar-widget > div.jp-Toolbar-item:last-child {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0 0.5rem 0.75rem 0.5rem;
+  padding: 0 0.5rem;
 }
 
 .identify-v2-card-header {
@@ -808,6 +808,7 @@ div.jGIS-toolbar-widget > div.jp-Toolbar-item:last-child {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  padding: 0.5rem 0.5rem 0 0.5rem;
 }
 
 .identify-v2-row {
@@ -817,7 +818,7 @@ div.jGIS-toolbar-widget > div.jp-Toolbar-item:last-child {
 }
 
 .identify-v2-row--add {
-  justify-content: flex-end;
+  justify-content: center;
 }
 
 .identify-v2-row--editor {
@@ -844,6 +845,10 @@ div.jGIS-toolbar-widget > div.jp-Toolbar-item:last-child {
   display: inline-flex;
   flex: 0 0 auto;
   align-self: center;
+}
+
+.identify-v2-add-button {
+  justify-content: center;
 }
 
 .jp-gis-stop-container-wrapper {
