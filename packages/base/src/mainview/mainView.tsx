@@ -216,6 +216,7 @@ interface IStates {
   isSpectaPresentation: boolean;
   initialLayersReady: boolean;
   identifyFeatureFloatersVersion: number;
+  activeStoryHtmlContent: string | null;
 }
 
 export class MainView extends React.Component<IMainViewProps, IStates> {
@@ -302,6 +303,14 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       this._handleIdentifiedFeaturesChanged,
       this,
     );
+    this._model.currentSegmentIndexChanged.connect(
+      this._syncActiveStoryHtmlContent,
+      this,
+    );
+    this._model.sharedModel.storyMapsChanged.connect(
+      this._syncActiveStoryHtmlContent,
+      this,
+    );
     this._model.zoomToPositionSignal.connect(this._onZoomToPosition, this);
     this._model.settingsChanged.connect(this._onSettingsChanged, this);
     this._model.updateLayerSignal.connect(this._triggerLayerUpdate, this);
@@ -345,6 +354,7 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       isSpectaPresentation: this._model.isSpectaMode(),
       initialLayersReady: false,
       identifyFeatureFloatersVersion: 0,
+      activeStoryHtmlContent: null,
     };
 
     this._sources = [];
@@ -376,6 +386,7 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     this._handlePointerChanged();
     this._handleTemporalControllerActiveChanged();
     this._handleSelectedChanged();
+    this._syncActiveStoryHtmlContent();
     this._mainViewModel.initSignal();
     if (window.jupytergisMaps !== undefined && this._documentPath) {
       window.jupytergisMaps[this._documentPath] = this._Map;
@@ -390,6 +401,12 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     ) {
       this._setupSpectaMode();
       this._isSpectaPresentationInitialized = true;
+    }
+
+    const wasHtmlSegmentActive = Boolean(prevState.activeStoryHtmlContent);
+    const isHtmlSegmentActive = Boolean(this.state.activeStoryHtmlContent);
+    if (wasHtmlSegmentActive !== isHtmlSegmentActive) {
+      this._setMapInteractionsEnabled(!isHtmlSegmentActive);
     }
   }
 
@@ -429,6 +446,14 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     this._model.selectedChanged.disconnect(this._handleSelectedChanged, this);
     this._model.identifiedFeaturesChanged.disconnect(
       this._handleIdentifiedFeaturesChanged,
+      this,
+    );
+    this._model.currentSegmentIndexChanged.disconnect(
+      this._syncActiveStoryHtmlContent,
+      this,
+    );
+    this._model.sharedModel.storyMapsChanged.disconnect(
+      this._syncActiveStoryHtmlContent,
       this,
     );
 
@@ -2233,6 +2258,8 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
   }
 
   private _handleSelectedChanged = (): void => {
+    this._syncActiveStoryHtmlContent();
+
     const localState = this._model.localState;
     if (!localState) {
       return;
@@ -3441,6 +3468,72 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     // TODO SOMETHING
   };
 
+  private _setMapInteractionsEnabled = (enabled: boolean): void => {
+    if (!this._Map) {
+      return;
+    }
+
+    this._Map.getInteractions().forEach(interaction => {
+      const interactionId = getUid(interaction);
+      if (!enabled) {
+        this._mapInteractionActiveState.set(interactionId, interaction.getActive());
+        interaction.setActive(false);
+        return;
+      }
+
+      const wasActive = this._mapInteractionActiveState.get(interactionId);
+      interaction.setActive(wasActive ?? true);
+    });
+
+    if (enabled) {
+      this._mapInteractionActiveState.clear();
+    }
+  };
+
+  private _getActiveStoryHtmlContent = (): string | null => {
+    if (!this.state.isSpectaPresentation) {
+      return null;
+    }
+
+    const story = this._model.getSelectedStory().story;
+    if (!story?.storySegments?.length) {
+      return null;
+    }
+
+    const currentSegmentId =
+      story.storySegments[this._model.getCurrentSegmentIndex() ?? 0];
+    if (!currentSegmentId) {
+      return null;
+    }
+
+    const segmentLayer = this._model.getLayer(currentSegmentId);
+    if (segmentLayer?.type !== 'StorySegmentLayer') {
+      return null;
+    }
+
+    const segmentParameters =
+      segmentLayer.parameters as IStorySegmentLayer['parameters'] | undefined;
+    const segmentContent = segmentParameters?.content;
+    const contentMode = segmentContent?.contentMode;
+    const htmlContent = segmentContent?.htmlContent;
+
+    if (contentMode !== 'html' || typeof htmlContent !== 'string') {
+      return null;
+    }
+
+    return htmlContent.trim() ? htmlContent : null;
+  };
+
+  private _syncActiveStoryHtmlContent = (): void => {
+    const activeStoryHtmlContent = this._getActiveStoryHtmlContent();
+    this.setState(prevState => {
+      if (prevState.activeStoryHtmlContent === activeStoryHtmlContent) {
+        return prevState;
+      }
+      return { ...prevState, activeStoryHtmlContent };
+    });
+  };
+
   private _handleSpectaTouchStart = (e: React.TouchEvent): void => {
     if (e.touches.length > 0) {
       this._spectaTouchStartX = e.touches[0].clientX;
@@ -3787,8 +3880,19 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
               style={{
                 width: '100%',
                 height: '100%',
+                position: 'relative',
               }}
             >
+              {this.state.activeStoryHtmlContent && (
+                <div className="jgis-story-html-overlay">
+                  <iframe
+                    className="jgis-story-html-iframe"
+                    sandbox=""
+                    srcDoc={this.state.activeStoryHtmlContent}
+                    title="Story HTML Segment"
+                  />
+                </div>
+              )}
               <div className="jgis-panels-wrapper">
                 {!this.state.isSpectaPresentation ? (
                   <>
@@ -3933,6 +4037,7 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
   }
 
   private _featurePropertyCache: Map<string | number, any> = new Map();
+  private readonly _mapInteractionActiveState = new Map<string | number, boolean>();
   private _isSpectaPresentationInitialized = false;
   private _storyScrollHandler: ((e: Event) => void) | null = null;
   private _clearStoryScrollGuard: () => void;
