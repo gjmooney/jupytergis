@@ -604,22 +604,31 @@ const LayerComponent: React.FC<ILayerProps> = props => {
         onContextMenu={setSelection}
         style={{ display: 'flex' }}
       >
-        {/* Expand/collapse legend button (only if symbology is supported) */}
-        {hasSupportedSymbology && (
-          <Button
-            minimal
-            onClick={e => {
-              e.stopPropagation();
-              setExpanded(v => !v);
-            }}
-            title={expanded ? 'Hide legend' : 'Show legend'}
-          >
-            <LabIcon.resolveReact
-              icon={expanded ? caretDownIcon : caretRightIcon}
-              tag="span"
-            />
-          </Button>
-        )}
+        {/* Expand/collapse legend button — always rendered to preserve alignment */}
+        <Button
+          minimal
+          onClick={
+            hasSupportedSymbology
+              ? e => {
+                  e.stopPropagation();
+                  setExpanded(v => !v);
+                }
+              : undefined
+          }
+          title={
+            hasSupportedSymbology
+              ? expanded
+                ? 'Hide legend'
+                : 'Show legend'
+              : undefined
+          }
+          style={{ visibility: hasSupportedSymbology ? 'visible' : 'hidden' }}
+        >
+          <LabIcon.resolveReact
+            icon={expanded ? caretDownIcon : caretRightIcon}
+            tag="span"
+          />
+        </Button>
 
         {/* Visibility toggle for normal layers, Slide number for story segments */}
         {isStorySegmentLayer ? (
