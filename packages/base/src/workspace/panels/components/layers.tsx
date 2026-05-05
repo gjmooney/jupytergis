@@ -701,7 +701,7 @@ const LayerComponent: React.FC<ILayerProps> = props => {
 
       {/* Show legend only if supported symbology */}
       {expanded && gisModel && hasSupportedSymbology && (
-        <div style={{ marginTop: 6, width: '100%' }}>
+        <div style={{ marginTop: 6, width: '100%' }} onClick={setSelection}>
           <LegendItem layerId={layerId} model={gisModel} />
         </div>
       )}
