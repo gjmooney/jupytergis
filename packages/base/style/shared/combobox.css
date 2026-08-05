@@ -161,10 +161,6 @@
   color: var(--jp-ui-font-color2);
 }
 
-.jgis-combobox-input-group {
-  width: auto;
-}
-
 .jgis-combobox-input-trigger-button {
   background-color: transparent;
 }
@@ -198,6 +194,11 @@
   transition-duration: 100ms;
 }
 
+.jgis-combobox-content:has([data-slot='input-group']) {
+  padding: 0.25rem;
+  padding-bottom: 0;
+}
+
 .jgis-combobox-content[data-chips='true'] {
   min-width: var(--anchor-width);
 }
@@ -229,8 +230,6 @@
 }
 
 .jgis-combobox-content [data-slot='input-group'] {
-  margin: 0.25rem;
-  margin-bottom: 0;
   height: 2rem;
   border-color: color-mix(in srgb, var(--jp-border-color1), transparent 70%);
   background-color: color-mix(
@@ -239,6 +238,10 @@
     transparent 70%
   );
   box-shadow: none;
+}
+
+.jgis-combobox-content:has([data-slot='input-group']) .jgis-combobox-list {
+  padding-inline: 0;
 }
 
 .jgis-combobox-list {
@@ -256,6 +259,30 @@
 
 .jgis-combobox-list[data-empty] {
   padding: 0;
+}
+
+.jgis-combobox-list.jgis-combobox-list-virtualized {
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+
+.jgis-combobox-virtual-scroller {
+  box-sizing: border-box;
+  max-height: min(15.75rem, calc(var(--available-height) - 2.25rem));
+  overflow: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 0.25rem;
+  scrollbar-width: none;
+}
+
+.jgis-combobox-virtual-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.jgis-combobox-virtual-placeholder {
+  position: relative;
+  width: 100%;
 }
 
 .jgis-combobox-item {
@@ -342,7 +369,9 @@
   background-clip: padding-box;
   padding: 0.25rem 0.625rem;
   font-size: 0.875rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .jgis-combobox-chips:focus-within {

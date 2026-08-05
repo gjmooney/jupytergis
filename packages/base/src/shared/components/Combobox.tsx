@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { Combobox as ComboboxPrimitive } from '@base-ui/react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { CheckIcon, ChevronDownIcon, XIcon } from 'lucide-react';
 
 import { cn } from './utils';
@@ -14,6 +15,12 @@ import {
 } from './InputGroup';
 
 const Combobox = ComboboxPrimitive.Root;
+
+const useComboboxFilteredItems = ComboboxPrimitive.useFilteredItems;
+
+type ComboboxVirtualizer = ReturnType<
+  typeof useVirtualizer<HTMLDivElement, Element>
+>;
 
 function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
   return <ComboboxPrimitive.Value data-slot="combobox-value" {...props} />;
@@ -132,13 +139,13 @@ function ComboboxList({ className, ...props }: ComboboxPrimitive.List.Props) {
   );
 }
 
-function ComboboxItem({
-  className,
-  children,
-  ...props
-}: ComboboxPrimitive.Item.Props) {
+const ComboboxItem = React.forwardRef<
+  HTMLDivElement,
+  ComboboxPrimitive.Item.Props
+>(function ComboboxItem({ className, children, ...props }, ref) {
   return (
     <ComboboxPrimitive.Item
+      ref={ref}
       data-slot="combobox-item"
       className={cn('jgis-combobox-item', className)}
       {...props}
@@ -153,7 +160,7 @@ function ComboboxItem({
       />
     </ComboboxPrimitive.Item>
   );
-}
+});
 
 function ComboboxGroup({ className, ...props }: ComboboxPrimitive.Group.Props) {
   return (
@@ -268,6 +275,91 @@ function useComboboxAnchor() {
   return React.useRef<HTMLDivElement | null>(null);
 }
 
+function ComboboxVirtualizedList<T>({
+  virtualizerRef,
+  estimateSize = 32,
+  overscan = 20,
+  children,
+}: {
+  virtualizerRef: React.RefObject<ComboboxVirtualizer | null>;
+  estimateSize?: number;
+  overscan?: number;
+  children: (item: T) => React.ReactNode;
+}) {
+  const filteredItems = useComboboxFilteredItems<T>();
+  const scrollElementRef = React.useRef<HTMLDivElement | null>(null);
+
+  const virtualizer = useVirtualizer({
+    count: filteredItems.length,
+    getScrollElement: () => scrollElementRef.current,
+    estimateSize: () => estimateSize,
+    overscan,
+    paddingStart: 4,
+    paddingEnd: 4,
+    scrollPaddingEnd: 4,
+    scrollPaddingStart: 4,
+  });
+
+  React.useImperativeHandle(virtualizerRef, () => virtualizer);
+
+  const handleScrollElementRef = React.useCallback(
+    (element: HTMLDivElement | null) => {
+      scrollElementRef.current = element;
+      if (element) {
+        virtualizer.measure();
+      }
+    },
+    [virtualizer],
+  );
+
+  const totalSize = virtualizer.getTotalSize();
+
+  if (!filteredItems.length) {
+    return null;
+  }
+
+  return (
+    <div
+      ref={handleScrollElementRef}
+      className="jgis-combobox-virtual-scroller"
+    >
+      <div
+        className="jgis-combobox-virtual-placeholder"
+        style={{ height: totalSize }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const item = filteredItems[virtualItem.index];
+          if (item === undefined) {
+            return null;
+          }
+
+          return (
+            <ComboboxItem
+              key={virtualItem.key}
+              index={virtualItem.index}
+              data-index={virtualItem.index}
+              ref={virtualizer.measureElement}
+              value={item}
+              aria-setsize={filteredItems.length}
+              aria-posinset={virtualItem.index + 1}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: virtualItem.size,
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+            >
+              {children(item)}
+            </ComboboxItem>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export {
   Combobox,
   ComboboxInput,
@@ -284,5 +376,8 @@ export {
   ComboboxChipsInput,
   ComboboxTrigger,
   ComboboxValue,
+  ComboboxVirtualizedList,
   useComboboxAnchor,
+  useComboboxFilteredItems,
 };
+export type { ComboboxVirtualizer };
