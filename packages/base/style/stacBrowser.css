@@ -158,7 +158,8 @@
   width: 100%;
 }
 
-/* More specific selector to override [data-slot="input"] styles for Input components */
+/* More specific selector to override Input styles for queryable combo */
+.jgis-input.jgis-queryable-combo-input,
 .jgis-queryable-combo-input[data-slot='input'] {
   padding: 0.5rem;
   /* padding-left: 1rem; */

@@ -69,9 +69,7 @@ function InputGroupButton({
 }
 
 function InputGroupText({ className, ...props }: React.ComponentProps<'span'>) {
-  return (
-    <span className={cn('jgis-input-group-text', className)} {...props} />
-  );
+  return <span className={cn('jgis-input-group-text', className)} {...props} />;
 }
 
 function InputGroupInput({
