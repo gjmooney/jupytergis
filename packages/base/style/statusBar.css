@@ -15,3 +15,10 @@
 .jgis-status-bar-coords {
   min-width: 160px;
 }
+
+.jgis-status-bar
+  .jgis-combobox-trigger.jgis-status-bar-projection-trigger
+  svg:not([class*='size-']) {
+  width: 1em;
+  height: 1em;
+}
