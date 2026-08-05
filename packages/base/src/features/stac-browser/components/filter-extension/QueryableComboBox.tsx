@@ -14,7 +14,7 @@ import {
   Operator,
   UpdateSelectedQueryables,
 } from '@/src/features/stac-browser/types/types';
-import { Combobox } from '@/src/shared/components/Combobox';
+import { ComboboxLegacy } from '@/src/shared/components/ComboboxLegacy';
 import { Input } from '@/src/shared/components/Input';
 import { Select } from '@/src/shared/components/Select';
 import { debounce } from '@/src/tools';
@@ -303,7 +303,7 @@ export function QueryableComboBox({
 
   return (
     <div className="jgis-queryable-combo-container">
-      <Combobox
+      <ComboboxLegacy
         items={items}
         buttonText={getButtonText()}
         searchPlaceholder="Search queryable..."
