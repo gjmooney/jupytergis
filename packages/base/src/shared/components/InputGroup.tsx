@@ -1,8 +1,8 @@
 import * as React from 'react';
 
-import { cn } from './utils';
 import { Button, type ButtonProps } from './Button';
 import { Input } from './Input';
+import { cn } from './utils';
 
 function InputGroup({ className, ...props }: React.ComponentProps<'div'>) {
   return (

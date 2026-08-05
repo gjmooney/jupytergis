@@ -26,9 +26,7 @@
   opacity: 0.5;
 }
 
-.jgis-input-group:has(
-  [data-slot='input-group-control']:focus-visible
-) {
+.jgis-input-group:has([data-slot='input-group-control']:focus-visible) {
   border-color: var(--jp-brand-color2);
   box-shadow: 0 0 0 3px
     color-mix(in srgb, var(--jp-brand-color2), transparent 50%);
@@ -129,7 +127,8 @@
   padding: 0.5rem 0.625rem 0;
 }
 
-.jgis-input-group:has(> input) .jgis-input-group-addon[data-align='block-start'] {
+.jgis-input-group:has(> input)
+  .jgis-input-group-addon[data-align='block-start'] {
   padding-top: 0.5rem;
 }
 

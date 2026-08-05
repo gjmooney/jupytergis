@@ -1,11 +1,8 @@
-'use client';
-
-import * as React from 'react';
 import { Combobox as ComboboxPrimitive } from '@base-ui/react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { CheckIcon, ChevronDownIcon, XIcon } from 'lucide-react';
+import * as React from 'react';
 
-import { cn } from './utils';
 import { Button } from './Button';
 import {
   InputGroup,
@@ -13,6 +10,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from './InputGroup';
+import { cn } from './utils';
 
 const Combobox = ComboboxPrimitive.Root;
 
@@ -142,7 +140,7 @@ function ComboboxList({ className, ...props }: ComboboxPrimitive.List.Props) {
 const ComboboxItem = React.forwardRef<
   HTMLDivElement,
   ComboboxPrimitive.Item.Props
->(function ComboboxItem({ className, children, ...props }, ref) {
+>(({ className, children, ...props }, ref) => {
   return (
     <ComboboxPrimitive.Item
       ref={ref}
@@ -327,7 +325,7 @@ function ComboboxVirtualizedList<T>({
         className="jgis-combobox-virtual-placeholder"
         style={{ height: totalSize }}
       >
-        {virtualizer.getVirtualItems().map((virtualItem) => {
+        {virtualizer.getVirtualItems().map(virtualItem => {
           const item = filteredItems[virtualItem.index];
           if (item === undefined) {
             return null;
