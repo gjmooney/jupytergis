@@ -2674,7 +2674,10 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     });
   };
 
-  private _onSharedOptionsChanged(): void {
+  private _onSharedOptionsChanged(
+    _sender?: IJupyterGISDoc,
+    change?: MapChange,
+  ): void {
     if (!this._Map) {
       return;
     }
@@ -2688,6 +2691,8 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       const options = this._model.getOptions();
       this.updateOptions(options);
       this._isPositionInitialized = true;
+    } else if (change?.has('projection')) {
+      this.updateOptions(this._model.getOptions());
     }
   }
 
@@ -2736,6 +2741,7 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
 
     // Need to recreate view if the projection changes
     if (projection !== undefined && currentProjection !== projection) {
+      this.ensureProjectionRegistered(projection);
       const newProjection = getProjection(projection);
       if (newProjection) {
         this.setState(old => ({
