@@ -1210,10 +1210,7 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
             throw new Error('CollaborativePointSource requires storeId');
           }
 
-          this._model.ensureFeatureStore(storeId, {
-            pmtilesPath: parameters.pmtilesPath ?? '',
-            baselineVersion: parameters.baselineVersion ?? 0,
-          });
+          this._model.ensureFeatureStore(storeId);
 
           newSource = new VectorSource();
           this._collaborativeOverlaySources.set(storeId, newSource);
@@ -3570,8 +3567,8 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
   ): void {
     const features = this._model.getFeatureStoreFeatures(storeId);
     const viewProj = this._Map.getView().getProjection();
-    const dataProjection =
-      this._model.getOptions().projection ?? DEFAULT_PROJECTION;
+    // Overlay lon/lat are always stored in EPSG:4326 (matches PostGIS).
+    const dataProjection = 'EPSG:4326';
     const olFeatures: Feature[] = [];
 
     for (const feature of Object.values(features)) {
@@ -3633,12 +3630,11 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     }
 
     const coordinate = this._Map.getCoordinateFromPixel(e.pixel);
-    const dataProjection =
-      this._model.getOptions().projection ?? DEFAULT_PROJECTION;
+    // Persist lon/lat in EPSG:4326 regardless of the map view CRS.
     const [lon, lat] = transform(
       coordinate,
       this._Map.getView().getProjection(),
-      dataProjection,
+      'EPSG:4326',
     );
 
     const attrs = this._model.getDrawCustomAttributes(layerId);
@@ -3652,7 +3648,7 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       lat,
       props,
     });
-    
+
     if (!result.ok) {
       const message =
         result.reason === 'compacting'
@@ -3661,6 +3657,8 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       await showErrorMessage('Collaborative points', message);
       return;
     }
+
+    console.log('awareness', this._model.sharedModel.awareness.getLocalState());
 
     if (result.nearSoftLimit) {
       this._log(
@@ -4178,7 +4176,6 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       ? this._model.getDrawCustomAttributes(layerId)
       : [];
     applyDrawCustomAttributesToFeature(feature, customAttributes);
-    console.log('awareness', this._model.sharedModel.awareness.getLocalState());
   };
 
   _editVectorLayer = () => {
