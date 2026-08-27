@@ -6,6 +6,7 @@ import {
   LayerPropertiesForm,
   VectorLayerPropertiesForm,
   GeoTiffLayerPropertiesForm,
+  WindParticleLayerPropertiesForm,
 } from '@/src/features/layers/forms/layer';
 import type { ILayerProps } from '@/src/features/layers/forms/layer/layerform';
 import {
@@ -34,8 +35,10 @@ export function getLayerTypeForm(
       break;
     case 'GeoTiffLayer':
     case 'GeoZarrLayer':
-    case 'WindParticleLayer':
       LayerForm = GeoTiffLayerPropertiesForm;
+      break;
+    case 'WindParticleLayer':
+      LayerForm = WindParticleLayerPropertiesForm;
       break;
 
     // ADD MORE FORM TYPES HERE

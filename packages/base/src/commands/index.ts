@@ -37,6 +37,9 @@ import {
   getLatestOpenEOConnection,
   listOpenEOConnections,
 } from '../features/layers/openeo/OpenEOTileLayer';
+import {
+  DEFAULT_WIND_COLOR_OPTIONS,
+} from '../features/layers/wind/windColorScale';
 import { SymbologyWidget } from '../features/layers/symbology/symbologyDialog';
 import { ProcessingFormDialog } from '../features/processing/ProcessingFormDialog';
 import {
@@ -944,6 +947,7 @@ export function addCommands(
           lineWidth: 2,
           frameRate: 20,
           maxAge: 60,
+          ...DEFAULT_WIND_COLOR_OPTIONS,
         },
       },
       sourceType: 'GeoTiffSource',
