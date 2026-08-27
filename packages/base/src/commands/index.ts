@@ -25,7 +25,7 @@ import { ReadonlyPartialJSONObject, UUID } from '@lumino/coreutils';
 import { Coordinate } from 'ol/coordinate';
 import { fromLonLat } from 'ol/proj';
 
-import { getLayerEditHandler } from '@/src/shared/formbuilder/editbehavior';
+import { getLayerEditHandler } from '../shared/formbuilder/editbehavior';
 import { addLayerCreationCommands } from './operationCommands';
 import { CommandIDs, icons } from '../constants';
 import { LayerBrowserWidget } from '../features/layer-browser';
@@ -907,6 +907,39 @@ export function addCommands(
       layerType: 'GeoTiffLayer',
     }),
     ...icons.get(CommandIDs.openNewGeoTiffDialog),
+  });
+
+  commands.addCommand(CommandIDs.addWindParticleLayer, {
+    label: trans.__('Wind particles'),
+    caption:
+      'Open a dialog to create a wind particle layer from a 2-band U/V GeoTIFF source in the current JupyterGIS document.',
+    describedBy: {
+      args: {
+        type: 'object',
+        properties: {},
+      },
+    },
+    isEnabled: () => {
+      return tracker.currentWidget
+        ? tracker.currentWidget.model.sharedModel.editable
+        : false;
+    },
+    execute: Private.createEntry({
+      tracker,
+      formSchemaRegistry,
+      title: 'Create Wind Particle Layer',
+      createLayer: true,
+      createSource: true,
+      sourceData: {
+        name: 'Custom Wind GeoTiff Source',
+        urls: [{}],
+        normalize: false,
+      },
+      layerData: { name: 'Custom Wind Particle Layer' },
+      sourceType: 'GeoTiffSource',
+      layerType: 'WindParticleLayer',
+    }),
+    ...icons.get(CommandIDs.addWindParticleLayer),
   });
 
   commands.addCommand(CommandIDs.openNewGeoZarrDialog, {

@@ -47,6 +47,7 @@ import {
   IOpenEOTileSource,
   IOpenEOTileLayer,
   IGrammarSymbologyState,
+  IWindParticleLayer,
 } from '@jupytergis/schema';
 import { showErrorMessage } from '@jupyterlab/apputils';
 import type { ILoggerRegistry } from '@jupyterlab/logconsole';
@@ -167,6 +168,10 @@ import {
 import { MainViewModel } from './mainviewmodel';
 import { ensureHighlightLayer } from '../features/identify/utils/highlightLayer';
 import { buildHighlightStyle } from '../features/identify/utils/highlightStyle';
+import {
+  createWindLayerFromGeoTiff,
+  loadGeoTiffSourceBuffer,
+} from '../features/layers/wind/addWindLayerFromGeoTiff';
 import {
   OpenEOTileLayer,
   OpenEOTileSource,
@@ -1892,6 +1897,24 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
         break;
       }
 
+      case 'WindParticleLayer': {
+        layerParameters = layer.parameters as IWindParticleLayer;
+        if (!source || source.type !== 'GeoTiffSource') {
+          throw new Error(
+            'WindParticleLayer requires a GeoTiffSource with 2-band U/V data',
+          );
+        }
+        const buffer = await loadGeoTiffSourceBuffer(
+          source.parameters as IGeoTiffSource,
+          this._model,
+        );
+        newMapLayer = (await createWindLayerFromGeoTiff(buffer, {
+          opacity: layerParameters.opacity,
+          visible: layer.visible,
+        })) as unknown as OlLayerTypes;
+        break;
+      }
+
       case 'StorySegmentLayer': {
         // Special layer not for this
         return;
@@ -1910,7 +1933,10 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       }
 
       this.addProjection(newMapLayer);
-      await this._waitForLayerReady(newMapLayer);
+      // WindLayer has no OL tile/image source; getSourceState never becomes ready.
+      if (layer.type !== 'WindParticleLayer') {
+        await this._waitForLayerReady(newMapLayer);
+      }
     }
 
     this._loadingLayers.delete(id);
@@ -2248,6 +2274,10 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
         break;
       }
       case 'ImageLayer': {
+        mapLayer.setOpacity(layer.parameters?.opacity ?? 1);
+        break;
+      }
+      case 'WindParticleLayer': {
         mapLayer.setOpacity(layer.parameters?.opacity ?? 1);
         break;
       }

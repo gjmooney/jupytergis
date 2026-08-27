@@ -474,6 +474,9 @@ importers:
       ol-stac:
         specifier: ^1.0.0-rc.10
         version: 1.5.0(geotiff@2.1.3)(ol@10.9.0)
+      ol-wind:
+        specifier: ^1.1.9
+        version: 1.1.9(ol@10.9.0)
       pbf:
         specifier: ^4.0.1
         version: 4.0.2
@@ -7539,6 +7542,11 @@ packages:
     peerDependencies:
       ol: '>=9.0.0'
 
+  ol-wind@1.1.9:
+    resolution: {integrity: sha512-QLqmlJlMwmhC8QDMPEfi/WTtOaKbXUqO07Rfo0zVGnoe6imL3KYM6/QPjIIOe6niT7Bwwn5lInTaXWqHfUE08Q==}
+    peerDependencies:
+      ol: '>=6.0.0'
+
   ol@10.9.0:
     resolution: {integrity: sha512-svbbgVQUmEHaKpLQ8kRySojs59Brvgl2zYIrqG9eQNXGfsbi55rQasZIDpwpQzDL6OlzrUb0H4hQaiX9wDoGmA==}
 
@@ -9341,6 +9349,9 @@ packages:
 
   wildcard@2.0.1:
     resolution: {integrity: sha512-CC1bOL87PIWSBhDcTrdeLo6eGT7mCFtrg0uIJtqJUFyK+eJnzl8A1niH56uu7KMa5XFrtiV+AQuHO3n7DsHnLQ==}
+
+  wind-core@1.1.8:
+    resolution: {integrity: sha512-mxnkLXkZ4hcoGsRBkBsP0TyCnTDAslbMMmInklKWnDKzkRJ/nkyxGOGG+06i+ta+PihEKCV3zTZMdGlMD9orZQ==}
 
   wkt-parser@1.5.5:
     resolution: {integrity: sha512-/zMYi94/7D7fxcOSlVmWn6vnOMj3Gq5d1xvVjaYOS9n6h0qOJ4I7YYVxBWYcH1vq9+suhqzXkn05Yx47zQNUIA==}
@@ -18005,6 +18016,11 @@ snapshots:
     transitivePeerDependencies:
       - geotiff
 
+  ol-wind@1.1.9(ol@10.9.0):
+    dependencies:
+      ol: 10.9.0
+      wind-core: 1.1.8
+
   ol@10.9.0:
     dependencies:
       '@types/rbush': 4.0.0
@@ -20089,6 +20105,8 @@ snapshots:
       string-width: 4.2.3
 
   wildcard@2.0.1: {}
+
+  wind-core@1.1.8: {}
 
   wkt-parser@1.5.5: {}
 

@@ -46,6 +46,7 @@ const iconObject = {
   GeoTiffLayer: { iconClass: 'fa fa-image' },
   StacLayer: { icon: rasterIcon },
   ImageLayer: { iconClass: 'fa fa-image' },
+  WindParticleLayer: { iconClass: 'fa fa-wind' },
   StorySegmentLayer: { iconClass: 'fa fa-link' },
 
   [CommandIDs.redo]: { icon: redoIcon },
@@ -61,6 +62,7 @@ const iconObject = {
   [CommandIDs.newGeoPackageRasterEntry]: { icon: geoPackageIcon },
   [CommandIDs.openNewShapefileDialog]: { iconClass: 'fa fa-file' },
   [CommandIDs.openNewGeoTiffDialog]: { iconClass: 'fa fa-image' },
+  [CommandIDs.addWindParticleLayer]: { iconClass: 'fa fa-wind' },
   [CommandIDs.openNewGeoZarrDialog]: { iconClass: 'fa fa-image' },
   [CommandIDs.openNewGeoParquetDialog]: { iconClass: 'fa fa-file' },
   [CommandIDs.openNewOpenEODialog]: { icon: rasterIcon },

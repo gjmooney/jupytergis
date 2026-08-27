@@ -86,5 +86,10 @@ export const rasterSubMenu = (commands: CommandRegistry) => {
     command: CommandIDs.openNewOpenEODialog,
   });
 
+  subMenu.addItem({
+    type: 'command',
+    command: CommandIDs.addWindParticleLayer,
+  });
+
   return subMenu;
 };

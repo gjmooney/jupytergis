@@ -38,6 +38,7 @@ from jupytergis_core.schema import (
     IVectorLayer,
     IVectorTileLayer,
     IVectorTileSource,
+    IWindParticleLayer,
     IWmsTileSource,
     LayerType,
     SourceType,
@@ -1422,6 +1423,7 @@ class JGISLayer(BaseModel):
         | IGeoZarrLayer
         | IStorySegmentLayer
         | IOpenEOTileLayer
+        | IWindParticleLayer
     )
     _parent = GISDocument | None
 
@@ -1541,6 +1543,7 @@ OBJECT_FACTORY.register_factory(LayerType.GeoZarrLayer, IGeoZarrLayer)
 OBJECT_FACTORY.register_factory(LayerType.ImageLayer, IImageLayer)
 OBJECT_FACTORY.register_factory(LayerType.StorySegmentLayer, IStorySegmentLayer)
 OBJECT_FACTORY.register_factory(LayerType.OpenEOTileLayer, IOpenEOTileLayer)
+OBJECT_FACTORY.register_factory(LayerType.WindParticleLayer, IWindParticleLayer)
 
 OBJECT_FACTORY.register_factory(SourceType.VectorTileSource, IVectorTileSource)
 OBJECT_FACTORY.register_factory(SourceType.MarkerSource, IMarkerSource)

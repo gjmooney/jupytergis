@@ -27,6 +27,7 @@ export const openNewGeoJSONDialog = 'jupytergis:openNewGeoJSONDialog';
 export const openNewHillshadeDialog = 'jupytergis:openNewHillshadeDialog';
 export const openNewImageDialog = 'jupytergis:openNewImageDialog';
 export const openNewGeoTiffDialog = 'jupytergis:openNewGeoTiffDialog';
+export const addWindParticleLayer = 'jupytergis:addWindParticleLayer';
 export const openNewGeoZarrDialog = 'jupytergis:openNewGeoZarrDialog';
 export const openNewGeoParquetDialog = 'jupytergis:openNewGeoParquetDialog';
 export const newGeoPackageRasterEntry = 'jupytergis:newGeoPackageRasterEntry';
