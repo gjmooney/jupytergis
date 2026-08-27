@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { EditorAwareDialog } from '@/src/shared/editorAwareDialog';
 import { SymbologyTab, SymbologyValue } from '@/src/types';
 import Grammar from './Grammar';
+import { WindParticleSymbology } from './WindParticleSymbology';
 
 export interface ISymbologyDialogProps {
   model: IJupyterGISModel;
@@ -105,6 +106,15 @@ export const SymbologyDialog: React.FC<ISymbologyDialogProps> = ({
             layerId={selectedLayer}
             isStorySegmentOverride={isStorySegmentOverride}
             segmentId={segmentId}
+          />
+        );
+        break;
+      case 'WindParticleLayer':
+        LayerSymbology = (
+          <WindParticleSymbology
+            model={model}
+            okSignalPromise={okSignalPromise}
+            layerId={selectedLayer}
           />
         );
         break;

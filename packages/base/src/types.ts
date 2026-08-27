@@ -60,6 +60,7 @@ export const SYMBOLOGY_VALID_LAYER_TYPES = [
   'VectorTileLayer',
   'GeoTiffLayer',
   'GeoZarrLayer',
+  'WindParticleLayer',
 ];
 
 export const STORY_TYPE = {

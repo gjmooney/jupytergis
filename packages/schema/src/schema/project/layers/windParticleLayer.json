@@ -16,6 +16,90 @@
       "multipleOf": 0.1,
       "minimum": 0,
       "maximum": 1
+    },
+    "windOptions": {
+      "type": "object",
+      "description": "Particle animation options passed to ol-wind / wind-core",
+      "additionalProperties": false,
+      "properties": {
+        "globalAlpha": {
+          "type": "number",
+          "description": "Trail fade alpha (higher = longer trails)",
+          "default": 0.9,
+          "minimum": 0,
+          "maximum": 1,
+          "multipleOf": 0.05
+        },
+        "paths": {
+          "type": "number",
+          "description": "Number of particles",
+          "default": 3000,
+          "minimum": 1,
+          "multipleOf": 1
+        },
+        "velocityScale": {
+          "type": "number",
+          "description": "Particle step scale (smaller = slower)",
+          "default": 0.025,
+          "minimum": 0
+        },
+        "lineWidth": {
+          "type": "number",
+          "description": "Particle stroke width",
+          "default": 2,
+          "minimum": 0
+        },
+        "frameRate": {
+          "type": "number",
+          "description": "Milliseconds between animation frames",
+          "default": 20,
+          "minimum": 1,
+          "multipleOf": 1
+        },
+        "maxAge": {
+          "type": "number",
+          "description": "Frames before a particle respawns",
+          "default": 60,
+          "minimum": 1,
+          "multipleOf": 1
+        },
+        "colorRamp": {
+          "type": "string",
+          "description": "Named color ramp from JupyterGIS symbology (e.g. viridis)",
+          "default": "viridis"
+        },
+        "nClasses": {
+          "type": "number",
+          "description": "Number of colors sampled from the color ramp",
+          "default": 9,
+          "minimum": 2,
+          "multipleOf": 1
+        },
+        "reverse": {
+          "type": "boolean",
+          "description": "Reverse the color ramp",
+          "default": false
+        },
+        "colorScale": {
+          "description": "Optional baked particle colors by wind speed. When omitted, sampled from colorRamp.",
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1
+            }
+          ]
+        },
+        "minVelocity": {
+          "type": "number",
+          "description": "Min wind speed for color mapping (auto if omitted)"
+        },
+        "maxVelocity": {
+          "type": "number",
+          "description": "Max wind speed for color mapping (auto if omitted)"
+        }
+      }
     }
   }
 }

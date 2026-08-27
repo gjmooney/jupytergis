@@ -1,13 +1,57 @@
-import type { IGeoTiffSource, IJupyterGISModel } from '@jupytergis/schema';
+import type {
+	IGeoTiffSource,
+	IJupyterGISModel,
+	IWindParticleLayer,
+} from '@jupytergis/schema';
 import { fromArrayBuffer } from 'geotiff';
 import { WindLayer } from 'ol-wind';
 import { Field, type IField } from 'wind-core';
 
 import { loadFile } from '@/src/tools';
+import { resolveWindColorScale } from '@/src/features/layers/wind/windColorScale';
 
 export interface IWindGeoTiffField extends IField {
 	/** Geographic extent [minLon, minLat, maxLon, maxLat]. */
 	extent4326: [number, number, number, number];
+}
+
+const DEFAULT_WIND_OPTIONS: NonNullable<IWindParticleLayer['windOptions']> = {
+	globalAlpha: 0.9,
+	paths: 3000,
+	velocityScale: 1 / 40,
+	lineWidth: 2,
+	frameRate: 20,
+	maxAge: 60,
+	colorRamp: 'viridis',
+	nClasses: 9,
+	reverse: false,
+};
+
+/**
+ * Merge document windOptions with defaults for ol-wind.
+ * colorRamp/nClasses/reverse are JupyterGIS recipe fields; colorScale is what
+ * ol-wind consumes.
+ */
+export function resolveWindOptions(
+	windOptions?: IWindParticleLayer['windOptions'],
+): Record<string, unknown> {
+	const merged = {
+		...DEFAULT_WIND_OPTIONS,
+		...(windOptions ?? {}),
+	};
+
+	const {
+		colorRamp: _colorRamp,
+		nClasses: _nClasses,
+		reverse: _reverse,
+		colorScale: _colorScale,
+		...olWindOptions
+	} = merged;
+
+	return {
+		...olWindOptions,
+		colorScale: resolveWindColorScale(merged),
+	};
 }
 
 /**
@@ -112,12 +156,9 @@ export async function loadGeoTiffSourceBuffer(
 }
 
 export interface ICreateWindLayerOptions {
-	paths?: number;
-	velocityScale?: number;
-	lineWidth?: number;
 	opacity?: number;
 	visible?: boolean;
-	colorScale?: string | string[] | ((m: number) => string);
+	windOptions?: IWindParticleLayer['windOptions'];
 }
 
 /**
@@ -138,24 +179,6 @@ export async function createWindLayerFromGeoTiff(
 		opacity: options.opacity ?? 1,
 		visible: options.visible ?? true,
 		className: 'jgis-wind-particle-layer',
-		windOptions: {
-			globalAlpha: 0.9,
-			paths: options.paths ?? 3000,
-			velocityScale: options.velocityScale ?? 1 / 40,
-			lineWidth: options.lineWidth ?? 2,
-			colorScale:
-				options.colorScale ??
-				((m: number) => {
-					if (m < 5) {
-						return '#7fdbff';
-					}
-					if (m < 12) {
-						return '#ffdc00';
-					}
-					return '#ff4136';
-				}),
-			frameRate: 20,
-			maxAge: 60,
-		},
+		windOptions: resolveWindOptions(options.windOptions),
 	});
 }

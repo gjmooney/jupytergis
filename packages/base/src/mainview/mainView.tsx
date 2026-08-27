@@ -130,6 +130,7 @@ import { Rule } from 'ol/style/flat';
 //@ts-expect-error no types for ol-pmtiles
 import { PMTilesRasterSource, PMTilesVectorSource } from 'ol-pmtiles';
 import StacLayer from 'ol-stac';
+import { WindLayer } from 'ol-wind';
 import projcodes from 'proj-codes';
 import proj4 from 'proj4';
 import * as React from 'react';
@@ -171,6 +172,7 @@ import { buildHighlightStyle } from '../features/identify/utils/highlightStyle';
 import {
   createWindLayerFromGeoTiff,
   loadGeoTiffSourceBuffer,
+  resolveWindOptions,
 } from '../features/layers/wind/addWindLayerFromGeoTiff';
 import {
   OpenEOTileLayer,
@@ -1911,6 +1913,7 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
         newMapLayer = (await createWindLayerFromGeoTiff(buffer, {
           opacity: layerParameters.opacity,
           visible: layer.visible,
+          windOptions: layerParameters.windOptions,
         })) as unknown as OlLayerTypes;
         break;
       }
@@ -2279,6 +2282,14 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       }
       case 'WindParticleLayer': {
         mapLayer.setOpacity(layer.parameters?.opacity ?? 1);
+        const windLayer = mapLayer as unknown as WindLayer;
+        if (typeof windLayer.setWindOptions === 'function') {
+          windLayer.setWindOptions(
+            resolveWindOptions(
+              (layer.parameters as IWindParticleLayer).windOptions,
+            ),
+          );
+        }
         break;
       }
       case 'GeoTiffLayer': {
