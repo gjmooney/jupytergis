@@ -170,11 +170,6 @@ import { MainViewModel } from './mainviewmodel';
 import { ensureHighlightLayer } from '../features/identify/utils/highlightLayer';
 import { buildHighlightStyle } from '../features/identify/utils/highlightStyle';
 import {
-  createWindLayerFromGeoTiff,
-  loadGeoTiffSourceBuffer,
-  resolveWindOptions,
-} from '../features/layers/wind/addWindLayerFromGeoTiff';
-import {
   OpenEOTileLayer,
   OpenEOTileSource,
   openEOEvents,
@@ -191,6 +186,11 @@ import {
   getDefaultRGBBands,
   IZarrBandInfo,
 } from '../features/layers/symbology/zarrBandDiscovery';
+import {
+  createWindLayerFromGeoTiff,
+  loadGeoTiffSourceBuffer,
+  resolveWindOptions,
+} from '../features/layers/wind/addWindLayerFromGeoTiff';
 import type { IStoryViewerPanelHandle } from '../features/story/StoryViewerPanel';
 import type { IListStorySegmentTransition } from '../features/story/types/types';
 

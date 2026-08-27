@@ -184,7 +184,8 @@ function compileKDELayer(
   opacity: number,
   visible: boolean,
 ): HeatmapLayer {
-  const gradient = extractColorMapGradient(grammarLayer.rules) ?? DEFAULT_GRADIENT;
+  const gradient =
+    extractColorMapGradient(grammarLayer.rules) ?? DEFAULT_GRADIENT;
   const { weightField } = kdeTransform;
 
   return new HeatmapLayer({
