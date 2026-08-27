@@ -34,6 +34,7 @@ export function getLayerTypeForm(
       break;
     case 'GeoTiffLayer':
     case 'GeoZarrLayer':
+    case 'WindParticleLayer':
       LayerForm = GeoTiffLayerPropertiesForm;
       break;
 

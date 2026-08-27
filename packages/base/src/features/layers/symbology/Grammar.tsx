@@ -557,7 +557,9 @@ const Grammar: React.FC<ISymbologyDialogProps> = ({
 }) => {
   const layer = layerId !== undefined ? model.getLayer(layerId) : null;
   const isRasterLayer =
-    layer?.type === 'GeoTiffLayer' || layer?.type === 'GeoZarrLayer';
+    layer?.type === 'GeoTiffLayer' ||
+    layer?.type === 'GeoZarrLayer' ||
+    layer?.type === 'WindParticleLayer';
 
   const { featureProperties: selectableAttributesAndValues } = useGetProperties(
     { layerId, model },

@@ -17,6 +17,20 @@
       "minimum": 0,
       "maximum": 1
     },
+    "symbologyState": {
+      "type": "object",
+      "description": "Grammar symbology; colorMap scales drive particle colorScale",
+      "properties": {
+        "layers": {
+          "type": "array",
+          "description": "Grammar rendering layers.",
+          "items": {
+            "$ref": "project/symbology.json#/definitions/IGrammarLayer"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "windOptions": {
       "type": "object",
       "description": "Particle animation options passed to ol-wind / wind-core",
@@ -62,34 +76,6 @@
           "default": 60,
           "minimum": 1,
           "multipleOf": 1
-        },
-        "colorRamp": {
-          "type": "string",
-          "description": "Named color ramp from JupyterGIS symbology (e.g. viridis)",
-          "default": "viridis"
-        },
-        "nClasses": {
-          "type": "number",
-          "description": "Number of colors sampled from the color ramp",
-          "default": 9,
-          "minimum": 2,
-          "multipleOf": 1
-        },
-        "reverse": {
-          "type": "boolean",
-          "description": "Reverse the color ramp",
-          "default": false
-        },
-        "colorScale": {
-          "description": "Optional baked particle colors by wind speed. When omitted, sampled from colorRamp.",
-          "oneOf": [
-            { "type": "string" },
-            {
-              "type": "array",
-              "items": { "type": "string" },
-              "minItems": 1
-            }
-          ]
         },
         "minVelocity": {
           "type": "number",

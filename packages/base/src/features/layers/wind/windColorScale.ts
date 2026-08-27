@@ -1,49 +1,30 @@
-import type { IWindParticleLayer } from '@jupytergis/schema';
+import type { IGrammarSymbologyState } from '@jupytergis/schema';
 
-import {
-	ColorRampName,
-	ensureHexColorCode,
-	getColorMap,
-} from '@/src/features/layers/symbology/colorRampUtils';
+import { extractColorMapGradient } from '@/src/features/layers/symbology/grammarToOLLayer';
+
+const DEFAULT_WIND_COLOR_SCALE = ['#7fdbff', '#ffdc00', '#ff4136'];
 
 /**
- * Sample a JupyterGIS symbology color ramp into CSS colors for ol-wind.
+ * Derive ol-wind colorScale from Grammar symbology (same colorMap path as heatmaps).
  */
-export function colorRampToWindColorScale(
-	rampName: string,
-	nClasses = 9,
-	reverse = false,
+export function grammarToWindColorScale(
+	symbologyState?: IGrammarSymbologyState | { layers?: unknown },
 ): string[] {
-	const colorMap = getColorMap(rampName as ColorRampName);
-	if (!colorMap || colorMap.colors.length === 0) {
-		return ['#7fdbff', '#ffdc00', '#ff4136'];
+	const layers = symbologyState?.layers;
+	if (!Array.isArray(layers)) {
+		return DEFAULT_WIND_COLOR_SCALE;
 	}
 
-	const colors = reverse
-		? [...colorMap.colors].reverse()
-		: [...colorMap.colors];
-	const n = Math.max(2, Math.floor(nClasses));
-	const step = (colors.length - 1) / (n - 1);
-
-	return Array.from({ length: n }, (_, i) =>
-		ensureHexColorCode(colors[Math.round(i * step)]),
-	);
-}
-
-/**
- * Resolve document windOptions into the object ol-wind expects.
- * Prefers explicit colorScale; otherwise samples from colorRamp.
- */
-export function resolveWindColorScale(
-	windOptions?: IWindParticleLayer['windOptions'],
-): string | string[] {
-	if (windOptions?.colorScale !== undefined) {
-		return windOptions.colorScale;
+	for (const grammarLayer of layers) {
+		const rules = (grammarLayer as { rules?: unknown })?.rules;
+		if (!Array.isArray(rules)) {
+			continue;
+		}
+		const gradient = extractColorMapGradient(rules as any);
+		if (gradient && gradient.length > 0) {
+			return gradient;
+		}
 	}
 
-	return colorRampToWindColorScale(
-		windOptions?.colorRamp ?? 'viridis',
-		windOptions?.nClasses ?? 9,
-		windOptions?.reverse ?? false,
-	);
+	return DEFAULT_WIND_COLOR_SCALE;
 }

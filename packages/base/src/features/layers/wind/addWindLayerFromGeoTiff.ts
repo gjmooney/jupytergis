@@ -1,5 +1,6 @@
 import type {
 	IGeoTiffSource,
+	IGrammarSymbologyState,
 	IJupyterGISModel,
 	IWindParticleLayer,
 } from '@jupytergis/schema';
@@ -7,8 +8,8 @@ import { fromArrayBuffer } from 'geotiff';
 import { WindLayer } from 'ol-wind';
 import { Field, type IField } from 'wind-core';
 
+import { grammarToWindColorScale } from '@/src/features/layers/wind/windColorScale';
 import { loadFile } from '@/src/tools';
-import { resolveWindColorScale } from '@/src/features/layers/wind/windColorScale';
 
 export interface IWindGeoTiffField extends IField {
 	/** Geographic extent [minLon, minLat, maxLon, maxLat]. */
@@ -22,35 +23,22 @@ const DEFAULT_WIND_OPTIONS: NonNullable<IWindParticleLayer['windOptions']> = {
 	lineWidth: 2,
 	frameRate: 20,
 	maxAge: 60,
-	colorRamp: 'viridis',
-	nClasses: 9,
-	reverse: false,
 };
 
 /**
  * Merge document windOptions with defaults for ol-wind.
- * colorRamp/nClasses/reverse are JupyterGIS recipe fields; colorScale is what
- * ol-wind consumes.
+ * Particle colors come from Grammar symbologyState (colorMap), not windOptions.
  */
 export function resolveWindOptions(
 	windOptions?: IWindParticleLayer['windOptions'],
+	symbologyState?: IWindParticleLayer['symbologyState'],
 ): Record<string, unknown> {
-	const merged = {
+	return {
 		...DEFAULT_WIND_OPTIONS,
 		...(windOptions ?? {}),
-	};
-
-	const {
-		colorRamp: _colorRamp,
-		nClasses: _nClasses,
-		reverse: _reverse,
-		colorScale: _colorScale,
-		...olWindOptions
-	} = merged;
-
-	return {
-		...olWindOptions,
-		colorScale: resolveWindColorScale(merged),
+		colorScale: grammarToWindColorScale(
+			symbologyState as IGrammarSymbologyState | undefined,
+		),
 	};
 }
 
@@ -159,6 +147,7 @@ export interface ICreateWindLayerOptions {
 	opacity?: number;
 	visible?: boolean;
 	windOptions?: IWindParticleLayer['windOptions'];
+	symbologyState?: IWindParticleLayer['symbologyState'];
 }
 
 /**
@@ -179,6 +168,9 @@ export async function createWindLayerFromGeoTiff(
 		opacity: options.opacity ?? 1,
 		visible: options.visible ?? true,
 		className: 'jgis-wind-particle-layer',
-		windOptions: resolveWindOptions(options.windOptions),
+		windOptions: resolveWindOptions(
+			options.windOptions,
+			options.symbologyState,
+		),
 	});
 }

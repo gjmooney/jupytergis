@@ -1914,6 +1914,7 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
           opacity: layerParameters.opacity,
           visible: layer.visible,
           windOptions: layerParameters.windOptions,
+          symbologyState: layerParameters.symbologyState,
         })) as unknown as OlLayerTypes;
         break;
       }
@@ -2281,12 +2282,14 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
         break;
       }
       case 'WindParticleLayer': {
-        mapLayer.setOpacity(layer.parameters?.opacity ?? 1);
+        const windParams = layer.parameters as IWindParticleLayer;
+        mapLayer.setOpacity(windParams.opacity ?? 1);
         const windLayer = mapLayer as unknown as WindLayer;
         if (typeof windLayer.setWindOptions === 'function') {
           windLayer.setWindOptions(
             resolveWindOptions(
-              (layer.parameters as IWindParticleLayer).windOptions,
+              windParams.windOptions,
+              windParams.symbologyState,
             ),
           );
         }

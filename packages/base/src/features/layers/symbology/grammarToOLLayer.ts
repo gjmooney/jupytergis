@@ -184,7 +184,7 @@ function compileKDELayer(
   opacity: number,
   visible: boolean,
 ): HeatmapLayer {
-  const gradient = extractGradient(grammarLayer.rules) ?? DEFAULT_GRADIENT;
+  const gradient = extractColorMapGradient(grammarLayer.rules) ?? DEFAULT_GRADIENT;
   const { weightField } = kdeTransform;
 
   return new HeatmapLayer({
@@ -207,9 +207,11 @@ function compileKDELayer(
 
 /**
  * Look for a pixel-color colorRamp mapping in the rules and convert it to an
- * OL HeatmapLayer gradient string array.  Returns undefined when absent.
+ * OL HeatmapLayer / wind colorScale string array. Returns undefined when absent.
  */
-function extractGradient(rules: IEncodingRule[]): string[] | undefined {
+export function extractColorMapGradient(
+  rules: IEncodingRule[],
+): string[] | undefined {
   for (const rule of rules) {
     for (const mapping of rule.mappings) {
       const isPixelEncoding = (mapping.encodings as string[]).some(
