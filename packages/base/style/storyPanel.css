@@ -117,6 +117,19 @@
   font-size: var(--jp-ui-font-size2);
 }
 
+.jgis-story-question-result {
+  margin: 0;
+  text-align: center;
+}
+
+.jgis-story-question-result--correct {
+  color: var(--jp-success-color1);
+}
+
+.jgis-story-question-result--incorrect {
+  color: var(--jp-error-color1);
+}
+
 .jgis-story-viewer-content p,
 .jgis-story-viewer-content span,
 .jgis-story-viewer-content li {

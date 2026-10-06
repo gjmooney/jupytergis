@@ -219,6 +219,7 @@ function StoryViewerPanel({
             <StoryQuestionCard
               segmentId={segmentId}
               prompt={activeSlide?.interactive?.prompt}
+              acceptedAnswers={activeSlide?.interactive?.acceptedAnswers}
             />
           ) : (
             <RenderedStoryMarkdown
