@@ -104,6 +104,19 @@
   margin: 0 auto;
 }
 
+.jgis-story-question {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 1rem;
+}
+
+.jgis-story-question-prompt {
+  margin: 0;
+  text-align: center;
+  font-size: var(--jp-ui-font-size2);
+}
+
 .jgis-story-viewer-content p,
 .jgis-story-viewer-content span,
 .jgis-story-viewer-content li {
