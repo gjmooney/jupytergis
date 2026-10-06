@@ -103,7 +103,7 @@ import {
 import GeoZarr from 'ol/source/GeoZarr';
 import Static from 'ol/source/ImageStatic';
 import TileSource, { TileSourceEvent } from 'ol/source/Tile';
-import { Fill, Icon, Style } from 'ol/style';
+import { Fill, Icon, Stroke, Style } from 'ol/style';
 import { Rule } from 'ol/style/flat';
 //@ts-expect-error no types for ol-pmtiles
 import { PMTilesRasterSource, PMTilesVectorSource } from 'ol-pmtiles';
@@ -112,6 +112,12 @@ import projcodes from 'proj-codes';
 import proj4 from 'proj4';
 
 import type { IDrawToolAdapter } from '@/src/features/draw-tool';
+import {
+  featureMatchesQuestionRef,
+  QUESTION_LAYER_DIM,
+  type IQuestionFeatureRef,
+} from '@/src/features/story/utils/questionHighlight';
+import { getCssVarValue } from '@/src/tools';
 import { OpenLayersDrawToolController } from '@/src/features/draw-tool/open-layers/openLayersDrawToolController';
 import {
   ensureHighlightLayer,
@@ -189,6 +195,24 @@ function setClipPath(
         element.style.clipPath = clip;
       }
     });
+}
+
+function questionHighlightStyle(feature: FeatureLike): Style {
+  const stroke = getCssVarValue('--jp-brand-color1') || '#1976d2';
+  const fill =
+    getCssVarValue('--jp-brand-color3') || 'rgba(25, 118, 210, 0.35)';
+  const geomType = feature.getGeometry()?.getType();
+
+  if (geomType === 'LineString' || geomType === 'MultiLineString') {
+    return new Style({
+      stroke: new Stroke({ color: stroke, width: 3 }),
+    });
+  }
+
+  return new Style({
+    stroke: new Stroke({ color: stroke, width: 2 }),
+    fill: new Fill({ color: fill }),
+  });
 }
 
 export class OpenLayersAdapter implements IMapAdapter {
@@ -878,6 +902,7 @@ export class OpenLayersAdapter implements IMapAdapter {
     }
 
     this._map.un('change:size', this._publishMapSize);
+    this.clearQuestionHighlight();
     this._model.setMapSize(undefined);
     this._drawTool.leaveDrawMode();
     this._map.setTarget(undefined);
@@ -1620,6 +1645,127 @@ export class OpenLayersAdapter implements IMapAdapter {
 
   private _ensureHighlightLayer(): void {
     ensureHighlightLayer(this._map, this._highlightLayerRef);
+  }
+
+  setQuestionHighlight(refs: IQuestionFeatureRef[]): void {
+    this.clearQuestionHighlight();
+    if (refs.length === 0) {
+      return;
+    }
+
+    this._questionRefs = refs;
+    const layerIds = [...new Set(refs.map(ref => ref.layerId))];
+
+    for (const layerId of layerIds) {
+      const mapLayer = this.getLayer(layerId);
+      if (!mapLayer) {
+        continue;
+      }
+
+      this._questionDimmed.push({
+        layer: mapLayer,
+        opacity: mapLayer.getOpacity(),
+      });
+      mapLayer.setOpacity(QUESTION_LAYER_DIM);
+
+      const source = this._vectorSourceForLayer(mapLayer);
+      if (!source || this._questionSources.includes(source)) {
+        continue;
+      }
+
+      source.on('change', this._onQuestionSourceChange);
+      this._questionSources.push(source);
+    }
+
+    this._fillQuestionOverlay();
+  }
+
+  clearQuestionHighlight(): void {
+    for (const source of this._questionSources) {
+      source.un('change', this._onQuestionSourceChange);
+    }
+    this._questionSources = [];
+
+    for (const dimmed of this._questionDimmed) {
+      dimmed.layer.setOpacity(dimmed.opacity);
+    }
+    this._questionDimmed = [];
+    this._questionRefs = [];
+    this._questionHighlightLayer?.getSource()?.clear();
+  }
+
+  private readonly _onQuestionSourceChange = (): void => {
+    this._fillQuestionOverlay();
+  };
+
+  private _fillQuestionOverlay(): void {
+    const overlay = this._ensureQuestionHighlightLayer();
+    const source = overlay.getSource();
+    source?.clear();
+    if (!source) {
+      return;
+    }
+
+    for (const ref of this._questionRefs) {
+      const mapLayer = this.getLayer(ref.layerId);
+      const data = mapLayer ? this._vectorSourceForLayer(mapLayer) : undefined;
+      if (!data) {
+        continue;
+      }
+
+      for (const feature of data.getFeatures()) {
+        if (
+          !featureMatchesQuestionRef(
+            feature.getProperties(),
+            ref.property,
+            ref.value,
+          )
+        ) {
+          continue;
+        }
+
+        const clone = feature.clone();
+        clone.setStyle(undefined);
+        source.addFeature(clone);
+      }
+    }
+  }
+
+  private _ensureQuestionHighlightLayer(): VectorLayer<VectorSource> {
+    if (
+      this._questionHighlightLayer &&
+      this._map.getLayers().getArray().includes(this._questionHighlightLayer)
+    ) {
+      return this._questionHighlightLayer;
+    }
+
+    if (!this._questionHighlightLayer) {
+      this._questionHighlightLayer = new VectorLayer({
+        source: new VectorSource(),
+        style: questionHighlightStyle,
+        zIndex: 998,
+      });
+    }
+
+    this._map.addLayer(this._questionHighlightLayer);
+    return this._questionHighlightLayer;
+  }
+
+  private _vectorSourceForLayer(
+    layer: Layer | LayerGroup,
+  ): VectorSource | undefined {
+    if (layer instanceof LayerGroup) {
+      for (const child of layer.getLayers().getArray()) {
+        const source = this._vectorSourceForLayer(child as Layer);
+        if (source) {
+          return source;
+        }
+      }
+      return undefined;
+    }
+
+    const source = layer.getSource();
+    return source instanceof VectorSource ? source : undefined;
   }
 
   clearHighlightIfNotIdentifying(): void {
@@ -3118,6 +3264,11 @@ export class OpenLayersAdapter implements IMapAdapter {
   private _highlightLayerRef: {
     current: VectorImageLayer<VectorSource> | null;
   } = { current: null };
+  private _questionHighlightLayer: VectorLayer<VectorSource> | null = null;
+  private _questionRefs: IQuestionFeatureRef[] = [];
+  private _questionSources: VectorSource[] = [];
+  private _questionDimmed: { layer: Layer | LayerGroup; opacity: number }[] =
+    [];
   private _callbacks?: IMapAdapterCallbacks;
   private _zoomControl?: Zoom;
   private _controlsTarget?: HTMLElement;

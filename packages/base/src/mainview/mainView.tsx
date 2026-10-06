@@ -17,6 +17,7 @@ import {
   IJupyterGISModel,
   JupyterGISModel,
   IJupyterGISSettings,
+  IStorySegmentLayer,
   DEFAULT_PROJECTION,
   IIdentifiedFeature,
   IIdentifiedFeatures,
@@ -43,6 +44,7 @@ import {
   getStoryPresentationMode,
   isVerticalScrollPresentation,
 } from '@/src/features/story/presentation/getStoryPresentationMode';
+import { getSegmentDisplayMode } from '@/src/features/story/utils/listStoryScrollTrack';
 import { useIsMobile } from '@/src/shared/hooks/useIsMobile';
 import { isLightTheme } from '@/src/tools';
 import StatusBar from '@/src/workspace/statusbar/StatusBar';
@@ -202,6 +204,10 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     this._model.updateLayerSignal.connect(this._triggerLayerUpdate, this);
     this._model.storyPreviewActiveChanged.connect(
       this._onStoryPreviewActiveChanged,
+      this,
+    );
+    this._model.currentSegmentIndexChanged.connect(
+      this._syncQuestionHighlight,
       this,
     );
 
@@ -381,6 +387,10 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       this._onStoryPreviewActiveChanged,
       this,
     );
+    this._model.currentSegmentIndexChanged.disconnect(
+      this._syncQuestionHighlight,
+      this,
+    );
     this._model.geolocationChanged.disconnect(this._geolocationListener, this);
     this._model.uiStateChanged.disconnect(
       this._handleLocationIndicatorListner,
@@ -528,6 +538,8 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       const options = this._model.getOptions();
       this.updateOptions(options);
     }
+
+    this._syncQuestionHighlight();
 
     const viewProjection = this._mapAdapter.getProjection();
     this.setState(old => ({
@@ -1056,7 +1068,11 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       const layerTree = JupyterGISModel.getOrderedLayerIds(this._model);
 
       if (layerTree.includes(id)) {
-        this._mapAdapter.updateLayer(id, newLayer, oldLayer);
+        void this._mapAdapter
+          .updateLayer(id, newLayer, oldLayer)
+          .then(() => {
+            this._syncQuestionHighlight();
+          });
 
         if (
           this._model.currentMode === 'drawing' &&
@@ -1065,9 +1081,34 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
           this._mapAdapter.drawTool.enterLayer();
         }
       } else {
-        void this._mapAdapter.updateLayers(layerTree);
+        void this._mapAdapter.updateLayers(layerTree).then(() => {
+          this._syncQuestionHighlight();
+        });
       }
     });
+
+    this._syncQuestionHighlight();
+  }
+
+  private _syncQuestionHighlight(): void {
+    const adapter = this._mapAdapter;
+    if (!adapter) {
+      return;
+    }
+
+    const segmentId = this._model.getSelectedStorySegmentId();
+    const layer = segmentId ? this._model.getLayer(segmentId) : undefined;
+    const slide =
+      layer?.type === 'StorySegmentLayer'
+        ? (layer.parameters as IStorySegmentLayer)
+        : undefined;
+
+    if (getSegmentDisplayMode(slide) !== 'question') {
+      adapter.setQuestionHighlight([]);
+      return;
+    }
+
+    adapter.setQuestionHighlight(slide?.interactive?.features ?? []);
   }
 
   private _onLayerTreeChange(
