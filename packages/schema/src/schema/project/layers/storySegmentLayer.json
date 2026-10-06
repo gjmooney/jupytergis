@@ -74,6 +74,54 @@
       },
       "required": ["contentMode"]
     },
+    "interactive": {
+      "title": "Interactive question",
+      "description": "Feature-guessing question for an interactive story. Omit on markdown segments.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "title": "Prompt",
+          "description": "Question shown to the players.",
+          "default": "Name this country"
+        },
+        "acceptedAnswers": {
+          "type": "array",
+          "title": "Accepted answers",
+          "description": "The first entry is the name revealed after a miss. Later entries are aliases.",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "features": {
+          "type": "array",
+          "title": "Features",
+          "description": "Features to highlight for this question.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["layerId", "property", "value"],
+            "properties": {
+              "layerId": {
+                "type": "string",
+                "description": "Layer that contains the feature."
+              },
+              "property": {
+                "type": "string",
+                "description": "Feature property used to identify the feature."
+              },
+              "value": {
+                "type": "string",
+                "description": "Property value that identifies the feature."
+              }
+            }
+          },
+          "default": []
+        }
+      }
+    },
     "transition": {
       "type": "object",
       "description": "Transition configuration between to this story segment",

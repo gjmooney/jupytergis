@@ -32,6 +32,7 @@ class YJGIS(YBaseDoc):
             self._yfeatureStores,
             self._ysources,
         )
+        self._ydoc["interactivePlay"] = self._yinteractivePlay = Map()
 
     @property
     def version(self) -> str:
@@ -50,6 +51,7 @@ class YJGIS(YBaseDoc):
         annotations = self._yannotations.to_py()
         presets = self._ypresets.to_py()
         meta = self._ymetadata.to_py()
+        interactive_play = self._yinteractivePlay.to_py()
         layers_tree = self._ylayerTree.to_py()
         return json.dumps(
             dict(
@@ -63,6 +65,7 @@ class YJGIS(YBaseDoc):
                 annotations=annotations,
                 presets=presets,
                 metadata=meta,
+                interactivePlay=interactive_play,
             ),
             sort_keys=True,
             indent=2,
@@ -103,6 +106,9 @@ class YJGIS(YBaseDoc):
             self._ymetadata.clear()
             self._ymetadata.update(valueDict.get("metadata", {}))
 
+            self._yinteractivePlay.clear()
+            self._yinteractivePlay.update(valueDict.get("interactivePlay", {}))
+
     def observe(self, callback: Callable[[str, Any], None]):
         self.unobserve()
         self._subscriptions[self._ystate] = self._ystate.observe(
@@ -134,4 +140,7 @@ class YJGIS(YBaseDoc):
         )
         self._subscriptions[self._ymetadata] = self._ymetadata.observe_deep(
             partial(callback, "meta"),
+        )
+        self._subscriptions[self._yinteractivePlay] = (
+            self._yinteractivePlay.observe_deep(partial(callback, "interactivePlay"))
         )
