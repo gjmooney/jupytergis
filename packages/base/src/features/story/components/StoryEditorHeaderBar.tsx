@@ -104,9 +104,18 @@ function StorySettingsPopover({
               className="w-full"
               value={story.storyType ?? STORY_TYPE.guided}
               onChange={event => {
-                onUpdateStory({
-                  storyType: event.target.value as IJGISStoryMap['storyType'],
-                });
+                const storyType = event.target
+                  .value as IJGISStoryMap['storyType'];
+                const patch: Partial<IJGISStoryMap> = { storyType };
+                if (storyType === STORY_TYPE.interactive) {
+                  if (!story.interaction) {
+                    patch.interaction = 'feature-guessing';
+                  }
+                  if (!story.playMode) {
+                    patch.playMode = 'cooperative';
+                  }
+                }
+                onUpdateStory(patch);
               }}
             >
               {Object.values(STORY_TYPE).map(storyType => (

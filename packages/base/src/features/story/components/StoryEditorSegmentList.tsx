@@ -2,7 +2,10 @@ import { faGripVertical, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useCallback, useRef, useState } from 'react';
 
-import type { IStorySegmentViewItem } from '@/src/features/story/types/types';
+import type {
+  IStorySegmentViewItem,
+  StorySegmentDisplayMode,
+} from '@/src/features/story/types/types';
 import { getSegmentDisplayMode } from '@/src/features/story/utils/listStoryScrollTrack';
 import { getStorySegmentDisplayTitle } from '@/src/features/story/utils/storySegmentViewItems';
 import { Button } from '@/src/shared/components/Button';
@@ -20,10 +23,19 @@ export interface IStoryEditorSegmentListProps {
   onReorderSegments: (fromIndex: number, toIndex: number) => void;
 }
 
+function formatSegmentModeLabel(mode: StorySegmentDisplayMode): string {
+  if (mode === 'question') {
+    return 'Question';
+  }
+
+  return mode === 'markdown' ? 'Text' : 'Map';
+}
+
 function formatSegmentOptionLabel(segment: IStorySegmentViewItem): string {
   const title = getStorySegmentDisplayTitle(segment);
-  const mode =
-    getSegmentDisplayMode(segment.activeSlide) === 'map' ? 'Map' : 'Text';
+  const mode = formatSegmentModeLabel(
+    getSegmentDisplayMode(segment.activeSlide),
+  );
   return `${segment.index + 1}. ${title} · ${mode}`;
 }
 
@@ -75,7 +87,7 @@ function SegmentListItem({
         </span>
         <span className="jgis-story-editor-segment-item-title">{title}</span>
         <span className="jgis-story-editor-segment-item-type">
-          {segmentMode === 'map' ? 'Map' : 'Text'}
+          {formatSegmentModeLabel(segmentMode)}
         </span>
       </button>
     </div>

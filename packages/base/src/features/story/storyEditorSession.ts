@@ -23,6 +23,7 @@ import {
   type IOverrideLayerEntry,
 } from './types/types';
 import { setModelPanelsOpen } from './utils/modelPanelState';
+import { applyPickedFeature } from './utils/interactiveQuestion';
 import { updateSegmentMapView } from './utils/storySegmentMapView';
 import {
   applySegmentLayerOverrides,
@@ -165,7 +166,10 @@ export class StoryEditorSession implements IStoryMapBarHost {
     }
 
     const interaction = this.getInteraction(model);
-    if (interaction?.mode === SegmentInteractionMode.mapView) {
+    if (
+      interaction?.mode === SegmentInteractionMode.mapView ||
+      interaction?.mode === SegmentInteractionMode.pickingFeature
+    ) {
       return StoryEditorMode.mapView;
     }
 
@@ -208,6 +212,13 @@ export class StoryEditorSession implements IStoryMapBarHost {
     this.enterSegmentInteraction(SegmentInteractionMode.mapView, segmentId);
   }
 
+  public enterPickFeatureMode(segmentId: string): void {
+    this.enterSegmentInteraction(
+      SegmentInteractionMode.pickingFeature,
+      segmentId,
+    );
+  }
+
   public enterPreviewMode(segmentId: string): void {
     this.enterSegmentInteraction(
       SegmentInteractionMode.previewingSegment,
@@ -242,6 +253,25 @@ export class StoryEditorSession implements IStoryMapBarHost {
     }
 
     updateSegmentMapView(model, interaction.segmentId);
+    this.restoreEditorForModel(model);
+  }
+
+  public applyPickedFeatureForModel(model: IJupyterGISModel): void {
+    const interaction = this.getInteraction(model);
+    if (
+      !interaction ||
+      interaction.mode !== SegmentInteractionMode.pickingFeature
+    ) {
+      return;
+    }
+
+    const mapSize = model.getMapSize() ?? null;
+    const applied = applyPickedFeature(model, interaction.segmentId, mapSize);
+
+    if (!applied) {
+      return;
+    }
+
     this.restoreEditorForModel(model);
   }
 
@@ -345,7 +375,8 @@ export class StoryEditorSession implements IStoryMapBarHost {
     }
 
     const overrideEntries: IOverrideLayerEntry[] = [];
-    const panelsHidden = setModelPanelsOpen(model, false);
+    const hidePanels = mode !== SegmentInteractionMode.pickingFeature;
+    const panelsHidden = hidePanels && setModelPanelsOpen(model, false);
 
     if (panelsHidden) {
       this.notifyPanelStateChanged();
@@ -364,8 +395,30 @@ export class StoryEditorSession implements IStoryMapBarHost {
       applySegmentLayerOverrides(model, segmentId, overrideEntries);
     }
 
+    if (mode === SegmentInteractionMode.pickingFeature) {
+      this.startIdentify(model);
+    }
+
     this.releaseDialogForModel(model);
     this._bars.refresh();
+  }
+
+  private startIdentify(model: IJupyterGISModel): void {
+    model.syncIdentifiedFeatures([], model.getClientId().toString());
+
+    if (model.currentMode === 'identifying') {
+      return;
+    }
+
+    void this._context?.commands.execute(CommandIDs.identify);
+  }
+
+  private stopIdentify(model: IJupyterGISModel): void {
+    if (model.currentMode === 'identifying') {
+      void this._context?.commands.execute(CommandIDs.identify);
+    }
+
+    model.syncIdentifiedFeatures([], model.getClientId().toString());
   }
 
   private clearInteractionForModel(
@@ -380,6 +433,10 @@ export class StoryEditorSession implements IStoryMapBarHost {
 
     if (interaction.mode === SegmentInteractionMode.previewingSegment) {
       clearSegmentLayerOverrideEntries(model, interaction.overrideEntries);
+    }
+
+    if (interaction.mode === SegmentInteractionMode.pickingFeature) {
+      this.stopIdentify(model);
     }
 
     if (options.restorePanels && interaction.panelsHidden) {

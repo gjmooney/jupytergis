@@ -11,7 +11,7 @@ export function getHandoffGapHeight(
   mapHeight: number,
   markdownSegmentGap: boolean,
 ): number {
-  if (fromMode === 'map' || toMode === 'map') {
+  if (fromMode !== 'markdown' || toMode !== 'markdown') {
     return mapHeight;
   }
 

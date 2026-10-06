@@ -531,6 +531,8 @@ export interface IJupyterGISModel extends DocumentRegistry.IModel {
 
   getClientId(): number;
   centerOnPosition(id: string): void;
+  getMapSize(): [number, number] | undefined;
+  setMapSize(size: [number, number] | undefined): void;
 
   toggleMode(mode: Modes): void;
   checkIfIsADrawVectorLayer(layer: IJGISLayer): boolean;
