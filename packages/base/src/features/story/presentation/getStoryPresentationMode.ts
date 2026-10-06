@@ -13,6 +13,7 @@ export function getStoryPresentationMode(
     return 'verticalScroll';
   }
 
+  // Guided and interactive stories both use the column stepper.
   return 'column';
 }
 
