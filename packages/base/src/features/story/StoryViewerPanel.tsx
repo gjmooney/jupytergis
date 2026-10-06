@@ -15,6 +15,7 @@ import { exitStoryIdentifyMode } from '@/src/features/story/utils/exitStoryIdent
 import { getSegmentDisplayMode } from '@/src/features/story/utils/listStoryScrollTrack';
 import { Button } from '@/src/shared/components/Button';
 import { infoIcon } from '@/src/shared/icons';
+import { StoryQuestionCard } from './components/StoryQuestionCard';
 import { RenderedStoryMarkdown } from './components/RenderedStoryMarkdown';
 import StoryImageCaptionSection from './components/StoryImageCaptionSection';
 import StoryImageSection from './components/StoryImageSection';
@@ -131,9 +132,10 @@ function StoryViewerPanel({
     presentationMode,
     isMobile,
   );
+  const segmentMode = getSegmentDisplayMode(activeSlide);
+  const isQuestion = segmentMode === 'question';
   const showIdentifyButton =
-    getSegmentDisplayMode(activeSlide) === 'map' &&
-    activeSlide?.enableIdentify === true;
+    segmentMode === 'map' && activeSlide?.enableIdentify === true;
 
   const navSlot =
     navPlacement !== null && segmentNav ? (
@@ -196,7 +198,7 @@ function StoryViewerPanel({
               </Button>
             ) : null}
           </div>
-          {activeSlide?.content?.image && imageLoaded ? (
+          {!isQuestion && activeSlide?.content?.image && imageLoaded ? (
             <StoryImageSection
               imageUrl={activeSlide.content.image}
               imageLoaded={imageLoaded}
@@ -205,18 +207,27 @@ function StoryViewerPanel({
               navSlot={navPlacement === 'over-image' ? navSlot : null}
             />
           ) : null}
-          <StoryImageCaptionSection
-            caption={activeSlide?.content?.imageCaption ?? ''}
-            navSlot={navPlacement === 'caption-specta' ? navSlot : null}
-          />
+          {!isQuestion ? (
+            <StoryImageCaptionSection
+              caption={activeSlide?.content?.imageCaption ?? ''}
+              navSlot={navPlacement === 'caption-specta' ? navSlot : null}
+            />
+          ) : null}
         </div>
         <div id="jgis-story-segment-content">
-          <RenderedStoryMarkdown
-            model={model}
-            segmentId={segmentId}
-            source={activeSlide?.content?.markdown ?? ''}
-            variant="column"
-          />
+          {isQuestion ? (
+            <StoryQuestionCard
+              segmentId={segmentId}
+              prompt={activeSlide?.interactive?.prompt}
+            />
+          ) : (
+            <RenderedStoryMarkdown
+              model={model}
+              segmentId={segmentId}
+              source={activeSlide?.content?.markdown ?? ''}
+              variant="column"
+            />
+          )}
         </div>
       </div>
     </div>
