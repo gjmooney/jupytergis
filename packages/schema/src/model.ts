@@ -428,6 +428,14 @@ export class JupyterGISModel implements IJupyterGISModel {
     this._zoomToPositionSignal.emit(id);
   }
 
+  getMapSize(): [number, number] | undefined {
+    return this._mapSize;
+  }
+
+  setMapSize(size: [number, number] | undefined): void {
+    this._mapSize = size;
+  }
+
   private _metadataChangedHandler(_: IJupyterGISDoc, args: MapChange) {
     this._sharedMetadataChanged.emit(args);
   }
@@ -1832,6 +1840,7 @@ export class JupyterGISModel implements IJupyterGISModel {
   private _sharedPresetsChanged = new Signal<this, MapChange>(this);
   private _featureStoresChanged = new Signal<this, MapChange>(this);
   private _zoomToPositionSignal = new Signal<this, string>(this);
+  private _mapSize: [number, number] | undefined;
 
   private _addFeatureAsMsSignal = new Signal<this, string>(this);
 

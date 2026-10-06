@@ -416,6 +416,8 @@ export class OpenLayersAdapter implements IMapAdapter {
     this._setupInteractions();
     this._setupViewEvents();
     this._setupGeolocation();
+    this._map.on('change:size', this._publishMapSize);
+    this._publishMapSize();
 
     await new Promise<void>(resolve => {
       if (!this._map) {
@@ -856,6 +858,19 @@ export class OpenLayersAdapter implements IMapAdapter {
     return this._map.getView().getZoom() ?? 0;
   }
 
+  getMapSize(): [number, number] | undefined {
+    const size = this._map?.getSize();
+    if (!size || size[0] < 1 || size[1] < 1) {
+      return undefined;
+    }
+
+    return [size[0], size[1]];
+  }
+
+  private readonly _publishMapSize = (): void => {
+    this._model.setMapSize(this.getMapSize());
+  };
+
   getViewportId(): string {
     const viewport = this._map.getViewport();
 
@@ -1027,6 +1042,8 @@ export class OpenLayersAdapter implements IMapAdapter {
       return;
     }
 
+    this._map.un('change:size', this._publishMapSize);
+    this._model.setMapSize(undefined);
     this._drawTool.leaveDrawMode();
     this._map.setTarget(undefined);
     this._sources.clear();

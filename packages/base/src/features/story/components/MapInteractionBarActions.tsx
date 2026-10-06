@@ -5,11 +5,13 @@ import { Button } from '@/src/shared/components/Button';
 export interface IMapViewBarActionsProps {
   onBack: () => void;
   onApply: () => void;
+  applyLabel?: string;
 }
 
 export function MapViewBarActions({
   onBack,
   onApply,
+  applyLabel = 'Apply view',
 }: IMapViewBarActionsProps): JSX.Element {
   return (
     <>
@@ -18,7 +20,7 @@ export function MapViewBarActions({
       </Button>
 
       <Button size={'sm'} onClick={onApply}>
-        Apply view
+        {applyLabel}
       </Button>
     </>
   );

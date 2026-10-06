@@ -85,7 +85,8 @@ function segmentHeightForItem(
   heightsById: Readonly<Record<string, number>>,
 ): { height: number; measured: boolean } {
   const mode = getSegmentDisplayMode(item.activeSlide);
-  if (mode === 'map') {
+  //! TODO would prefer an inclusive way here
+  if (mode !== 'markdown') {
     return {
       height: estimateMapSegmentHeight(mapViewportHeight),
       measured: mapViewportHeight > 0,
@@ -166,5 +167,10 @@ export function getSegmentDisplayMode(
   if (activeSlide?.content?.contentMode === 'markdown') {
     return 'markdown';
   }
+
+  if (activeSlide?.interactive) {
+    return 'question';
+  }
+
   return 'map';
 }

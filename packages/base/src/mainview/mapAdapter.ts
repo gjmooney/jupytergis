@@ -46,6 +46,7 @@ export interface IMapAdapter {
   removeLayer(id: string): void;
 
   getZoom(): number;
+  getMapSize(): [number, number] | undefined;
   getViewportId(): string;
   getProjection(): IMapProjection;
   getPixelFromCoordinate(coordinate: number[]): [number, number];

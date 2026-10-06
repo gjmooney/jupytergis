@@ -31,6 +31,7 @@ export interface IStoryMapBarHost {
   ): { mode: SegmentInteractionMode } | null;
   restoreEditorForModel(model: IJupyterGISModel): void;
   applyMapViewForModel(model: IJupyterGISModel): void;
+  applyPickedFeatureForModel(model: IJupyterGISModel): void;
   exitStoryPreviewForModel(model: IJupyterGISModel): void;
 }
 
@@ -162,6 +163,21 @@ export class StoryMapBarController {
             onApply: () => {
               this._host.applyMapViewForModel(model);
             },
+          }),
+          placement: 'overlay-bottom',
+        };
+      case SegmentInteractionMode.pickingFeature:
+        return {
+          message:
+            'Select the country layer, click a feature, then apply',
+          children: React.createElement(MapViewBarActions, {
+            onBack: () => {
+              this._host.restoreEditorForModel(model);
+            },
+            onApply: () => {
+              this._host.applyPickedFeatureForModel(model);
+            },
+            applyLabel: 'Apply',
           }),
           placement: 'overlay-bottom',
         };

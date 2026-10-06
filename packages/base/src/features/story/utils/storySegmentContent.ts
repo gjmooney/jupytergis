@@ -5,6 +5,7 @@ import type {
   StorySegmentPaneAlignment,
 } from '@/src/features/story/types/types';
 import { DEFAULT_MAP_PANEL_WIDTH } from '@/src/features/story/utils/cssWidth';
+import { defaultInteractiveQuestion } from '@/src/features/story/utils/interactiveQuestion';
 
 type SegmentContent = NonNullable<IStorySegmentLayer['content']>;
 
@@ -35,7 +36,7 @@ export function getSegmentPaneAlignment(
     return content.paneAlignment;
   }
 
-  return mode === 'map' ? 'end' : 'center';
+  return mode === 'markdown' ? 'center' : 'end';
 }
 
 export function segmentPaneAlignment(
@@ -88,10 +89,20 @@ export function updateSegmentContentMode(
     return false;
   }
 
-  const parameters = layer.parameters as IStorySegmentLayer;
+  const parameters = {
+    ...(layer.parameters as IStorySegmentLayer),
+  };
+  parameters.content = normalizeSegmentContentForMode(parameters.content, mode);
 
-  model.sharedModel.updateObjectParameters(segmentId, {
-    content: normalizeSegmentContentForMode(parameters.content, mode),
+  if (mode === 'question') {
+    parameters.interactive ??= defaultInteractiveQuestion();
+  } else {
+    delete parameters.interactive;
+  }
+
+  model.sharedModel.updateLayer(segmentId, {
+    ...layer,
+    parameters,
   });
 
   return true;

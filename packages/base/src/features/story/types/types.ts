@@ -1,20 +1,21 @@
 import type { IStorySegmentLayer } from '@jupytergis/schema';
 
-export type StorySegmentDisplayMode = 'map' | 'markdown';
+export type StorySegmentDisplayMode = 'question' | 'map' | 'markdown';
 
 export type StorySegmentPaneAlignment = 'start' | 'center' | 'end';
 
+//! TODO shchema type??
 export const SegmentInteractionMode = {
   mapView: 'map-view',
   previewingSegment: 'previewing-segment',
+  pickingFeature: 'picking-feature',
 } as const;
 
 export type SegmentInteractionMode =
   (typeof SegmentInteractionMode)[keyof typeof SegmentInteractionMode];
 
 export type StoryMapInteractionBarPlacement =
-  | 'overlay-bottom'
-  | 'main-top-left';
+  'overlay-bottom' | 'main-top-left';
 
 export interface IOverrideLayerEntry {
   layerId: string;

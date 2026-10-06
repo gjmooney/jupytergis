@@ -94,7 +94,7 @@ function buildPaneConfig(
     mode,
   );
 
-  if (mode === 'map') {
+  if (mode !== 'markdown') {
     return {
       type: 'map',
       segmentIndex: item.index,
@@ -121,7 +121,7 @@ function overlayPaneHeight(
   viewportHeight: number,
   items: IStorySegmentViewItem[],
 ): number {
-  if (mode === 'map') {
+  if (mode !== 'markdown') {
     return Math.max(viewportHeight, 0);
   }
 

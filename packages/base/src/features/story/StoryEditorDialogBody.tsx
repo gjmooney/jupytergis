@@ -10,6 +10,7 @@ import { SegmentImageUrlField } from '@/src/features/story/components/SegmentIma
 import { SegmentLayerOverrides } from '@/src/features/story/components/SegmentLayerOverrides';
 import { SegmentMarkdownEditor } from '@/src/features/story/components/SegmentMarkdownEditor';
 import { SegmentModePicker } from '@/src/features/story/components/SegmentModePicker';
+import { SegmentQuestionEditor } from '@/src/features/story/components/SegmentQuestionEditor';
 import { SegmentPaneAlignmentPicker } from '@/src/features/story/components/SegmentPaneAlignmentPicker';
 import { SegmentWidthSelector } from '@/src/features/story/components/SegmentWidthSelector';
 import { StoryEditorHeaderBar } from '@/src/features/story/components/StoryEditorHeaderBar';
@@ -27,6 +28,10 @@ import {
   isMarkdownOverlayWidthFull,
   MAP_PANEL_WIDTH_PRESETS,
 } from '@/src/features/story/utils/cssWidth';
+import {
+  DEFAULT_QUESTION_PROMPT,
+  updateInteractiveQuestion,
+} from '@/src/features/story/utils/interactiveQuestion';
 import { getSegmentDisplayMode } from '@/src/features/story/utils/listStoryScrollTrack';
 import {
   getSegmentPaneAlignment,
@@ -44,6 +49,7 @@ import {
   getStoryMarkdownFromSlide,
   getStorySegmentDisplayTitle,
 } from '@/src/features/story/utils/storySegmentViewItems';
+import { STORY_TYPE } from '@/src/types';
 import { Button } from '@/src/shared/components/Button';
 import {
   NativeSelect,
@@ -75,6 +81,7 @@ function SegmentEditor({
   onTransitionChange,
   onRemoveSegment,
   isTextSegmentWidthFull,
+  isInteractiveStory,
 }: {
   model: IJupyterGISModel;
   state: IStateDB;
@@ -89,6 +96,7 @@ function SegmentEditor({
   onTransitionChange: (patch: SegmentTransitionPatch) => void;
   onRemoveSegment: () => void;
   isTextSegmentWidthFull: boolean;
+  isInteractiveStory: boolean;
 }): JSX.Element {
   const [layersOpen, setLayersOpen] = useState(true);
   const [animationOpen, setAnimationOpen] = useState(false);
@@ -106,6 +114,12 @@ function SegmentEditor({
     segment.activeSlide?.transition,
   );
   const isImmediateTransition = transitionType === 'immediate';
+  const isMapSegment = segmentMode !== 'markdown';
+  const interactive = segment.activeSlide?.interactive;
+  const feature = interactive?.features?.[0];
+  const featureLabel = feature
+    ? `Using ${feature.value} (${feature.property})`
+    : '';
 
   return (
     <div className="jgis-story-editor-segment">
@@ -134,7 +148,11 @@ function SegmentEditor({
         </Button>
       </div>
 
-      <SegmentModePicker value={segmentMode} onChange={onContentModeChange} />
+      <SegmentModePicker
+        value={segmentMode}
+        showQuestion={isInteractiveStory}
+        onChange={onContentModeChange}
+      />
 
       {segmentMode === 'map' ? (
         <label className="jgis-story-editor-toggle-row jgis-story-editor-label justify-start!">
@@ -146,9 +164,9 @@ function SegmentEditor({
         </label>
       ) : null}
 
-      {segmentMode === 'map' || !isTextSegmentWidthFull ? (
+      {isMapSegment || !isTextSegmentWidthFull ? (
         <div className="jgis-story-editor-split">
-          {segmentMode === 'map' ? (
+          {isMapSegment ? (
             <SegmentWidthSelector
               label="Panel width"
               layout="block"
@@ -169,7 +187,7 @@ function SegmentEditor({
         </div>
       ) : null}
 
-      {segmentMode === 'map' ? (
+      {isMapSegment ? (
         <>
           <StoryEditorSection triggerText="Map view" defaultOpen>
             <div className="jgis-story-editor-stack jgis-story-editor-stack--tight">
@@ -202,26 +220,48 @@ function SegmentEditor({
             </div>
           </StoryEditorSection>
 
-          <StoryEditorSection triggerText="Content" defaultOpen>
-            <div className="jgis-story-editor-stack">
-              <SegmentImageUrlField
-                value={imageUrl}
-                onChange={nextImageUrl => {
-                  onContentChange({ image: nextImageUrl });
+          <StoryEditorSection
+            triggerText={segmentMode === 'question' ? 'Question' : 'Content'}
+            defaultOpen
+          >
+            {segmentMode === 'question' ? (
+              <SegmentQuestionEditor
+                segmentId={segment.id}
+                prompt={interactive?.prompt ?? DEFAULT_QUESTION_PROMPT}
+                answers={interactive?.acceptedAnswers ?? []}
+                featureLabel={featureLabel}
+                onPromptChange={prompt => {
+                  updateInteractiveQuestion(model, segment.id, { prompt });
+                }}
+                onAnswersChange={acceptedAnswers => {
+                  updateInteractiveQuestion(model, segment.id, {
+                    acceptedAnswers,
+                  });
                 }}
               />
-              <SegmentImageCaptionField
-                value={imageCaption}
-                onChange={caption => onContentChange({ imageCaption: caption })}
-              />
-              <SegmentMarkdownEditor
-                model={model}
-                segmentId={segment.id}
-                editorServices={editorServices}
-                initialMarkdown={markdown}
-                rows={4}
-              />
-            </div>
+            ) : (
+              <div className="jgis-story-editor-stack">
+                <SegmentImageUrlField
+                  value={imageUrl}
+                  onChange={nextImageUrl => {
+                    onContentChange({ image: nextImageUrl });
+                  }}
+                />
+                <SegmentImageCaptionField
+                  value={imageCaption}
+                  onChange={caption =>
+                    onContentChange({ imageCaption: caption })
+                  }
+                />
+                <SegmentMarkdownEditor
+                  model={model}
+                  segmentId={segment.id}
+                  editorServices={editorServices}
+                  initialMarkdown={markdown}
+                  rows={4}
+                />
+              </div>
+            )}
           </StoryEditorSection>
 
           <StoryEditorSection
@@ -397,6 +437,7 @@ export function StoryEditorDialogBody({
               }}
               onRemoveSegment={removeSegment}
               isTextSegmentWidthFull={isTextSegmentWidthFull}
+              isInteractiveStory={story?.storyType === STORY_TYPE.interactive}
             />
           ) : (
             <SegmentEditorEmptyState />
