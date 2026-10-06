@@ -213,6 +213,22 @@ describe('useStoryEditorSegmentList', () => {
     expect(view.current.canRemoveSegment).toBe(false);
   });
 
+  it('keeps segments when the story type changes to interactive', () => {
+    const story = createStory();
+    const { model } = createModel({ story, currentIndex: 0 });
+    const view = mountHook(model, commands);
+
+    act(() => {
+      view.current.updateStory({ storyType: 'interactive' });
+    });
+
+    expect(model.sharedModel.updateStoryMap).toHaveBeenCalledWith('story-1', {
+      ...story,
+      storyType: 'interactive',
+      storySegments: ['segment-1', 'segment-2'],
+    });
+  });
+
   it('reorders story segments', () => {
     const story = createStory();
     const { model } = createModel({ story, currentIndex: 0 });

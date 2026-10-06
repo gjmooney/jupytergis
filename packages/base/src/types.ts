@@ -18,8 +18,7 @@ export type JupyterGISTracker = WidgetTracker<IJupyterGISWidget>;
 export type SymbologyTab = 'color' | 'radius' | 'filters';
 
 type RgbColorValue =
-  | [number, number, number]
-  | [number, number, number, number];
+  [number, number, number] | [number, number, number, number];
 type HexColorValue = string;
 type InternalRgbArray = number[];
 
@@ -62,9 +61,11 @@ export const SYMBOLOGY_VALID_LAYER_TYPES = [
   'GeoZarrLayer',
 ];
 
+//! TODO: why isnt this using the schema type?
 export const STORY_TYPE = {
   guided: 'guided',
   verticalScroll: 'Vertical Scroll',
+  interactive: 'interactive',
 } as const satisfies Record<string, StoryType>;
 
 export interface IWmsLayerInfo {

@@ -63,9 +63,11 @@ import { IViewState, Modes } from './types';
 
 const SETTINGS_ID = '@jupytergis/jupytergis-core:jupytergis-settings';
 
+//! TODO: why isnt this using the schema type?
 const SPECTA_STORY_TYPES: IJGISStoryMap['storyType'][] = [
   'guided',
   'Vertical Scroll',
+  'interactive',
 ];
 
 const DEFAULT_SETTINGS: IJupyterGISSettings = {
