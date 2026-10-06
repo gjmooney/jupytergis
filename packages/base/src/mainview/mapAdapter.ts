@@ -122,6 +122,11 @@ export interface IMapAdapter {
   setQuestionHighlight(
     refs: { layerId: string; property: string; value: string }[],
   ): void;
+
+  /** Clears question and identify highlight overlays. */
+  clearEditorHighlights(): void;
+
+  readonly drawTool: IDrawToolAdapter;
 }
 
 export interface IMapAdapterOptions {

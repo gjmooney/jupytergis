@@ -214,6 +214,10 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
       this._syncQuestionHighlight,
       this,
     );
+    this._model.clearHighlightsSignal.connect(
+      this._onClearHighlights,
+      this,
+    );
 
     // After a user signs in to an OpenEO server, rebuild any of this
     // document's OpenEO tile sources whose serverUrl matches — they
@@ -394,6 +398,10 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
     );
     this._model.currentSegmentIndexChanged.disconnect(
       this._syncQuestionHighlight,
+      this,
+    );
+    this._model.clearHighlightsSignal.disconnect(
+      this._onClearHighlights,
       this,
     );
     this._model.geolocationChanged.disconnect(this._geolocationListener, this);
@@ -1103,6 +1111,10 @@ export class MainView extends React.Component<IMainViewProps, IStates> {
 
     this._syncQuestionHighlight();
   }
+
+  private _onClearHighlights = (): void => {
+    this._mapAdapter?.clearEditorHighlights();
+  };
 
   private _syncQuestionHighlight(): void {
     const adapter = this._mapAdapter;

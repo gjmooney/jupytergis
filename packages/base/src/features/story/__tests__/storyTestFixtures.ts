@@ -43,6 +43,7 @@ export function createModel(overrides: Record<string, unknown> = {}) {
   return {
     centerOnPosition: jest.fn(),
     getMapSize: jest.fn(() => undefined),
+    clearHighlights: jest.fn(),
     canUseStoryPreview: jest.fn(() => true),
     isStoryPreviewActive: jest.fn(() => storyPreviewActive),
     setStoryPreviewActive: jest.fn((active: boolean) => {
