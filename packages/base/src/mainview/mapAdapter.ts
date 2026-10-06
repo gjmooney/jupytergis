@@ -116,14 +116,14 @@ export interface IMapAdapter {
   drawTool: IDrawToolAdapter;
   onFeatureStoresChanged(): void;
   /**
-   * Dim the referenced layers and draw the matching features on an overlay.
+   * Draw the matching features on the identify highlight layer.
    * Pass an empty list to clear.
    */
   setQuestionHighlight(
     refs: { layerId: string; property: string; value: string }[],
   ): void;
 
-  /** Clears question and identify highlight overlays. */
+  /** Clears the identify highlight layer, including a question highlight. */
   clearEditorHighlights(): void;
 
   readonly drawTool: IDrawToolAdapter;

@@ -1,6 +1,3 @@
-/** Opacity applied to the source layer while its question features are emphasized. */
-export const QUESTION_LAYER_DIM = 0.2;
-
 export interface IQuestionFeatureRef {
   layerId: string;
   property: string;
