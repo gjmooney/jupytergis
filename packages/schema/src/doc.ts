@@ -49,9 +49,10 @@ export const DEFAULT_JGIS_DOCUMENT_CONTENT = `{
   "viewState": {},
 	"options": {"latitude": 0, "longitude": 0, "zoom": 0, "bearing": 0, "pitch": 0, "projection": "${DEFAULT_PROJECTION}", "extent": [${DEFAULT_WORLD_EXTENT_3857.join(', ')}]},
 	"layerTree": [],
-	"annotations": {},
+  "annotations": {},
 	"presets": {},
-	"metadata": {}
+	"metadata": {},
+	"interactivePlay": {}
 }`;
 
 export class JupyterGISDoc
@@ -70,6 +71,7 @@ export class JupyterGISDoc
     this._annotations = this.ydoc.getMap('annotations');
     this._presets = this.ydoc.getMap('presets');
     this._metadata = this.ydoc.getMap('metadata');
+    this._interactivePlay = this.ydoc.getMap('interactivePlay');
 
     this.undoManager.addToScope(this._layers);
     this.undoManager.addToScope(this._sources);
@@ -113,6 +115,7 @@ export class JupyterGISDoc
     const annotations = this._annotations.toJSON();
     const presets = this._presets.toJSON();
     const metadata = this._metadata.toJSON();
+    const interactivePlay = this._interactivePlay.toJSON();
 
     return JSON.stringify(
       {
@@ -125,6 +128,7 @@ export class JupyterGISDoc
         annotations,
         presets,
         metadata,
+        interactivePlay,
       },
       null,
       '  ',
@@ -187,6 +191,11 @@ export class JupyterGISDoc
       const metadata = value['metadata'] ?? {};
       Object.entries(metadata).forEach(([key, val]) =>
         this._metadata.set(key, val),
+      );
+
+      const interactivePlay = value['interactivePlay'] ?? {};
+      Object.entries(interactivePlay).forEach(([key, val]) =>
+        this._interactivePlay.set(key, val),
       );
     });
   }
@@ -739,6 +748,7 @@ export class JupyterGISDoc
   private _metadata: Y.Map<any>;
   private _annotations: Y.Map<any>;
   private _presets: Y.Map<any>;
+  private _interactivePlay: Y.Map<any>;
 
   private _optionsChanged = new Signal<IJupyterGISDoc, MapChange>(this);
   private _layersChanged = new Signal<IJupyterGISDoc, IJGISLayerDocChange>(

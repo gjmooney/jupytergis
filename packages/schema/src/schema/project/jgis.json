@@ -34,6 +34,9 @@
     },
     "metadata": {
       "$ref": "#/definitions/jGISMetadata"
+    },
+    "interactivePlay": {
+      "$ref": "#/definitions/jGISInteractivePlay"
     }
   },
   "definitions": {
@@ -161,8 +164,21 @@
         "storyType": {
           "type": "string",
           "title": "Story Type",
-          "enum": ["guided", "Vertical Scroll"],
+          "enum": ["guided", "Vertical Scroll", "interactive"],
           "description": "The type of story map"
+        },
+        "interaction": {
+          "type": "string",
+          "title": "Interaction",
+          "enum": ["feature-guessing"],
+          "description": "Interactive story subtype. Unused by guided and vertical-scroll stories."
+        },
+        "playMode": {
+          "type": "string",
+          "title": "Play mode",
+          "enum": ["cooperative", "competitive"],
+          "description": "How an interactive story scores answers. Competitive is reserved and not played yet.",
+          "default": "cooperative"
         },
         "storySegments": {
           "type": "array",
@@ -472,6 +488,70 @@
       "type": "object",
       "default": {},
       "additionalProperties": { "type": "string" }
+    },
+    "jGISInteractivePlay": {
+      "title": "IJGISInteractivePlay",
+      "type": "object",
+      "default": {},
+      "additionalProperties": {
+        "$ref": "#/definitions/jGISInteractivePlayState"
+      }
+    },
+    "jGISInteractivePlayState": {
+      "title": "IJGISInteractivePlayState",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "currentSegmentId": {
+          "type": "string",
+          "description": "Segment the room is currently playing."
+        },
+        "rounds": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "$ref": "#/definitions/jGISInteractiveRound"
+          }
+        }
+      }
+    },
+    "jGISInteractiveRound": {
+      "title": "IJGISInteractiveRound",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolved", "submissions"],
+      "properties": {
+        "resolved": {
+          "type": "boolean",
+          "description": "True after the first accepted submission in co-op play."
+        },
+        "submissions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/jGISInteractiveSubmission"
+          }
+        }
+      }
+    },
+    "jGISInteractiveSubmission": {
+      "title": "IJGISInteractiveSubmission",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clientId", "name", "value", "correct"],
+      "properties": {
+        "clientId": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "correct": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }
