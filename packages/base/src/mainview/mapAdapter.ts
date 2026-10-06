@@ -115,6 +115,13 @@ export interface IMapAdapter {
 
   drawTool: IDrawToolAdapter;
   onFeatureStoresChanged(): void;
+  /**
+   * Dim the referenced layers and draw the matching features on an overlay.
+   * Pass an empty list to clear.
+   */
+  setQuestionHighlight(
+    refs: { layerId: string; property: string; value: string }[],
+  ): void;
 }
 
 export interface IMapAdapterOptions {
