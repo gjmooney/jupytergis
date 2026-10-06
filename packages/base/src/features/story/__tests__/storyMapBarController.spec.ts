@@ -41,6 +41,7 @@ function createHost(
     getInteraction: jest.fn(() => null),
     restoreEditorForModel: jest.fn(),
     applyMapViewForModel: jest.fn(),
+    applyPickedFeatureForModel: jest.fn(),
     exitStoryPreviewForModel: jest.fn(),
     ...overrides,
   };
@@ -213,6 +214,28 @@ describe('StoryMapBarController', () => {
 
     expect(host.restoreEditorForModel).toHaveBeenCalledWith(model);
     expect(host.applyMapViewForModel).toHaveBeenCalledWith(model);
+  });
+
+  it('asks the author to identify a feature before applying', () => {
+    const model = createModel();
+    const tracker = createTracker(model);
+    const host = createHost(tracker, {
+      getInteraction: jest.fn(() => ({
+        mode: SegmentInteractionMode.pickingFeature,
+      })),
+    });
+    const controller = new StoryMapBarController(host);
+
+    controller.refresh();
+
+    const config = (StoryMapInteractionBarWidget as jest.Mock).mock
+      .calls[0][0];
+    expect(config.message).toBe(
+      'Select the country layer, click a feature, then apply',
+    );
+    expect(config.children.props.applyLabel).toBe('Apply');
+    config.children.props.onApply();
+    expect(host.applyPickedFeatureForModel).toHaveBeenCalledWith(model);
   });
 
   it('routes segment preview back through the host', () => {

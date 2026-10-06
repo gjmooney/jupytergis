@@ -11,6 +11,10 @@ jest.mock('../utils/storySegmentOverrides', () => ({
   clearSegmentLayerOverrideEntries: jest.fn(),
 }));
 
+jest.mock('../utils/interactiveQuestion', () => ({
+  applyPickedFeature: jest.fn(() => false),
+}));
+
 jest.mock('../components/StoryMapInteractionBarWidget', () => ({
   StoryMapInteractionBarWidget: jest.fn().mockImplementation(() => ({
     show: jest.fn(),
@@ -53,6 +57,7 @@ jest.mock('@/src/constants', () => ({
     toggleLeftPanel: 'jupytergis:toggleLeftPanel',
     toggleRightPanel: 'jupytergis:toggleRightPanel',
     openStoryEditor: 'jupytergis:openStoryEditor',
+    identify: 'jupytergis:identify',
   },
 }));
 
@@ -70,6 +75,7 @@ import {
   createTracker,
   notifyTrackerTabChange,
 } from './storyTestFixtures';
+import { applyPickedFeature } from '../utils/interactiveQuestion';
 import { updateSegmentMapView } from '../utils/storySegmentMapView';
 import {
   applySegmentLayerOverrides,
@@ -126,6 +132,38 @@ describe('StoryEditorSession', () => {
         leftPanelOpen: true,
         rightPanelOpen: true,
       });
+    });
+
+    it('picks a feature without hiding panels', () => {
+      const dialog = createDialog();
+      const model = createModel({
+        currentMode: 'panning',
+        syncIdentifiedFeatures: jest.fn(),
+        getClientId: jest.fn(() => 1),
+      });
+      const commands = createCommands();
+
+      attachSession(session, dialog, model, commands);
+      session.enterPickFeatureMode('segment-1');
+
+      expect(session.getMode(model as never)).toBe(StoryEditorMode.mapView);
+      expect(model.setUIState).not.toHaveBeenCalled();
+      expect(commands.execute).toHaveBeenCalledWith('jupytergis:identify');
+      expect(dialog.close).toHaveBeenCalled();
+
+      session.applyPickedFeatureForModel(model as never);
+
+      expect(applyPickedFeature).toHaveBeenCalledWith(
+        model,
+        'segment-1',
+        null,
+      );
+      expect(StoryEditorWidget).not.toHaveBeenCalled();
+
+      (applyPickedFeature as jest.Mock).mockReturnValueOnce(true);
+      session.applyPickedFeatureForModel(model as never);
+
+      expect(StoryEditorWidget).toHaveBeenCalled();
     });
 
     it('previews a segment and clears overrides when restored', () => {
