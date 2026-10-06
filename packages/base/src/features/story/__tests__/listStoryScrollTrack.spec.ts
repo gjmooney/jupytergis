@@ -21,6 +21,15 @@ describe('getSegmentDisplayMode', () => {
       'map',
     );
   });
+
+  it('returns question when the segment has an interactive block', () => {
+    expect(
+      getSegmentDisplayMode({
+        content: { contentMode: 'map' },
+        interactive: { prompt: 'Name this country' },
+      }),
+    ).toBe('question');
+  });
 });
 
 describe('estimateMarkdownHeight', () => {
