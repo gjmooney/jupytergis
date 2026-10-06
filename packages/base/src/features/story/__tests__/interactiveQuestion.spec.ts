@@ -3,10 +3,28 @@ import { Polygon } from 'ol/geom';
 
 import {
   applyPickedFeature,
+  gradeAnswer,
   matchFeatureProperties,
   mergeAcceptedAnswers,
 } from '@/src/features/story/utils/interactiveQuestion';
 import { updateSegmentContentMode } from '@/src/features/story/utils/storySegmentContent';
+
+describe('gradeAnswer', () => {
+  const accepted = ['France', 'République française', 'FRA'];
+
+  it('matches case, accents, and surrounding space', () => {
+    expect(gradeAnswer('  FRANCE ', accepted)).toBe(true);
+    expect(gradeAnswer('republique francaise', accepted)).toBe(true);
+    expect(gradeAnswer('fra', accepted)).toBe(true);
+  });
+
+  it('rejects a miss and an empty guess', () => {
+    expect(gradeAnswer('Germany', accepted)).toBe(false);
+    expect(gradeAnswer('   ', accepted)).toBe(false);
+    expect(gradeAnswer('', [])).toBe(false);
+    expect(gradeAnswer('', [''])).toBe(false);
+  });
+});
 
 describe('matchFeatureProperties', () => {
   it('uses the name as the feature reference and the ISO code as an alias', () => {

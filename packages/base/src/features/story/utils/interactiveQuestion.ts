@@ -1,11 +1,28 @@
-import type {
-  IJupyterGISModel,
-  IStorySegmentLayer,
-} from '@jupytergis/schema';
+import type { IJupyterGISModel, IStorySegmentLayer } from '@jupytergis/schema';
 import { Geometry as OLGeometry } from 'ol/geom';
 import View from 'ol/View';
 
 export const DEFAULT_QUESTION_PROMPT = 'Name this country';
+
+/**
+ * Trim, casefold, and strip accents so grading ignores those differences.
+ * An empty result is incorrect.
+ */
+export function normalizeAnswer(value: string): string {
+  return value.trim().toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
+}
+
+export function gradeAnswer(
+  guess: string,
+  acceptedAnswers: readonly string[],
+): boolean {
+  const normalized = normalizeAnswer(guess);
+  if (!normalized) {
+    return false;
+  }
+
+  return acceptedAnswers.some(answer => normalizeAnswer(answer) === normalized);
+}
 
 const NAME_PROPERTY_KEYS = ['NAME', 'NAME_LONG', 'ADMIN', 'name'] as const;
 const ISO_PROPERTY_KEYS = ['ISO_A3', 'ISO_A2', 'ADM0_A3'] as const;
@@ -245,9 +262,7 @@ export function applyPickedFeature(
   const extent = extentFromFeatureProperties(properties);
   const projection = model.getOptions().projection ?? 'EPSG:3857';
   const zoom =
-    extent && mapSize
-      ? zoomForExtent(extent, mapSize, projection)
-      : null;
+    extent && mapSize ? zoomForExtent(extent, mapSize, projection) : null;
 
   parameters.interactive = {
     prompt: previous.prompt?.trim() || DEFAULT_QUESTION_PROMPT,
