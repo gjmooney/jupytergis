@@ -204,6 +204,9 @@ function setClipPath(
     });
 }
 
+/** Pixel margin around a question feature when the camera flies to its extent. */
+const QUESTION_EXTENT_PADDING_PX = 80;
+
 function questionHighlightStyle(feature: FeatureLike): Style {
   const stroke = getCssVarValue('--jp-brand-color1') || '#1976d2';
   const fill =
@@ -3572,16 +3575,21 @@ export class OpenLayersAdapter implements IMapAdapter {
     if (jgisLayer.type === 'StorySegmentLayer') {
       const params = jgisLayer.parameters as IStorySegmentLayer;
       const coords = getCenter(params.extent);
-      const viewCenter = this._map.getView().getCenter();
-      const alreadyCentered =
+      const zoom = this._storySegmentZoom(params);
+      const view = this._map.getView();
+      const viewCenter = view.getCenter();
+      const viewZoom = view.getZoom();
+      const alreadyThere =
         viewCenter !== undefined &&
+        viewZoom !== undefined &&
         Math.abs(viewCenter[0] - coords[0]) < 1e-9 &&
-        Math.abs(viewCenter[1] - coords[1]) < 1e-9;
+        Math.abs(viewCenter[1] - coords[1]) < 1e-9 &&
+        Math.abs(viewZoom - zoom) < 1e-9;
 
-      if (!alreadyCentered) {
+      if (!alreadyThere) {
         this.flyToPosition(
           { x: coords[0], y: coords[1] },
-          params.zoom,
+          zoom,
           (params.transition.time ?? 1) * 1000,
           params.transition.type,
         );
@@ -3592,6 +3600,37 @@ export class OpenLayersAdapter implements IMapAdapter {
 
     this._pendingZoomLayerId = id;
   }
+
+  /**
+   * Question extents are the feature bbox. Fit them inside a smaller
+   * viewport so the country is not flush with the map edges.
+   */
+  private _storySegmentZoom(params: IStorySegmentLayer): number {
+    const extent = params.extent;
+    const hasQuestion = (params.interactive?.features?.length ?? 0) > 0;
+    if (!hasQuestion || !isValidExtent(extent)) {
+      return params.zoom;
+    }
+
+    const size = this._map.getSize();
+    const paddedSize: [number, number] | null = size
+      ? [
+          size[0] - QUESTION_EXTENT_PADDING_PX * 2,
+          size[1] - QUESTION_EXTENT_PADDING_PX * 2,
+        ]
+      : null;
+    if (!paddedSize || paddedSize[0] < 1 || paddedSize[1] < 1) {
+      return params.zoom;
+    }
+
+    const view = this._map.getView();
+    const resolution = view.getResolutionForExtent(extent, paddedSize);
+    if (resolution === undefined) {
+      return params.zoom;
+    }
+
+    return view.getZoomForResolution(resolution) ?? params.zoom;
+  } //sdsd
 
   private _computeZoomFromExtent(extent: number[]): number | null {
     if (!this._map) {
