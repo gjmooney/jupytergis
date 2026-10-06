@@ -1683,6 +1683,11 @@ export class OpenLayersAdapter implements IMapAdapter {
     this._fillQuestionOverlay();
   }
 
+  clearEditorHighlights(): void {
+    this.clearQuestionHighlight();
+    this._highlightLayerRef.current?.getSource()?.clear();
+  }
+
   clearQuestionHighlight(): void {
     for (const source of this._questionSources) {
       source.un('change', this._onQuestionSourceChange);

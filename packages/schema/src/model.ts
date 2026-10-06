@@ -415,6 +415,14 @@ export class JupyterGISModel implements IJupyterGISModel {
     this._mapSize = size;
   }
 
+  clearHighlights(): void {
+    this._clearHighlightsSignal.emit();
+  }
+
+  get clearHighlightsSignal(): ISignal<this, void> {
+    return this._clearHighlightsSignal;
+  }
+
   private _metadataChangedHandler(_: IJupyterGISDoc, args: MapChange) {
     this._sharedMetadataChanged.emit(args);
   }
@@ -1713,6 +1721,7 @@ export class JupyterGISModel implements IJupyterGISModel {
   private _sharedPresetsChanged = new Signal<this, MapChange>(this);
   private _zoomToPositionSignal = new Signal<this, string>(this);
   private _mapSize: [number, number] | undefined;
+  private _clearHighlightsSignal = new Signal<this, void>(this);
 
   private _addFeatureAsMsSignal = new Signal<this, string>(this);
 

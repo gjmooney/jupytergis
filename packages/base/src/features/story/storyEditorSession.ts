@@ -317,6 +317,7 @@ export class StoryEditorSession implements IStoryMapBarHost {
   public clear(): void {
     for (const [model] of this._editors) {
       this.clearInteractionForModel(model, { restorePanels: true });
+      model.clearHighlights();
     }
 
     this._context?.tracker.forEach(widget => {

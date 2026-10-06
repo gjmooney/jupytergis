@@ -533,6 +533,8 @@ export interface IJupyterGISModel extends DocumentRegistry.IModel {
   centerOnPosition(id: string): void;
   getMapSize(): [number, number] | undefined;
   setMapSize(size: [number, number] | undefined): void;
+  clearHighlights(): void;
+  readonly clearHighlightsSignal: ISignal<IJupyterGISModel, void>;
 
   toggleMode(mode: Modes): void;
   checkIfIsADrawVectorLayer(layer: IJGISLayer): boolean;
