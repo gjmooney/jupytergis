@@ -125,8 +125,6 @@ export interface IMapAdapter {
 
   /** Clears the identify highlight layer, including a question highlight. */
   clearEditorHighlights(): void;
-
-  readonly drawTool: IDrawToolAdapter;
 }
 
 export interface IMapAdapterOptions {

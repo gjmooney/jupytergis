@@ -206,24 +206,6 @@ function setClipPath(
 /** Pixel margin around a question feature when the camera flies to its extent. */
 const QUESTION_EXTENT_PADDING_PX = 80;
 
-function questionHighlightStyle(feature: FeatureLike): Style {
-  const stroke = getCssVarValue('--jp-brand-color1') || '#1976d2';
-  const fill =
-    getCssVarValue('--jp-brand-color3') || 'rgba(25, 118, 210, 0.35)';
-  const geomType = feature.getGeometry()?.getType();
-
-  if (geomType === 'LineString' || geomType === 'MultiLineString') {
-    return new Style({
-      stroke: new Stroke({ color: stroke, width: 3 }),
-    });
-  }
-
-  return new Style({
-    stroke: new Stroke({ color: stroke, width: 2 }),
-    fill: new Fill({ color: fill }),
-  });
-}
-
 /** Highlight tombstoned baseline features that are pending delete. */
 function highlightTombstones(rules: Rule[], ids: readonly string[]): Rule[] {
   if (ids.length === 0) {

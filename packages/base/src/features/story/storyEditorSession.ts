@@ -270,7 +270,7 @@ export class StoryEditorSession implements IStoryMapBarHost {
 
     if (!applied) {
       return;
-    }
+    } //s
 
     this.restoreEditorForModel(model);
   }
