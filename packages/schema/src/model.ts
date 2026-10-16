@@ -77,7 +77,6 @@ const SETTINGS_ID = '@jupytergis/jupytergis-core:jupytergis-settings';
 const SPECTA_STORY_TYPES: IJGISStoryMap['storyType'][] = [
   'guided',
   'Vertical Scroll',
-  'interactive',
 ];
 
 const DEFAULT_SETTINGS: IJupyterGISSettings = {

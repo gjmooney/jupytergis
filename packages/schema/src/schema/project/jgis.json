@@ -165,20 +165,20 @@
         "storyType": {
           "type": "string",
           "title": "Story Type",
-          "enum": ["guided", "Vertical Scroll", "interactive"],
-          "description": "The type of story map"
+          "enum": ["guided", "Vertical Scroll"],
+          "description": "Presentation layout for the story map."
         },
         "interaction": {
           "type": "string",
           "title": "Interaction",
           "enum": ["feature-guessing"],
-          "description": "Interactive story subtype. Unused by guided and vertical-scroll stories."
+          "description": "How question segments are graded. Optional until the story has questions."
         },
         "playMode": {
           "type": "string",
           "title": "Play mode",
           "enum": ["cooperative", "competitive"],
-          "description": "How an interactive story scores answers. Competitive is reserved and not played yet.",
+          "description": "How question segments score answers. Competitive is reserved and not played yet.",
           "default": "cooperative"
         },
         "storySegments": {

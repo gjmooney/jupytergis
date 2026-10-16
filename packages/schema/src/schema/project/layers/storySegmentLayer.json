@@ -76,7 +76,7 @@
     },
     "interactive": {
       "title": "Interactive question",
-      "description": "Feature-guessing question for an interactive story. Omit on markdown segments.",
+      "description": "Feature-guessing question for this segment. Omit on map and markdown segments.",
       "type": "object",
       "additionalProperties": false,
       "properties": {

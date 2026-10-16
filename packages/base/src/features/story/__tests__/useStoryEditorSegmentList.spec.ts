@@ -213,18 +213,18 @@ describe('useStoryEditorSegmentList', () => {
     expect(view.current.canRemoveSegment).toBe(false);
   });
 
-  it('keeps segments when the story type changes to interactive', () => {
+  it('keeps segments when the story type changes to vertical scroll', () => {
     const story = createStory();
     const { model } = createModel({ story, currentIndex: 0 });
     const view = mountHook(model, commands);
 
     act(() => {
-      view.current.updateStory({ storyType: 'interactive' });
+      view.current.updateStory({ storyType: 'Vertical Scroll' });
     });
 
     expect(model.sharedModel.updateStoryMap).toHaveBeenCalledWith('story-1', {
       ...story,
-      storyType: 'interactive',
+      storyType: 'Vertical Scroll',
       storySegments: ['segment-1', 'segment-2'],
     });
   });

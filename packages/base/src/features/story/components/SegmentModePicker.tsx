@@ -12,31 +12,23 @@ import { Button } from '@/src/shared/components/Button';
 export interface ISegmentModePickerProps {
   value: StorySegmentDisplayMode;
   onChange: (mode: StorySegmentDisplayMode) => void;
-  showQuestion?: boolean;
 }
 
 export function SegmentModePicker({
   value,
   onChange,
-  showQuestion = false,
 }: ISegmentModePickerProps): JSX.Element {
-  const pickerClassName = showQuestion
-    ? 'jgis-story-editor-segment-mode-picker jgis-story-editor-segment-mode-picker--interactive'
-    : 'jgis-story-editor-segment-mode-picker';
-
   return (
     <section className="jgis-story-editor-block">
       <div className="jgis-story-editor-label">What is this segment?</div>
-      <div className={pickerClassName}>
-        {showQuestion ? (
-          <ModeCard
-            icon={faCircleQuestion}
-            title="Question"
-            description="Highlighted feature and a typed answer"
-            selected={value === 'question'}
-            onClick={() => onChange('question')}
-          />
-        ) : null}
+      <div className="jgis-story-editor-segment-mode-picker">
+        <ModeCard
+          icon={faCircleQuestion}
+          title="Question"
+          description="Highlighted feature and a typed answer"
+          selected={value === 'question'}
+          onClick={() => onChange('question')}
+        />
         <ModeCard
           icon={faMap}
           title="Map"

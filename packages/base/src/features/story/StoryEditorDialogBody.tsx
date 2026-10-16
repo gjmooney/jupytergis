@@ -49,7 +49,6 @@ import {
   getStoryMarkdownFromSlide,
   getStorySegmentDisplayTitle,
 } from '@/src/features/story/utils/storySegmentViewItems';
-import { STORY_TYPE } from '@/src/types';
 import { Button } from '@/src/shared/components/Button';
 import {
   NativeSelect,
@@ -81,7 +80,6 @@ function SegmentEditor({
   onTransitionChange,
   onRemoveSegment,
   isTextSegmentWidthFull,
-  isInteractiveStory,
 }: {
   model: IJupyterGISModel;
   state: IStateDB;
@@ -96,7 +94,6 @@ function SegmentEditor({
   onTransitionChange: (patch: SegmentTransitionPatch) => void;
   onRemoveSegment: () => void;
   isTextSegmentWidthFull: boolean;
-  isInteractiveStory: boolean;
 }): JSX.Element {
   const [layersOpen, setLayersOpen] = useState(true);
   const [animationOpen, setAnimationOpen] = useState(false);
@@ -150,7 +147,6 @@ function SegmentEditor({
 
       <SegmentModePicker
         value={segmentMode}
-        showQuestion={isInteractiveStory}
         onChange={onContentModeChange}
       />
 
@@ -437,7 +433,6 @@ export function StoryEditorDialogBody({
               }}
               onRemoveSegment={removeSegment}
               isTextSegmentWidthFull={isTextSegmentWidthFull}
-              isInteractiveStory={story?.storyType === STORY_TYPE.interactive}
             />
           ) : (
             <SegmentEditorEmptyState />

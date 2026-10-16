@@ -65,7 +65,6 @@ export const SYMBOLOGY_VALID_LAYER_TYPES = [
 export const STORY_TYPE = {
   guided: 'guided',
   verticalScroll: 'Vertical Scroll',
-  interactive: 'interactive',
 } as const satisfies Record<string, StoryType>;
 
 export interface IWmsLayerInfo {

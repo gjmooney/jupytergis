@@ -456,12 +456,8 @@ button.jgis-story-editor-segment-item.jp-mod-styled.jgis-story-editor-segment-it
 
 .jgis-story-editor-segment-mode-picker {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-}
-
-.jgis-story-editor-segment-mode-picker--interactive {
   grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
 }
 
 .jgis-story-editor-segment-mode-picker .jgis-story-editor-segment-mode-card {
@@ -916,8 +912,7 @@ Radix won't set hidden so do it manually */
   }
 
   /* Side-by-side mode chips; hide descriptions */
-  .jgis-story-editor-segment-mode-picker,
-  .jgis-story-editor-segment-mode-picker--interactive {
+  .jgis-story-editor-segment-mode-picker {
     grid-template-columns: 1fr 1fr;
   }
 

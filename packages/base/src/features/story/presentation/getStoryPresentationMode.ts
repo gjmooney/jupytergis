@@ -13,7 +13,7 @@ export function getStoryPresentationMode(
     return 'verticalScroll';
   }
 
-  // Guided and interactive stories both use the column stepper.
+  // Guided (and any other non-scroll type) uses the column stepper.
   return 'column';
 }
 
