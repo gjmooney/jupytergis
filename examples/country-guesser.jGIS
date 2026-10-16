@@ -1,0 +1,2638 @@
+{
+  "annotations": {},
+  "interactivePlay": {},
+  "layerTree": [
+    "a90eb85b-5614-4a63-9d27-7ee86273d51a",
+    "95d463bb-576c-4c16-b617-1e39588f572a",
+    "044d590a-abf7-4abd-85fb-0912dcddb220",
+    "de78b394-d6b0-4795-bc19-8bcf82c1f90b",
+    "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "c3d4e5f6-a7b8-9012-cdef-123456789012"
+  ],
+  "layers": {
+    "044d590a-abf7-4abd-85fb-0912dcddb220": {
+      "name": "Intro",
+      "parameters": {
+        "content": {
+          "contentMode": "markdown",
+          "markdown": "# Why geography still matters\n\nKnowing where places are is not trivia for its own sake. Borders, climate, trade routes, and neighbours shape history and the news you see every week.\n\nThis short quiz is a quick PoC: spot a country on the map, type its name, then read a little about it."
+        },
+        "enableIdentify": false,
+        "extent": [
+          -20037508.34,
+          -10000000.0,
+          20037508.34,
+          15000000.0
+        ],
+        "layerOverride": [],
+        "transition": {
+          "time": 1.0,
+          "type": "linear"
+        },
+        "zoom": 2.2
+      },
+      "type": "StorySegmentLayer",
+      "visible": true
+    },
+    "95d463bb-576c-4c16-b617-1e39588f572a": {
+      "name": "countries",
+      "parameters": {
+        "declutter": false,
+        "opacity": 1.0,
+        "source": "fd631e99-8a90-4837-94cd-e3966dd9b870",
+        "symbologyState": {
+          "layers": [
+            {
+              "id": "7c807996-7e05-41c1-88ad-dbd0a9dfcdac",
+              "rules": [
+                {
+                  "fields": [
+                    "name"
+                  ],
+                  "id": "26e2050c-cab6-4480-bcf0-3011543a792e",
+                  "mappings": [
+                    {
+                      "encodings": [
+                        "fill-color",
+                        "circle-fill-color"
+                      ],
+                      "scale": {
+                        "params": {
+                          "colorRamp": "schemeCategory10",
+                          "colorStops": [
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Afghanistan"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Akrotiri Sovereign Base Area"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Aland"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Albania"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Algeria"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "American Samoa"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Andorra"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Angola"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Anguilla"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Antarctica"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Antigua and Barbuda"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Argentina"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Armenia"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Aruba"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Ashmore and Cartier Islands"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Australia"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Austria"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Azerbaijan"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Bahrain"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Bajo Nuevo Bank (Petrel Is.)"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Bangladesh"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Barbados"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Baykonur Cosmodrome"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Belarus"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Belgium"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Belize"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Benin"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Bermuda"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Bhutan"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Bir Tawil"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Bolivia"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Bosnia and Herzegovina"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Botswana"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Brazil"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Brazilian Island"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "British Indian Ocean Territory"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "British Virgin Islands"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Brunei"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Bulgaria"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Burkina Faso"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Burundi"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Cabo Verde"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Cambodia"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Cameroon"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Canada"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Cayman Islands"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Central African Republic"
+                            },
+                            {
+                              "color": [
+                                30.0,
+                                136.0,
+                                76.0,
+                                1.0
+                              ],
+                              "stop": "Chad"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Chile"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "China"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Clipperton Island"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Colombia"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Comoros"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Cook Islands"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Coral Sea Islands"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Costa Rica"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Croatia"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Cuba"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Cura\u00e7ao"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Cyprus"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Cyprus No Mans Area"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Czechia"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Democratic Republic of the Congo"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Denmark"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Dhekelia Sovereign Base Area"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Djibouti"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Dominica"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Dominican Republic"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "East Timor"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Ecuador"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Egypt"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "El Salvador"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Equatorial Guinea"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Eritrea"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Estonia"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Ethiopia"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Falkland Islands"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Faroe Islands"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Federated States of Micronesia"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Fiji"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Finland"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "France"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "French Polynesia"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "French Southern and Antarctic Lands"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Gabon"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Gambia"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Georgia"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Germany"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Ghana"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Gibraltar"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Greece"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Greenland"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Grenada"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Guam"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Guatemala"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Guernsey"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Guinea"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Guinea-Bissau"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Guyana"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Haiti"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Heard Island and McDonald Islands"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Honduras"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Hong Kong S.A.R."
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Hungary"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Iceland"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "India"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Indian Ocean Territories"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Indonesia"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Iran"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Iraq"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Ireland"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Isle of Man"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Israel"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Italy"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Ivory Coast"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Jamaica"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Japan"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Jersey"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Jordan"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Kazakhstan"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Kenya"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Kiribati"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Kosovo"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Kuwait"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Kyrgyzstan"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Laos"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Latvia"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Lebanon"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Lesotho"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Liberia"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Libya"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Liechtenstein"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Lithuania"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Luxembourg"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Macao S.A.R"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Madagascar"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Malawi"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Malaysia"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Maldives"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Mali"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Malta"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Marshall Islands"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Mauritania"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Mauritius"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Mexico"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Moldova"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Monaco"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Mongolia"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Montenegro"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Montserrat"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Morocco"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Mozambique"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Myanmar"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Namibia"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Nauru"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Nepal"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Netherlands"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "New Caledonia"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "New Zealand"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Nicaragua"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Niger"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Nigeria"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Niue"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Norfolk Island"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "North Korea"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "North Macedonia"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Northern Cyprus"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Northern Mariana Islands"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Norway"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Oman"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Pakistan"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Palau"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Palestine"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Panama"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Papua New Guinea"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Paraguay"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Peru"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Philippines"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Pitcairn Islands"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Poland"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Portugal"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Puerto Rico"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Qatar"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Republic of Serbia"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Republic of the Congo"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Romania"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Russia"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Rwanda"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Saint Barthelemy"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Saint Helena"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Saint Kitts and Nevis"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Saint Lucia"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Saint Martin"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Saint Pierre and Miquelon"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Saint Vincent and the Grenadines"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Samoa"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "San Marino"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Saudi Arabia"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Scarborough Reef"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Senegal"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Serranilla Bank"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Seychelles"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Siachen Glacier"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Sierra Leone"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Singapore"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Sint Maarten"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Slovakia"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Slovenia"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Solomon Islands"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Somalia"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Somaliland"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "South Africa"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "South Georgia and the Islands"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "South Korea"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "South Sudan"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Southern Patagonian Ice Field"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Spain"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Spratly Islands"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Sri Lanka"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Sudan"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Suriname"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Sweden"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Switzerland"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Syria"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "S\u00e3o Tom\u00e9 and Principe"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Taiwan"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Tajikistan"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Thailand"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "The Bahamas"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Togo"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Tonga"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Trinidad and Tobago"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Tunisia"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Turkey"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Turkmenistan"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Turks and Caicos Islands"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Tuvalu"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "US Naval Base Guantanamo Bay"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Uganda"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Ukraine"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "United Arab Emirates"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "United Kingdom"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "United Republic of Tanzania"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "United States Minor Outlying Islands"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "United States Virgin Islands"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "United States of America"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Uruguay"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "Uzbekistan"
+                            },
+                            {
+                              "color": [
+                                188.0,
+                                189.0,
+                                34.0,
+                                1.0
+                              ],
+                              "stop": "Vanuatu"
+                            },
+                            {
+                              "color": [
+                                23.0,
+                                190.0,
+                                207.0,
+                                1.0
+                              ],
+                              "stop": "Vatican"
+                            },
+                            {
+                              "color": [
+                                31.0,
+                                119.0,
+                                180.0,
+                                1.0
+                              ],
+                              "stop": "Venezuela"
+                            },
+                            {
+                              "color": [
+                                255.0,
+                                127.0,
+                                14.0,
+                                1.0
+                              ],
+                              "stop": "Vietnam"
+                            },
+                            {
+                              "color": [
+                                44.0,
+                                160.0,
+                                44.0,
+                                1.0
+                              ],
+                              "stop": "Wallis and Futuna"
+                            },
+                            {
+                              "color": [
+                                214.0,
+                                39.0,
+                                40.0,
+                                1.0
+                              ],
+                              "stop": "Western Sahara"
+                            },
+                            {
+                              "color": [
+                                148.0,
+                                103.0,
+                                189.0,
+                                1.0
+                              ],
+                              "stop": "Yemen"
+                            },
+                            {
+                              "color": [
+                                140.0,
+                                86.0,
+                                75.0,
+                                1.0
+                              ],
+                              "stop": "Zambia"
+                            },
+                            {
+                              "color": [
+                                227.0,
+                                119.0,
+                                194.0,
+                                1.0
+                              ],
+                              "stop": "Zimbabwe"
+                            },
+                            {
+                              "color": [
+                                127.0,
+                                127.0,
+                                127.0,
+                                1.0
+                              ],
+                              "stop": "eSwatini"
+                            }
+                          ],
+                          "fallback": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0
+                          ],
+                          "reverse": false
+                        },
+                        "scheme": "categorical"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "225bce23-6c4b-4e0c-a8f4-3989f53879fd",
+                  "mappings": [
+                    {
+                      "encodings": [
+                        "stroke-color"
+                      ],
+                      "scale": {
+                        "params": {
+                          "value": [
+                            4.0,
+                            3.0,
+                            3.0,
+                            1.0
+                          ]
+                        },
+                        "scheme": "constant_rgba"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type": "VectorLayer",
+      "visible": true
+    },
+    "a1b2c3d4-e5f6-7890-abcd-ef1234567890": {
+      "name": "About Chad",
+      "parameters": {
+        "content": {
+          "contentMode": "markdown",
+          "markdown": "![Chad flag](https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/Flag_of_Chad.svg/500px-Flag_of_Chad.svg.png)\n\nBeginning in the 7th millennium BC, humans moved into the Chadian basin in great numbers. By the end of the 1st millennium AD, a series of states and empires had risen and fallen in Chad's Sahelian strip, each focused on controlling the trans-Saharan trade routes that passed through the region."
+        },
+        "enableIdentify": false,
+        "extent": [
+          1321239.9820160104,
+          554263.9534716965,
+          2845848.1947681042,
+          2963927.4253324606
+        ],
+        "layerOverride": [],
+        "transition": {
+          "time": 1.0,
+          "type": "linear"
+        },
+        "zoom": 5.0
+      },
+      "type": "StorySegmentLayer",
+      "visible": true
+    },
+    "a90eb85b-5614-4a63-9d27-7ee86273d51a": {
+      "name": "OpenStreetMap.CAT Layer",
+      "parameters": {
+        "opacity": 1.0,
+        "source": "a602e3e8-535a-465f-a1c2-6bd0d301e19d"
+      },
+      "type": "RasterLayer",
+      "visible": true
+    },
+    "b2c3d4e5-f6a7-8901-bcde-f12345678901": {
+      "name": "Guess the Country",
+      "parameters": {
+        "content": {
+          "contentMode": "map",
+          "image": "",
+          "imageCaption": "",
+          "markdown": "",
+          "panelWidth": "25%"
+        },
+        "enableIdentify": false,
+        "extent": [
+          13166985.742591215,
+          2340592.7782403887,
+          17660027.095432255,
+          6142507.852203667
+        ],
+        "interactive": {
+          "acceptedAnswers": [
+            "Japan",
+            "Nippon",
+            "Nihon",
+            "JPN",
+            "JP"
+          ],
+          "features": [
+            {
+              "layerId": "95d463bb-576c-4c16-b617-1e39588f572a",
+              "property": "name",
+              "value": "Japan"
+            }
+          ],
+          "prompt": "Name this country"
+        },
+        "layerOverride": [
+          {
+            "targetLayer": "95d463bb-576c-4c16-b617-1e39588f572a",
+            "visible": false
+          }
+        ],
+        "transition": {
+          "time": 1.0,
+          "type": "linear"
+        },
+        "zoom": 4.5
+      },
+      "type": "StorySegmentLayer",
+      "visible": true
+    },
+    "c3d4e5f6-a7b8-9012-cdef-123456789012": {
+      "name": "Conclusion",
+      "parameters": {
+        "content": {
+          "contentMode": "markdown",
+          "markdown": "# That\u2019s it\n\nTwo countries, a bit of context, and a map. Yep we did it all for the gee eye eff"
+        },
+        "enableIdentify": false,
+        "extent": [
+          -20037508.34,
+          -10000000.0,
+          20037508.34,
+          15000000.0
+        ],
+        "layerOverride": [],
+        "transition": {
+          "time": 1.0,
+          "type": "linear"
+        },
+        "zoom": 2.2
+      },
+      "type": "StorySegmentLayer",
+      "visible": true
+    },
+    "de78b394-d6b0-4795-bc19-8bcf82c1f90b": {
+      "name": "Guess the Country",
+      "parameters": {
+        "content": {
+          "contentMode": "map",
+          "image": "",
+          "imageCaption": "",
+          "markdown": "",
+          "panelWidth": "25%"
+        },
+        "enableIdentify": false,
+        "extent": [
+          1321239.9820160104,
+          554263.9534716965,
+          2845848.1947681042,
+          2963927.4253324606
+        ],
+        "interactive": {
+          "acceptedAnswers": [
+            "Chad",
+            "TCD",
+            "TD"
+          ],
+          "features": [
+            {
+              "layerId": "95d463bb-576c-4c16-b617-1e39588f572a",
+              "property": "name",
+              "value": "Chad"
+            }
+          ],
+          "prompt": "Name this country"
+        },
+        "layerOverride": [
+          {
+            "targetLayer": "95d463bb-576c-4c16-b617-1e39588f572a",
+            "visible": false
+          }
+        ],
+        "transition": {
+          "time": 1.0,
+          "type": "linear"
+        },
+        "zoom": 5.2
+      },
+      "type": "StorySegmentLayer",
+      "visible": true
+    }
+  },
+  "metadata": {},
+  "options": {
+    "bearing": 0.0,
+    "extent": [
+      10615851.682819977,
+      194891.1491958578,
+      20211161.15520349,
+      8288209.481248198
+    ],
+    "latitude": 35.569533133003716,
+    "longitude": 138.46188398072593,
+    "pitch": 0.0,
+    "projection": "EPSG:3857",
+    "zoom": 4.545109835030056
+  },
+  "presets": {},
+  "schemaVersion": "0.7.0",
+  "sources": {
+    "a602e3e8-535a-465f-a1c2-6bd0d301e19d": {
+      "name": "OpenStreetMap.CAT",
+      "parameters": {
+        "attribution": "(C) OpenStreetMap contributors, Tiles courtesy of Breton OpenStreetMap Team",
+        "maxZoom": 19.0,
+        "minZoom": 0.0,
+        "url": "https://tile.openstreetmap.bzh/ca/{z}/{x}/{y}.png",
+        "urlParameters": {}
+      },
+      "type": "RasterSource"
+    },
+    "fd631e99-8a90-4837-94cd-e3966dd9b870": {
+      "name": "countries Source",
+      "parameters": {
+        "httpHeaders": "",
+        "path": "data/countries.geojson",
+        "useProxy": false
+      },
+      "type": "GeoJSONSource"
+    }
+  },
+  "stories": {
+    "23c99e84-c452-4abf-8011-177e61735080": {
+      "overlayContentWidth": "100%",
+      "showGradient": false,
+      "storySegments": [
+        "044d590a-abf7-4abd-85fb-0912dcddb220",
+        "de78b394-d6b0-4795-bc19-8bcf82c1f90b",
+        "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        "c3d4e5f6-a7b8-9012-cdef-123456789012"
+      ],
+      "storyType": "guided",
+      "title": "Country guesser"
+    }
+  },
+  "viewState": {}
+}
