@@ -1626,6 +1626,11 @@ export class OpenLayersAdapter implements IMapAdapter {
         // deck.gl GeoJsonLayer is only supported by the DeckGL adapter.
         return;
       }
+
+      case 'HexagonLayer': {
+        // Hexagon aggregation is only supported by the DeckGL adapter.
+        return;
+      }
     }
 
     // OpenLayers doesn't have name/id field so add it

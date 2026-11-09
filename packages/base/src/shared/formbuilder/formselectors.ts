@@ -79,6 +79,11 @@ export function getSourceTypeForm(
     case 'GeoParquetSource':
       SourceForm = PathBasedSourcePropertiesForm;
       break;
+    case 'TripsSource':
+    case 'PolygonSource':
+    case 'HexagonSource':
+      SourceForm = PathBasedSourcePropertiesForm;
+      break;
     case 'FeatureStoreSource':
       SourceForm = SourcePropertiesForm;
       break;

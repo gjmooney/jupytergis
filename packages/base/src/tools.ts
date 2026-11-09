@@ -753,6 +753,13 @@ export const loadFile = async (fileInfo: {
         throw new Error(`Failed to fetch ${filepath}`);
       }
 
+      case 'HexagonSource': {
+        const { loadHexagonPoints } = await import(
+          '@/src/mainview/adapters/deckgl/parseHexagonData'
+        );
+        return loadHexagonPoints(filepath);
+      }
+
       case 'GeoPackageVectorSource': {
         const projection = model.sharedModel.options.projection;
         if (!projection) {
@@ -841,6 +848,24 @@ export const loadFile = async (fileInfo: {
           }
         }
         break;
+      }
+
+      case 'HexagonSource': {
+        const { loadHexagonPoints } = await import(
+          '@/src/mainview/adapters/deckgl/parseHexagonData'
+        );
+        switch (file.format) {
+          case 'base64': {
+            return loadHexagonPoints(atob(file.content));
+          }
+          case 'text': {
+            return loadHexagonPoints(file.content);
+          }
+          case 'json': {
+            return loadHexagonPoints(file.content);
+          }
+        }
+        throw new Error(`Invalid hexagon source file format: ${file.format}.`);
       }
 
       case 'ShapefileSource': {

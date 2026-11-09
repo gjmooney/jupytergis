@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "description": "HexagonSource",
+  "title": "IHexagonSource",
+  "required": [],
+  "additionalProperties": false,
+  "properties": {
+    "path": {
+      "type": ["string", "null"],
+      "description": "Local path or URL of a JSON array of records, or a CSV of points (lng/lat columns become position)."
+    },
+    "data": {
+      "type": "array",
+      "description": "Inline records. Used when path is empty. lng/lat fields are normalized to position.",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "useProxy": {
+      "type": "boolean",
+      "description": "Route requests through the Jupyter server proxy to avoid CORS issues.",
+      "default": false
+    },
+    "httpHeaders": {
+      "type": "string",
+      "description": "HTTP headers forwarded to the upstream server when useProxy is true.",
+      "default": ""
+    }
+  }
+}

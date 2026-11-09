@@ -26,6 +26,8 @@ from jupytergis_core.schema import (
     IGeoTiffSource,
     IGeoZarrLayer,
     IGeoZarrSource,
+    IHexagonLayer,
+    IHexagonSource,
     IHillshadeLayer,
     IImageLayer,
     IImageSource,
@@ -1557,6 +1559,7 @@ class JGISLayer(BaseModel):
         | ITripsLayer
         | IPolygonLayer
         | IGeoJsonLayer
+        | IHexagonLayer
     )
     _parent = GISDocument | None
 
@@ -1588,6 +1591,7 @@ class JGISSource(BaseModel):
         | IOpenEOTileSource
         | ITripsSource
         | IPolygonSource
+        | IHexagonSource
     )
     _parent = GISDocument | None
 
@@ -1682,6 +1686,7 @@ OBJECT_FACTORY.register_factory(LayerType.TerrainLayer, ITerrainLayer)
 OBJECT_FACTORY.register_factory(LayerType.TripsLayer, ITripsLayer)
 OBJECT_FACTORY.register_factory(LayerType.PolygonLayer, IPolygonLayer)
 OBJECT_FACTORY.register_factory(LayerType.GeoJsonLayer, IGeoJsonLayer)
+OBJECT_FACTORY.register_factory(LayerType.HexagonLayer, IHexagonLayer)
 
 OBJECT_FACTORY.register_factory(SourceType.VectorTileSource, IVectorTileSource)
 OBJECT_FACTORY.register_factory(SourceType.MarkerSource, IMarkerSource)
@@ -1704,3 +1709,4 @@ OBJECT_FACTORY.register_factory(SourceType.WmsTileSource, IWmsTileSource)
 OBJECT_FACTORY.register_factory(SourceType.OpenEOTileSource, IOpenEOTileSource)
 OBJECT_FACTORY.register_factory(SourceType.TripsSource, ITripsSource)
 OBJECT_FACTORY.register_factory(SourceType.PolygonSource, IPolygonSource)
+OBJECT_FACTORY.register_factory(SourceType.HexagonSource, IHexagonSource)

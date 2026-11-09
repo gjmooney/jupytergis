@@ -2,6 +2,7 @@ import type {
   IJGISLayer,
   IJGISSource,
   IJupyterGISModel,
+  IHexagonSource,
   IPolygonSource,
   ITripsSource,
   IGeoJSONSource,
@@ -23,12 +24,13 @@ import {
   type RecordGetter,
   type TripTiming,
 } from './createDeckLayers';
+import { loadHexagonPoints } from './parseHexagonData';
 
 const MS_PER_TIMESTAMP_UNIT = 60;
 
 /**
- * Hosts a MapLibreOverlay and builds Trips/Polygon/GeoJson deck layers for
- * the MapLibre adapter.
+ * Hosts a MapLibreOverlay and builds Trips/Polygon/GeoJson/Hexagon deck
+ * layers for the MapLibre adapter.
  */
 export class DeckOverlayHost {
   constructor(model: IJupyterGISModel, log: LogFn) {
@@ -72,11 +74,20 @@ export class DeckOverlayHost {
         return true;
       }
 
-      const label = source.type === 'TripsSource' ? 'trips' : 'polygon';
+      const label =
+        source.type === 'TripsSource'
+          ? 'trips'
+          : source.type === 'HexagonSource'
+            ? 'hexagon'
+            : 'polygon';
       const data = await this._loadJsonPayload(
         id,
         source,
-        source.parameters as ITripsSource | IPolygonSource | undefined,
+        source.parameters as
+          | ITripsSource
+          | IPolygonSource
+          | IHexagonSource
+          | undefined,
         label,
       );
       if (!data) {
@@ -219,7 +230,9 @@ export class DeckOverlayHost {
   ): Promise<unknown> {
     if (parameters?.data !== undefined && parameters?.data !== null) {
       if (!Array.isArray(parameters.data) || parameters.data.length > 0) {
-        return parameters.data;
+        return label === 'hexagon'
+          ? await loadHexagonPoints(parameters.data)
+          : parameters.data;
       }
     }
 
@@ -234,7 +247,9 @@ export class DeckOverlayHost {
     const path = parameters.path;
     let data: unknown;
     try {
-      if (path.startsWith('http://') || path.startsWith('https://')) {
+      if (label === 'hexagon') {
+        data = await this._loadHexagonPayload(path);
+      } else if (path.startsWith('http://') || path.startsWith('https://')) {
         data = await fetchWithProxies(path, this._model, async response =>
           response.json(),
         );
@@ -243,7 +258,10 @@ export class DeckOverlayHost {
       }
 
       if (typeof data === 'string') {
-        data = JSON.parse(data) as unknown;
+        data =
+          label === 'hexagon'
+            ? await loadHexagonPoints(data)
+            : (JSON.parse(data) as unknown);
       }
     } catch (error) {
       this._log(
@@ -262,6 +280,38 @@ export class DeckOverlayHost {
     }
 
     return data;
+  }
+
+  private async _loadHexagonPayload(path: string): Promise<unknown> {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return loadHexagonPoints(path);
+    }
+
+    if (!this._model.contentsManager || !this._model.filePath) {
+      throw new Error('ContentsManager or filePath is not initialized.');
+    }
+
+    const absolutePath = PathExt.resolve(
+      PathExt.dirname(this._model.filePath),
+      path,
+    );
+    const file = await this._model.contentsManager.get(absolutePath, {
+      content: true,
+    });
+    if (!file.content) {
+      throw new Error(`File at ${absolutePath} is empty or inaccessible.`);
+    }
+
+    switch (file.format) {
+      case 'json':
+        return loadHexagonPoints(file.content);
+      case 'text':
+        return loadHexagonPoints(file.content);
+      case 'base64':
+        return loadHexagonPoints(atob(file.content));
+      default:
+        throw new Error(`Invalid hexagon source file format: ${file.format}.`);
+    }
   }
 
   private async _readLocalJson(path: string): Promise<unknown> {

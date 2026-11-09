@@ -1,3 +1,4 @@
+import { HexagonLayer } from '@deck.gl/aggregation-layers';
 import { TripsLayer } from '@deck.gl/geo-layers';
 import {
   GeoJsonLayer,
@@ -6,6 +7,7 @@ import {
 } from '@deck.gl/layers';
 import type {
   IGeoJsonLayer,
+  IHexagonLayer,
   IJGISLayer,
   IPolygonLayer,
   ITripsLayer,
@@ -16,17 +18,24 @@ import {
   grammarToDeckAccessors,
   type DeckNumberAccessor,
 } from './grammarToDeckAccessors';
+import { hexagonColorRange } from './hexagonColorRange';
 
 export const DEFAULT_PATH_FIELD = 'path';
 export const DEFAULT_TIMESTAMPS_FIELD = 'timestamps';
 export const DEFAULT_POLYGON_FIELD = 'polygon';
+export const DEFAULT_POSITION_FIELD = 'position';
 
-export const JSON_RECORD_SOURCES = new Set(['TripsSource', 'PolygonSource']);
+export const JSON_RECORD_SOURCES = new Set([
+  'TripsSource',
+  'PolygonSource',
+  'HexagonSource',
+]);
 
 export const DECK_OVERLAY_LAYER_TYPES = new Set([
   'TripsLayer',
   'PolygonLayer',
   'GeoJsonLayer',
+  'HexagonLayer',
 ]);
 
 type LngLat = [longitude: number, latitude: number];
@@ -254,7 +263,7 @@ export function createTripsLayer(
             widthUnits: 'pixels' as const,
             widthMinPixels: typeof trailWidth === 'number' ? trailWidth : 0,
           }
-        : { widthMinPixels: parameters?.widthMinPixels }),
+        : {}),
       capRounded: parameters?.capRounded,
       jointRounded: parameters?.jointRounded,
       opacity: parameters?.opacity,
@@ -304,8 +313,12 @@ export function createPolygonLayer(
     filled: parameters?.filled,
     stroked: parameters?.stroked,
     extruded: parameters?.extruded,
-    getFillColor: style.getFillColor ?? parameters?.fillColor,
-    getLineColor: style.getLineColor ?? parameters?.lineColor,
+    ...(style.getFillColor !== null
+      ? { getFillColor: style.getFillColor }
+      : {}),
+    ...(style.getLineColor !== null
+      ? { getLineColor: style.getLineColor }
+      : {}),
     ...(style.getLineWidth !== null
       ? {
           getLineWidth: style.getLineWidth,
@@ -313,10 +326,7 @@ export function createPolygonLayer(
           lineWidthMinPixels:
             typeof style.getLineWidth === 'number' ? style.getLineWidth : 0,
         }
-      : {
-          lineWidthUnits: 'pixels' as const,
-          lineWidthMinPixels: parameters?.lineWidthMinPixels,
-        }),
+      : {}),
     opacity: parameters?.opacity,
     visible: layer.visible ?? true,
     pickable: true,
@@ -390,6 +400,101 @@ export function createGeoJsonLayer(
   });
 }
 
+function isPosition(value: unknown): value is LngLat {
+  return (
+    Array.isArray(value) &&
+    value.length >= 2 &&
+    typeof value[0] === 'number' &&
+    Number.isFinite(value[0]) &&
+    typeof value[1] === 'number' &&
+    Number.isFinite(value[1])
+  );
+}
+
+function weightAccessor(
+  field: string | undefined,
+  getter: (expression: string) => RecordGetter,
+): number | ((record: unknown) => number) {
+  const trimmed = field?.trim();
+  if (!trimmed) {
+    return 1;
+  }
+
+  const read = getter(trimmed);
+  return record => {
+    const value = read(record);
+    return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+  };
+}
+
+export function createHexagonLayer(
+  id: string,
+  layer: IJGISLayer,
+  ctx: IDeckLayerBuildContext,
+): HexagonLayer | undefined {
+  const parameters = layer.parameters as IHexagonLayer | undefined;
+  const records = parameters?.source
+    ? ctx.jsonRecords.get(parameters.source)
+    : undefined;
+  if (!records || records.length === 0) {
+    return undefined;
+  }
+
+  const geometry = deckGeometryBinding(parameters?.symbologyState);
+  const positionField = geometryField(
+    geometry.position,
+    DEFAULT_POSITION_FIELD,
+  );
+  // CSV rows are already [lng, lat], matching the deck.gl example's
+  // `getPosition: d => d`. Object records still read `position`.
+  const positionsAreRows = isPosition(records[0]);
+  const readPosition = ctx.getter(positionField);
+  const getPosition = positionsAreRows
+    ? (record: unknown) => record
+    : readPosition;
+  const points = records.filter(record => isPosition(getPosition(record)));
+  if (points.length === 0) {
+    ctx.log(
+      'warning',
+      `hexagon layer "${layer.name ?? id}" has no points for ${positionField}.`,
+    );
+    return undefined;
+  }
+
+  const symbologyKey = JSON.stringify(parameters?.symbologyState ?? null);
+  const colorRange = hexagonColorRange(parameters?.symbologyState);
+  const getColorWeight = weightAccessor(geometry.colorWeight, ctx.getter);
+  const getElevationWeight = weightAccessor(
+    geometry.elevationWeight,
+    ctx.getter,
+  );
+
+  return new HexagonLayer({
+    id,
+    data: points,
+    getPosition: record => getPosition(record) as LngLat,
+    getColorWeight,
+    getElevationWeight,
+    colorRange,
+    radius: parameters?.radius,
+    coverage: parameters?.coverage,
+    extruded: parameters?.extruded,
+    gpuAggregation: parameters?.gpuAggregation,
+    colorAggregation: parameters?.colorAggregation,
+    elevationAggregation: parameters?.elevationAggregation,
+    elevationScale: parameters?.elevationScale,
+    opacity: parameters?.opacity,
+    visible: layer.visible ?? true,
+    pickable: true,
+    updateTriggers: {
+      getPosition: positionField,
+      getColorWeight: geometry.colorWeight ?? null,
+      getElevationWeight: geometry.elevationWeight ?? null,
+      colorRange: symbologyKey,
+    },
+  });
+}
+
 export type TripPlayback = {
   from: number;
   to: number;
@@ -398,7 +503,7 @@ export type TripPlayback = {
 
 /**
  * Build deck.gl overlay layers for the given document layer ids.
- * Only Trips / Polygon / GeoJson are produced; other types are skipped.
+ * Only Trips / Polygon / GeoJson / Hexagon are produced; other types are skipped.
  */
 export function buildDeckOverlayLayers(
   layerIds: string[],
@@ -440,6 +545,13 @@ export function buildDeckOverlayLayers(
       }
       case 'GeoJsonLayer': {
         const created = createGeoJsonLayer(id, layer, ctx);
+        if (created) {
+          layers.push(created);
+        }
+        break;
+      }
+      case 'HexagonLayer': {
+        const created = createHexagonLayer(id, layer, ctx);
         if (created) {
           layers.push(created);
         }

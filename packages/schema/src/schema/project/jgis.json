@@ -53,7 +53,8 @@
         "TerrainLayer",
         "TripsLayer",
         "PolygonLayer",
-        "GeoJsonLayer"
+        "GeoJsonLayer",
+        "HexagonLayer"
       ]
     },
     "sourceType": {
@@ -75,7 +76,8 @@
         "MarkerSource",
         "OpenEOTileSource",
         "TripsSource",
-        "PolygonSource"
+        "PolygonSource",
+        "HexagonSource"
       ]
     },
     "jGISLayer": {

@@ -30832,19 +30832,7 @@
       "name": "Custom Polygon Layer",
       "parameters": {
         "extruded": true,
-        "fillColor": [
-          0.0,
-          128.0,
-          255.0,
-          160.0
-        ],
         "filled": true,
-        "lineColor": [
-          80.0,
-          80.0,
-          80.0
-        ],
-        "lineWidthMinPixels": 1.0,
         "opacity": 1.0,
         "source": "a8f0b43e-d431-423e-9f9d-6ebdd1439a44",
         "stroked": true,
@@ -30853,6 +30841,54 @@
             {
               "id": "e693de6e-dae1-44a5-9745-e386e90954ec",
               "rules": [
+                {
+                  "id": "00000000-0000-4000-8000-000000000014",
+                  "mappings": [
+                    {
+                      "encodings": [
+                        "fill-color"
+                      ],
+                      "scale": {
+                        "params": {
+                          "value": [
+                            0.0,
+                            128.0,
+                            255.0,
+                            0.63
+                          ]
+                        },
+                        "scheme": "constant_rgba"
+                      }
+                    },
+                    {
+                      "encodings": [
+                        "stroke-color"
+                      ],
+                      "scale": {
+                        "params": {
+                          "value": [
+                            80.0,
+                            80.0,
+                            80.0,
+                            1.0
+                          ]
+                        },
+                        "scheme": "constant_rgba"
+                      }
+                    },
+                    {
+                      "encodings": [
+                        "stroke-width"
+                      ],
+                      "scale": {
+                        "params": {
+                          "value": 1.0
+                        },
+                        "scheme": "constant_num"
+                      }
+                    }
+                  ]
+                },
                 {
                   "fields": [
                     "height"
@@ -30887,8 +30923,50 @@
         "loopLength": 1800.0,
         "opacity": 1.0,
         "source": "de1a4229-31c4-471d-835b-101e1f4b9d2b",
-        "trailLength": 120.0,
-        "widthMinPixels": 4.0
+        "symbologyState": {
+          "layers": [
+            {
+              "id": "00000000-0000-4000-8000-000000000001",
+              "rules": [
+                {
+                  "id": "00000000-0000-4000-8000-000000000002",
+                  "mappings": [
+                    {
+                      "encodings": [
+                        "fill-color",
+                        "stroke-color"
+                      ],
+                      "scale": {
+                        "params": {
+                          "value": [
+                            253.0,
+                            128.0,
+                            93.0,
+                            1.0
+                          ]
+                        },
+                        "scheme": "constant_rgba"
+                      }
+                    },
+                    {
+                      "encodings": [
+                        "stroke-width",
+                        "circle-radius"
+                      ],
+                      "scale": {
+                        "params": {
+                          "value": 8.0
+                        },
+                        "scheme": "constant_num"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "trailLength": 120.0
       },
       "type": "TripsLayer",
       "visible": true
@@ -30907,15 +30985,15 @@
   "options": {
     "bearing": 0.0,
     "extent": [
-      -74.04796974158143,
-      40.70039810486523,
-      -73.96788462198403,
-      40.7324704466638
+      -74.02437007981419,
+      40.69963832534265,
+      -73.99148428374905,
+      40.72093348212226
     ],
     "latitude": 40.71028675501438,
     "longitude": -74.00792718178161,
     "mapAdapter": "maplibre",
-    "pitch": 49.00000000000001,
+    "pitch": 0.0,
     "projection": "EPSG:3857",
     "zoom": 14.444768134659885
   },

@@ -3,6 +3,9 @@ jest.mock('@deck.gl/core', () => ({
   MapView: class {},
   _GlobeView: class {},
 }));
+jest.mock('@deck.gl/aggregation-layers', () => ({
+  HexagonLayer: class {},
+}));
 jest.mock('@deck.gl/geo-layers', () => ({
   TileLayer: class {},
   TripsLayer: class {},

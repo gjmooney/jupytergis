@@ -6,6 +6,20 @@ export {
 } from './grammar/grammarConversions';
 export type { SymbologyState } from './grammar/grammarConversions';
 export { migrateDocument } from './migrations';
+export {
+  DEFAULT_HEXAGON_COLOR_RANGE,
+  defaultGeoJsonSymbology,
+  defaultHexagonSymbology,
+  defaultPolygonSymbology,
+  defaultSymbologyForDeckLayerType,
+  defaultTripsSymbology,
+  hasGrammarLayers,
+} from './deck/defaultDeckSymbology';
+export type {
+  IDeckSymbologyState,
+  NewId,
+  Rgba,
+} from './deck/defaultDeckSymbology';
 export * from './model';
 export * from './token';
 export type * from './types';

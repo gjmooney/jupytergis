@@ -115,6 +115,18 @@ export function deckGeometryBinding(
     if (geometry.polygon === undefined && binding.polygon) {
       geometry.polygon = binding.polygon;
     }
+
+    if (geometry.position === undefined && binding.position) {
+      geometry.position = binding.position;
+    }
+
+    if (geometry.colorWeight === undefined && binding.colorWeight) {
+      geometry.colorWeight = binding.colorWeight;
+    }
+
+    if (geometry.elevationWeight === undefined && binding.elevationWeight) {
+      geometry.elevationWeight = binding.elevationWeight;
+    }
   }
 
   return geometry;

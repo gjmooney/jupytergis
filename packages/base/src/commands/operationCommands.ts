@@ -1,4 +1,12 @@
-import { IJupyterGISModel, IJGISLayer, IJGISSource } from '@jupytergis/schema';
+import {
+  defaultGeoJsonSymbology,
+  defaultHexagonSymbology,
+  defaultPolygonSymbology,
+  defaultTripsSymbology,
+  IJupyterGISModel,
+  IJGISLayer,
+  IJGISSource,
+} from '@jupytergis/schema';
 import { IRenderMime } from '@jupyterlab/rendermime';
 import { CommandRegistry } from '@lumino/commands';
 import { UUID } from '@lumino/coreutils';
@@ -19,6 +27,7 @@ export namespace LayerCreationCommandIDs {
   export const newPolygonWithParams = 'jupytergis:newPolygonWithParams';
   export const newGeoJsonLayerWithParams =
     'jupytergis:newGeoJsonLayerWithParams';
+  export const newHexagonWithParams = 'jupytergis:newHexagonWithParams';
 }
 
 type LayerCreationSpec = {
@@ -350,22 +359,23 @@ export function addLayerCreationCommands(options: {
         opacity: { type: 'number', default: 1 },
         trailLength: { type: 'number', default: 120 },
         fadeTrail: { type: 'boolean', default: true },
-        widthMinPixels: { type: 'number', default: 1 },
-        capRounded: { type: 'boolean', default: false },
-        jointRounded: { type: 'boolean', default: false },
+        capRounded: { type: 'boolean', default: true },
+        jointRounded: { type: 'boolean', default: true },
         loopLength: { type: 'number' },
         animationSpeed: { type: 'number', default: 1 },
+        symbologyState: { type: 'object' },
       },
       buildParameters: (p, id) => ({
         source: id,
         opacity: p.opacity ?? 1,
         trailLength: p.trailLength ?? 120,
         fadeTrail: p.fadeTrail ?? true,
-        widthMinPixels: p.widthMinPixels ?? 1,
-        capRounded: p.capRounded ?? false,
-        jointRounded: p.jointRounded ?? false,
+        capRounded: p.capRounded ?? true,
+        jointRounded: p.jointRounded ?? true,
         ...(p.loopLength !== undefined ? { loopLength: p.loopLength } : {}),
         animationSpeed: p.animationSpeed ?? 1,
+        symbologyState:
+          p.symbologyState ?? defaultTripsSymbology(() => UUID.uuid4()),
       }),
     },
     {
@@ -385,17 +395,7 @@ export function addLayerCreationCommands(options: {
         filled: { type: 'boolean', default: true },
         stroked: { type: 'boolean', default: true },
         extruded: { type: 'boolean', default: false },
-        fillColor: {
-          type: 'array',
-          items: { type: 'number' },
-          default: [0, 128, 255, 160],
-        },
-        lineColor: {
-          type: 'array',
-          items: { type: 'number' },
-          default: [80, 80, 80],
-        },
-        lineWidthMinPixels: { type: 'number', default: 1 },
+        symbologyState: { type: 'object' },
       },
       buildParameters: (p, id) => ({
         source: id,
@@ -403,9 +403,8 @@ export function addLayerCreationCommands(options: {
         filled: p.filled ?? true,
         stroked: p.stroked ?? true,
         extruded: p.extruded ?? false,
-        fillColor: p.fillColor ?? [0, 128, 255, 160],
-        lineColor: p.lineColor ?? [80, 80, 80],
-        lineWidthMinPixels: p.lineWidthMinPixels ?? 1,
+        symbologyState:
+          p.symbologyState ?? defaultPolygonSymbology(() => UUID.uuid4()),
       }),
     },
     {
@@ -426,6 +425,7 @@ export function addLayerCreationCommands(options: {
         stroked: { type: 'boolean', default: true },
         extruded: { type: 'boolean', default: false },
         wireframe: { type: 'boolean', default: false },
+        symbologyState: { type: 'object' },
       },
       buildParameters: (p, id) => ({
         source: id,
@@ -434,6 +434,45 @@ export function addLayerCreationCommands(options: {
         stroked: p.stroked ?? true,
         extruded: p.extruded ?? false,
         wireframe: p.wireframe ?? false,
+        symbologyState:
+          p.symbologyState ?? defaultGeoJsonSymbology(() => UUID.uuid4()),
+      }),
+    },
+    {
+      id: LayerCreationCommandIDs.newHexagonWithParams,
+      label: 'New Hexagon Layer From Parameters',
+      caption:
+        'Add a new hexagon layer (by file path or URL) and add it to the given JupyterGIS file',
+      sourceType: 'HexagonSource',
+      layerType: 'HexagonLayer',
+      sourceSchema: {
+        type: 'object',
+        required: ['path'],
+        properties: { path: { type: 'string' } },
+      },
+      layerParamsSchema: {
+        opacity: { type: 'number', default: 1 },
+        radius: { type: 'number', default: 1000 },
+        coverage: { type: 'number', default: 1 },
+        extruded: { type: 'boolean', default: false },
+        gpuAggregation: { type: 'boolean', default: true },
+        colorAggregation: { type: 'string', default: 'SUM' },
+        elevationAggregation: { type: 'string', default: 'SUM' },
+        elevationScale: { type: 'number', default: 1 },
+        symbologyState: { type: 'object' },
+      },
+      buildParameters: (p, id) => ({
+        source: id,
+        opacity: p.opacity ?? 1,
+        radius: p.radius ?? 1000,
+        coverage: p.coverage ?? 1,
+        extruded: p.extruded ?? false,
+        gpuAggregation: p.gpuAggregation ?? true,
+        colorAggregation: p.colorAggregation ?? 'SUM',
+        elevationAggregation: p.elevationAggregation ?? 'SUM',
+        elevationScale: p.elevationScale ?? 1,
+        symbologyState:
+          p.symbologyState ?? defaultHexagonSymbology(() => UUID.uuid4()),
       }),
     },
   ];

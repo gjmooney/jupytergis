@@ -1,0 +1,77 @@
+{
+  "type": "object",
+  "description": "HexagonLayer",
+  "title": "IHexagonLayer",
+  "required": ["source"],
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "type": "string",
+      "description": "The id of the source"
+    },
+    "opacity": {
+      "type": "number",
+      "description": "The opacity of the layer",
+      "default": 1,
+      "multipleOf": 0.1,
+      "minimum": 0,
+      "maximum": 1
+    },
+    "radius": {
+      "type": "number",
+      "description": "Hexagon radius in meters.",
+      "default": 1000,
+      "minimum": 1
+    },
+    "coverage": {
+      "type": "number",
+      "description": "Displayed radius multiplier, clamped 0–1. Does not affect binning.",
+      "default": 1,
+      "minimum": 0,
+      "maximum": 1
+    },
+    "extruded": {
+      "type": "boolean",
+      "description": "Render hexagons as 3D columns.",
+      "default": false
+    },
+    "gpuAggregation": {
+      "type": "boolean",
+      "description": "Aggregate on the GPU when supported.",
+      "default": true
+    },
+    "colorAggregation": {
+      "type": "string",
+      "description": "How point weights combine into each hexagon's color value.",
+      "enum": ["SUM", "MEAN", "MIN", "MAX", "COUNT"],
+      "default": "SUM"
+    },
+    "elevationAggregation": {
+      "type": "string",
+      "description": "How point weights combine into each hexagon's elevation value.",
+      "enum": ["SUM", "MEAN", "MIN", "MAX", "COUNT"],
+      "default": "SUM"
+    },
+    "elevationScale": {
+      "type": "number",
+      "description": "Multiplier applied to all hexagon elevations.",
+      "default": 1,
+      "minimum": 0
+    },
+    "symbologyState": {
+      "type": "object",
+      "description": "Grammar symbology for the hexagon color ramp and geometry property names. A fill-color colorMap becomes colorRange. geometry.position, geometry.colorWeight, and geometry.elevationWeight name record properties; they default to position, and weight 1 when unset.",
+      "additionalProperties": false,
+      "required": ["layers"],
+      "properties": {
+        "layers": {
+          "type": "array",
+          "description": "Grammar rendering layers. Each layer is an independent rendering pipeline with optional preprocess transforms and encoding rules.",
+          "items": {
+            "$ref": "project/symbology.json#/definitions/IGrammarLayer"
+          }
+        }
+      }
+    }
+  }
+}

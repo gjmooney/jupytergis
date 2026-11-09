@@ -28,6 +28,7 @@ const LAYER_SCHEMAS = {
   TripsLayer: 'layers/tripsLayer.json',
   PolygonLayer: 'layers/polygonLayer.json',
   GeoJsonLayer: 'layers/geoJsonLayer.json',
+  HexagonLayer: 'layers/hexagonLayer.json',
 };
 
 const SOURCE_SCHEMAS = {
@@ -44,6 +45,7 @@ const SOURCE_SCHEMAS = {
   MarkerSource: 'sources/markerSource.json',
   TripsSource: 'sources/tripsSource.json',
   PolygonSource: 'sources/polygonSource.json',
+  HexagonSource: 'sources/hexagonSource.json',
 };
 
 function findJgisFiles(dir, files = []) {

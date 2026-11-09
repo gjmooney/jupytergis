@@ -1,4 +1,5 @@
 import {
+  defaultSymbologyForDeckLayerType,
   IDict,
   IJGISFormSchemaRegistry,
   IJupyterGISModel,
@@ -6,14 +7,14 @@ import {
   SourceType,
 } from '@jupytergis/schema';
 import { Dialog } from '@jupyterlab/apputils';
-import { PromiseDelegate } from '@lumino/coreutils';
+import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
 import * as React from 'react';
 
 import { FollowMirrorContext } from '@/src/features/follow/useFollowedState';
 import { CreationForm } from '@/src/shared/formbuilder';
 
-export type DeckGlLayerChoice = 'Trips' | 'Polygon' | 'GeoJSON';
+export type DeckGlLayerChoice = 'Trips' | 'Polygon' | 'GeoJSON' | 'Hexagon';
 
 export interface IDeckGlLayerPreset {
   label: DeckGlLayerChoice;
@@ -40,6 +41,12 @@ export const DECK_GL_LAYER_PRESETS: readonly IDeckGlLayerPreset[] = [
     sourceType: 'GeoJSONSource',
     layerType: 'GeoJsonLayer',
     layerName: 'Custom GeoJSON Layer',
+  },
+  {
+    label: 'Hexagon',
+    sourceType: 'HexagonSource',
+    layerType: 'HexagonLayer',
+    layerName: 'Custom Hexagon Layer',
   },
 ] as const;
 
@@ -80,6 +87,16 @@ export function DeckGlCreationForm(
 
   const [choice, setChoice] = React.useState<DeckGlLayerChoice>(initialChoice);
   const preset = presetForChoice(choice);
+  const layerData = React.useMemo(() => {
+    const symbologyState = defaultSymbologyForDeckLayerType(
+      preset.layerType,
+      () => UUID.uuid4(),
+    );
+    return {
+      name: preset.layerName,
+      ...(symbologyState ? { symbologyState } : {}),
+    };
+  }, [preset.layerName, preset.layerType]);
 
   return (
     <div>
@@ -114,7 +131,7 @@ export function DeckGlCreationForm(
         createSource={true}
         layerType={preset.layerType}
         sourceType={preset.sourceType}
-        layerData={{ name: preset.layerName }}
+        layerData={layerData}
         cancel={cancel}
         formErrorSignal={formErrorSignal}
         dialogOptions={dialogOptions}

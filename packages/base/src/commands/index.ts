@@ -363,6 +363,10 @@ const ADAPTER_REQUIREMENTS: Record<string, IAdapterRequirement> = {
     source: 'GeoJSONSource',
     layer: 'GeoJsonLayer',
   },
+  [LayerCreationCommandIDs.newHexagonWithParams]: {
+    source: 'HexagonSource',
+    layer: 'HexagonLayer',
+  },
 
   // Interaction features
   [CommandIDs.addMarker]: { source: 'MarkerSource' },

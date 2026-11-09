@@ -1,4 +1,6 @@
 import {
+  defaultSymbologyForDeckLayerType,
+  hasGrammarLayers,
   IDict,
   IJGISFormSchemaRegistry,
   IJGISLayer,
@@ -342,8 +344,17 @@ export function CreationForm(props: ICreationFormProps) {
     if (createSource) {
       data.source = sourceId;
     }
+    if (layerType && !hasGrammarLayers(data.symbologyState)) {
+      const symbologyState = defaultSymbologyForDeckLayerType(
+        layerType,
+        () => UUID.uuid4(),
+      );
+      if (symbologyState) {
+        data.symbologyState = symbologyState;
+      }
+    }
     return data;
-  }, [initialLayerData, createSource, sourceId]);
+  }, [initialLayerData, createSource, sourceId, layerType]);
 
   const sourceSchema = useMemo((): IDict | undefined => {
     if (!sourceType) {

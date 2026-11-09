@@ -44,6 +44,7 @@ const MAPLIBRE_FEATURES: IMapAdapterFeatures = {
     FeatureStoreSource: false,
     TripsSource: true,
     PolygonSource: true,
+    HexagonSource: true,
   },
   layers: {
     RasterLayer: true,
@@ -60,6 +61,7 @@ const MAPLIBRE_FEATURES: IMapAdapterFeatures = {
     TripsLayer: true,
     PolygonLayer: true,
     GeoJsonLayer: true,
+    HexagonLayer: true,
   },
   addMarker: false,
   identify: false,
@@ -93,6 +95,7 @@ const DECKGL_FEATURES: IMapAdapterFeatures = {
     FeatureStoreSource: false,
     TripsSource: true,
     PolygonSource: true,
+    HexagonSource: true,
   },
   layers: {
     RasterLayer: true,
@@ -109,6 +112,7 @@ const DECKGL_FEATURES: IMapAdapterFeatures = {
     TripsLayer: true,
     PolygonLayer: true,
     GeoJsonLayer: true,
+    HexagonLayer: true,
   },
   addMarker: false,
   identify: false,
@@ -142,6 +146,7 @@ const OPENLAYERS_FEATURES: IMapAdapterFeatures = {
     FeatureStoreSource: true,
     TripsSource: false,
     PolygonSource: false,
+    HexagonSource: false,
   },
   layers: {
     RasterLayer: true,
@@ -158,6 +163,7 @@ const OPENLAYERS_FEATURES: IMapAdapterFeatures = {
     TripsLayer: false,
     PolygonLayer: false,
     GeoJsonLayer: false,
+    HexagonLayer: false,
   },
   addMarker: true,
   identify: true,
@@ -256,6 +262,7 @@ const LAYER_ENTRIES: ILayerEntry[] = [
     layer: 'GeoJsonLayer',
     source: 'GeoJSONSource',
   },
+  { label: 'Hexagon', layer: 'HexagonLayer', source: 'HexagonSource' },
 ];
 
 type ToolKey =

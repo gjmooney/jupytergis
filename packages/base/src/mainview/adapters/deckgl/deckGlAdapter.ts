@@ -8,6 +8,7 @@ import {
   type ViewStateChangeParameters,
   type Widget,
 } from '@deck.gl/core';
+import { HexagonLayer } from '@deck.gl/aggregation-layers';
 import { TileLayer, TripsLayer } from '@deck.gl/geo-layers';
 import {
   BitmapLayer,
@@ -26,6 +27,7 @@ import type {
   IDict,
   IGeoJSONSource,
   IGeoJsonLayer,
+  IHexagonSource,
   IIdentifiedFeature,
   IJGISLayer,
   IJGISOptions,
@@ -52,6 +54,7 @@ import {
   compileGetter,
   computeTripTiming,
   createGeoJsonLayer,
+  createHexagonLayer,
   createPolygonLayer,
   createTripsLayer,
   JSON_RECORD_SOURCES,
@@ -59,6 +62,7 @@ import {
   type RecordGetter,
   type TripTiming,
 } from './createDeckLayers';
+import { loadHexagonPoints } from './parseHexagonData';
 import { ClientPointer } from '../../CollaboratorPointers';
 import {
   IMapAdapter,
@@ -431,12 +435,22 @@ export class DeckGlAdapter implements IMapAdapter {
         return;
 
       case 'TripsSource':
-      case 'PolygonSource': {
-        const label = source.type === 'TripsSource' ? 'trips' : 'polygon';
+      case 'PolygonSource':
+      case 'HexagonSource': {
+        const label =
+          source.type === 'TripsSource'
+            ? 'trips'
+            : source.type === 'HexagonSource'
+              ? 'hexagon'
+              : 'polygon';
         const data = await this._loadJsonPayload(
           id,
           source,
-          source.parameters as ITripsSource | IPolygonSource | undefined,
+          source.parameters as
+            | ITripsSource
+            | IPolygonSource
+            | IHexagonSource
+            | undefined,
           label,
         );
 
@@ -817,6 +831,16 @@ export class DeckGlAdapter implements IMapAdapter {
 
           break;
         }
+        case 'HexagonLayer': {
+          const created = this._createHexagonLayer(id, layer);
+          if (!created) {
+            continue;
+          }
+
+          layers.push(created);
+
+          break;
+        }
       }
     }
 
@@ -892,6 +916,13 @@ export class DeckGlAdapter implements IMapAdapter {
     layer: IJGISLayer,
   ): GeoJsonLayer | undefined {
     return createGeoJsonLayer(id, layer, this._deckBuildContext());
+  }
+
+  private _createHexagonLayer(
+    id: string,
+    layer: IJGISLayer,
+  ): HexagonLayer | undefined {
+    return createHexagonLayer(id, layer, this._deckBuildContext());
   }
 
   private _deckBuildContext() {
@@ -988,7 +1019,9 @@ export class DeckGlAdapter implements IMapAdapter {
   ): Promise<unknown> {
     if (parameters?.data !== undefined && parameters?.data !== null) {
       if (!Array.isArray(parameters.data) || parameters.data.length > 0) {
-        return parameters.data;
+        return label === 'hexagon'
+          ? await loadHexagonPoints(parameters.data)
+          : parameters.data;
       }
     }
 
@@ -1003,7 +1036,9 @@ export class DeckGlAdapter implements IMapAdapter {
     const path = parameters.path;
     let data: unknown;
     try {
-      if (path.startsWith('http://') || path.startsWith('https://')) {
+      if (label === 'hexagon') {
+        data = await this._loadHexagonPayload(path);
+      } else if (path.startsWith('http://') || path.startsWith('https://')) {
         data = await fetchWithProxies(path, this._model, async response =>
           response.json(),
         );
@@ -1012,7 +1047,10 @@ export class DeckGlAdapter implements IMapAdapter {
       }
 
       if (typeof data === 'string') {
-        data = JSON.parse(data) as unknown;
+        data =
+          label === 'hexagon'
+            ? await loadHexagonPoints(data)
+            : (JSON.parse(data) as unknown);
       }
     } catch (error) {
       this._log(
@@ -1031,6 +1069,38 @@ export class DeckGlAdapter implements IMapAdapter {
     }
 
     return data;
+  }
+
+  private async _loadHexagonPayload(path: string): Promise<unknown> {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return loadHexagonPoints(path);
+    }
+
+    if (!this._model.contentsManager || !this._model.filePath) {
+      throw new Error('ContentsManager or filePath is not initialized.');
+    }
+
+    const absolutePath = PathExt.resolve(
+      PathExt.dirname(this._model.filePath),
+      path,
+    );
+    const file = await this._model.contentsManager.get(absolutePath, {
+      content: true,
+    });
+    if (!file.content) {
+      throw new Error(`File at ${absolutePath} is empty or inaccessible.`);
+    }
+
+    switch (file.format) {
+      case 'json':
+        return loadHexagonPoints(file.content);
+      case 'text':
+        return loadHexagonPoints(file.content);
+      case 'base64':
+        return loadHexagonPoints(atob(file.content));
+      default:
+        throw new Error(`Invalid hexagon source file format: ${file.format}.`);
+    }
   }
 
   private async _readLocalJson(path: string): Promise<unknown> {

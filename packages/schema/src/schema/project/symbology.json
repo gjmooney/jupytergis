@@ -452,7 +452,7 @@
     "IGeometryBinding": {
       "type": "object",
       "title": "IGeometryBinding",
-      "description": "Property names for path, timestamps, or polygon on a plain JSON record. Each value is a dotted property path, not an expression. DeckGL reads these. OpenLayers ignores them.",
+      "description": "Property names for path, timestamps, polygon, position, or aggregation weights on a plain JSON record. Each value is a dotted property path, not an expression. DeckGL reads these. OpenLayers ignores them.",
       "additionalProperties": false,
       "properties": {
         "path": {
@@ -466,6 +466,18 @@
         "polygon": {
           "type": "string",
           "description": "Property holding a polygon ring. DeckGL defaults to polygon."
+        },
+        "position": {
+          "type": "string",
+          "description": "Property holding a point [longitude, latitude]. DeckGL HexagonLayer defaults to position."
+        },
+        "colorWeight": {
+          "type": "string",
+          "description": "Numeric property used as getColorWeight for HexagonLayer. When unset, weight is 1."
+        },
+        "elevationWeight": {
+          "type": "string",
+          "description": "Numeric property used as getElevationWeight for HexagonLayer. When unset, weight is 1."
         }
       }
     },
