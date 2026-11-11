@@ -49,8 +49,8 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/webpack-env": "^1.18.5",
-    "@typescript-eslint/eslint-plugin": "5.55.0",
-    "@typescript-eslint/parser": "5.55.0",
+    "@typescript-eslint/eslint-plugin": "8.72.1",
+    "@typescript-eslint/parser": "8.72.1",
     "copy-webpack-plugin": "^10.0.0",
     "eslint": "^8.36.0",
     "eslint-config-prettier": "^8.8.0",
@@ -65,7 +65,7 @@
     "react-draggable": "4.5.0",
     "rimraf": "^3.0.2",
     "ts-jest": "^29.4.9",
-    "typescript": "^5",
+    "typescript": "~6.0.3",
     "vega2ol": "^1.2.0",
     "webpack": "^5.76.3",
     "zarrita": "^0.7.3"

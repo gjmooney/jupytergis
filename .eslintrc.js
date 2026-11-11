@@ -34,11 +34,6 @@ module.exports = {
     "@typescript-eslint/no-namespace": "off",
     "@typescript-eslint/no-unnecessary-type-assertion": "error",
     "@typescript-eslint/no-use-before-define": "off",
-    "@typescript-eslint/quotes": [
-      "error",
-      "single",
-      { avoidEscape: true, allowTemplateLiterals: false },
-    ],
     "curly": ["error", "all"],
     "eqeqeq": "error",
     "import/order": [
