@@ -51,7 +51,7 @@ function Calendar({
           'relative flex flex-row gap-4 max-md:flex-col',
           defaultClassNames.months,
         ),
-        month: cn('flex w-full flex-col gap-4', defaultClassNames.month),
+        month: cn(' w-full flex flex-col gap-4', defaultClassNames.month),
         nav: cn(
           'absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1',
           defaultClassNames.nav,
