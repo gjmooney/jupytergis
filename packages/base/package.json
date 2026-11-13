@@ -28,16 +28,18 @@
   },
   "scripts": {
     "test": "jest",
-    "build": "pnpm run build:tailwind && pnpm run build:gallery && tspc -b && pnpm run cp:gdal",
+    "build": "pnpm run build:tailwind && pnpm run build:gallery && tsc -b && tsc-alias -p tsconfig.json && pnpm run cp:gdal",
     "build:tailwind": "tailwindcss -i ./style/tailwind.in.css -o ./style/tailwind.css",
     "build:gallery": "uv run --directory ../../scripts/layer_gallery python layer_gallery",
     "cp:gdal": "cp ../../node_modules/gdal3.js/dist/package/gdal3WebAssembly.data lib && cp ../../node_modules/gdal3.js/dist/package/gdal3WebAssembly.wasm lib",
     "build:prod": "pnpm run clean && pnpm run build",
-    "build:dev": "pnpm run build:tailwind && tspc -b && pnpm run cp:gdal",
+    "build:dev": "pnpm run build:tailwind && tsc -b && tsc-alias -p tsconfig.json && pnpm run cp:gdal",
     "clean": "rimraf tsconfig.tsbuildinfo",
     "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
     "clean:all": "pnpm run clean:lib",
-    "watch": "tspc -w"
+    "watch": "tsc -b && tsc-alias -p tsconfig.json && run-p watch:tsc watch:alias",
+    "watch:tsc": "tsc -b -w",
+    "watch:alias": "tsc-alias -p tsconfig.json -w"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -134,9 +136,8 @@
     "prettier-plugin-tailwindcss": "^0.8.1",
     "rimraf": "^3.0.2",
     "tailwindcss": "^4.3.3",
-    "ts-patch": "^4.0.1",
-    "typescript": "~6.0.3",
-    "typescript-transform-paths": "^3.5.5"
+    "tsc-alias": "^1.9.10",
+    "typescript": "~6.0.3"
   },
   "sideEffects": [
     "style/*.css",
