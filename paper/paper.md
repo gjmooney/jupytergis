@@ -174,12 +174,12 @@ JupyterLab delivers these features as a robust framework, backed by a large user
 
 JupyterGIS leverages the following technologies:
 
-|               |
+| |
 | ------------- | ---------------------------------------------------- |
-| Frontend      | JupyterLab application framework                     |
+| Frontend | JupyterLab application framework |
 | Collaboration | Collaborative editing with Yjs and PyCRDT [@YJS2015] |
-| Processing    | GDAL-based [@GDAL2025] toolbox                       |
-| Visualization | OpenLayers [@OpenLayers2025] for map rendering       |
+| Processing | GDAL-based [@GDAL2025] toolbox |
+| Visualization | OpenLayers [@OpenLayers2025] for map rendering |
 
 # Research Impact
 
