@@ -45,7 +45,7 @@
     "watch": "lerna watch -- lerna run build --scope=\\$LERNA_PACKAGE_NAME --include-dependents",
     "build:lab": "lerna run",
     "bench:tsc": "node scripts/bench-tsc.mjs",
-    "bench:lint": "node scripts/bench-lint.mjs"
+    "bench:build": "node scripts/bench-build.mjs"
   },
   "packageManager": "pnpm@11.17.0",
   "devDependencies": {

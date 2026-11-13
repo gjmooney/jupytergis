@@ -29,7 +29,8 @@ export async function checkFeatureStoreAvailability(): Promise<boolean> {
       },
       settings,
     );
-
+//sdsdsd
+//sdsdsds
     if (response.ok) {
       const data = await response.json();
       _featureStoreAvailable = data.available === true;
