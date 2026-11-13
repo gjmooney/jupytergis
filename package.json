@@ -43,7 +43,8 @@
     "build:packages": "python scripts/build_packages.py",
     "watch:lib": "lerna run --stream watch",
     "watch": "lerna watch -- lerna run build --scope=\\$LERNA_PACKAGE_NAME --include-dependents",
-    "build:lab": "lerna run"
+    "build:lab": "lerna run",
+    "bench:tsc": "node scripts/bench-tsc.mjs"
   },
   "packageManager": "pnpm@11.17.0",
   "devDependencies": {
@@ -51,6 +52,8 @@
     "@types/webpack-env": "^1.18.5",
     "@typescript-eslint/eslint-plugin": "8.72.1",
     "@typescript-eslint/parser": "8.72.1",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
     "copy-webpack-plugin": "^10.0.0",
     "eslint": "^8.36.0",
     "eslint-config-prettier": "^8.8.0",
@@ -65,7 +68,6 @@
     "react-draggable": "4.5.0",
     "rimraf": "^3.0.2",
     "ts-jest": "^29.4.9",
-    "typescript": "~6.0.3",
     "vega2ol": "^1.2.0",
     "webpack": "^5.76.3",
     "zarrita": "^0.7.3"
