@@ -45,7 +45,12 @@
     "watch": "lerna watch -- lerna run build --scope=\\$LERNA_PACKAGE_NAME --include-dependents",
     "build:lab": "lerna run",
     "bench:tsc": "node scripts/bench-tsc.mjs",
-    "bench:build": "node scripts/bench-build.mjs"
+    "bench:lint": "node scripts/bench-lint-ox.mjs",
+    "bench:lint-ox": "node scripts/bench-lint-ox.mjs",
+    "bench:lint-pes": "node scripts/bench-lint-pes.mjs",
+    "bench:lint-biome": "node scripts/bench-lint-biome.mjs",
+    "bench:build": "node scripts/bench-build.mjs",
+    "bench:build-main": "node scripts/bench-build-main.mjs"
   },
   "packageManager": "pnpm@11.17.0",
   "devDependencies": {
