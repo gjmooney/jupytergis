@@ -501,10 +501,9 @@ function vegaExprCompletion(fieldsRef: React.MutableRefObject<string[]>) {
     if (datumMatch) {
       return {
         from: datumMatch.from + 6,
-        options: fieldsRef.current.map((f): Completion => ({
-          label: f,
-          type: 'property',
-        })),
+        options: fieldsRef.current.map(
+          (f): Completion => ({ label: f, type: 'property' }),
+        ),
         validFor: /^\w*$/,
       };
     }
@@ -520,14 +519,12 @@ function vegaExprCompletion(fieldsRef: React.MutableRefObject<string[]>) {
         type: 'variable',
         detail: 'current data object',
       },
-      ...functionNames.map((name): Completion => ({
-        label: name,
-        type: 'function',
-      })),
-      ...constantNames.map((name): Completion => ({
-        label: name,
-        type: 'constant',
-      })),
+      ...functionNames.map(
+        (name): Completion => ({ label: name, type: 'function' }),
+      ),
+      ...constantNames.map(
+        (name): Completion => ({ label: name, type: 'constant' }),
+      ),
     ];
 
     return { from: word.from, options, validFor: /^\w*$/ };
