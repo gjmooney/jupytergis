@@ -1,0 +1,72 @@
+{
+  "description": "GeoJSONSourceV2",
+  "title": "IGeoJSONSourceV2",
+  "definitions": {
+    "attribution": {
+      "type": "string",
+      "description": "Attribution / credit for the dataset. Stored on the source; map libraries read it from the source (OpenLayers) or source options (MapLibre)."
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "title": "IGeoJSONSourceV2Data",
+      "description": "Inline GeoJSON data.",
+      "additionalProperties": false,
+      "required": ["data"],
+      "properties": {
+        "data": {
+          "description": "The GeoJSON data.",
+          "$ref": "./geojson.json"
+        },
+        "attribution": {
+          "$ref": "#/definitions/attribution"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "title": "IGeoJSONSourceV2Path",
+      "description": "Workspace or relative file path. Must not be an http(s) URL.",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Local or workspace-relative path to a GeoJSON file.",
+          "not": {
+            "pattern": "^https?://"
+          }
+        },
+        "attribution": {
+          "$ref": "#/definitions/attribution"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "title": "IGeoJSONSourceV2Url",
+      "description": "Remote GeoJSON fetched over HTTP(S). MapLibre/Deck can take this URL as source/layer data directly; OpenLayers resolves it then parses.",
+      "additionalProperties": false,
+      "required": ["url"],
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "http(s) URL of a GeoJSON resource.",
+          "pattern": "^https?://"
+        },
+        "httpHeaders": {
+          "type": "object",
+          "description": "HTTP headers sent with the request (e.g. Authorization). Key/value string map.",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "attribution": {
+          "$ref": "#/definitions/attribution"
+        }
+      }
+    }
+  ]
+}

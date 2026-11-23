@@ -6,7 +6,7 @@
   "properties": {
     "schemaVersion": {
       "type": "string",
-      "default": "0.7.3"
+      "default": "0.7.2"
     },
     "layers": {
       "$ref": "#/definitions/jGISLayers"
@@ -52,7 +52,8 @@
         "OpenEOTileLayer",
         "TerrainLayer",
         "PolygonLayer",
-        "GeoJsonLayer"
+        "GeoJsonLayer",
+        "GeoJsonLayerV2"
       ]
     },
     "sourceType": {
@@ -62,6 +63,7 @@
         "WmsTileSource",
         "VectorTileSource",
         "GeoJSONSource",
+        "GeoJSONSourceV2",
         "RasterDemSource",
         "ImageSource",
         "ShapefileSource",

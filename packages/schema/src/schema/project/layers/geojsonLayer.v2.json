@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "description": "GeoJsonLayerV2",
+  "title": "IGeoJsonLayerV2",
+  "required": ["source"],
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "type": "string",
+      "description": "The id of the GeoJSONSourceV2 source."
+    },
+    "symbologyState": {
+      "type": "object",
+      "description": "Grammar symbology. Single source of truth for how the layer is styled; adapters derive renderer-specific styles at render time.",
+      "additionalProperties": false,
+      "required": ["layers"],
+      "properties": {
+        "layers": {
+          "type": "array",
+          "description": "Grammar rendering layers. Each layer is an independent rendering pipeline with optional preprocess transforms and encoding rules.",
+          "items": {
+            "$ref": "project/symbology.json#/definitions/IGrammarLayer"
+          }
+        }
+      }
+    }
+  }
+}

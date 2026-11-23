@@ -12,11 +12,13 @@ from .interfaces.project.layers.openeoTileLayer import IOpenEOTileLayer  # noqa
 from .interfaces.project.layers.terrainLayer import ITerrainLayer  # noqa
 from .interfaces.project.layers.polygonLayer import IPolygonLayer  # noqa
 from .interfaces.project.layers.geoJsonLayer import IGeoJsonLayer  # noqa
+from .interfaces.project.layers.geojsonLayer_v2 import IGeoJsonLayerV2  # noqa
 
 from .interfaces.project.sources.vectorTileSource import IVectorTileSource  # noqa
 from .interfaces.project.sources.markerSource import IMarkerSource  # noqa
 from .interfaces.project.sources.rasterSource import IRasterSource  # noqa
 from .interfaces.project.sources.geoJsonSource import IGeoJSONSource  # noqa
+from .interfaces.project.sources.geojsonSource_v2 import IGeoJSONSourceV2  # noqa
 from .interfaces.project.sources.imageSource import IImageSource  # noqa
 from .interfaces.project.sources.geoTiffSource import IGeoTiffSource  # noqa
 from .interfaces.project.sources.geoZarrSource import IGeoZarrSource  # noqa

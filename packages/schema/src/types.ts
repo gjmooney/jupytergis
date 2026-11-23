@@ -7,6 +7,7 @@ export * from './_interface/geojson';
 export { IGeoPackageVectorSource } from './_interface/project/sources/geoPackageVectorSource';
 export { IGeoPackageRasterSource } from './_interface/project/sources/geoPackageRasterSource';
 export { IGeoJSONSource } from './_interface/project/sources/geoJsonSource';
+export { IGeoJSONSourceV2 } from './_interface/project/sources/geojsonSource.v2';
 export { IGeoTiffSource } from './_interface/project/sources/geoTiffSource';
 export { IImageSource } from './_interface/project/sources/imageSource';
 export { IRasterDemSource } from './_interface/project/sources/rasterDemSource';
@@ -35,6 +36,7 @@ export { IOpenEOTileLayer } from './_interface/project/layers/openeoTileLayer';
 export { ITerrainLayer } from './_interface/project/layers/terrainLayer';
 export { IPolygonLayer } from './_interface/project/layers/polygonLayer';
 export { IGeoJsonLayer } from './_interface/project/layers/geoJsonLayer';
+export { IGeoJsonLayerV2 } from './_interface/project/layers/geojsonLayer.v2';
 
 // Processing
 export * from './processing/_generated/exportProcessingSchema';

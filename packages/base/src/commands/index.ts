@@ -254,6 +254,10 @@ const ADAPTER_REQUIREMENTS: Record<string, IAdapterRequirement> = {
     source: 'GeoJSONSource',
     layer: 'GeoJsonLayer',
   },
+  [CommandIDs.openNewGeoJsonV2Dialog]: {
+    source: 'GeoJSONSourceV2',
+    layer: 'GeoJsonLayerV2',
+  },
   [CommandIDs.openNewShapefileDialog]: {
     source: 'ShapefileSource',
     layer: 'VectorLayer',
@@ -1124,6 +1128,54 @@ export function addCommands(
       layerType: 'GeoJsonLayer',
     }),
     ...icons.get(CommandIDs.openNewGeoJsonLayerDialog),
+  });
+
+      await launchFollowable(
+        current.model,
+        {
+          kind: 'layerCreation',
+          params: {
+            title: 'Create DeckGL Layer',
+            createLayer: true,
+            createSource: true,
+            sourceType: 'PolygonSource',
+            layerType: 'PolygonLayer',
+            layerData: { name: 'Custom Polygon Layer' },
+          },
+        },
+        dialog,
+      );
+    },
+    ...icons.get(CommandIDs.openNewDeckGLDialog),
+  });
+
+  commands.addCommand(CommandIDs.openNewGeoJsonV2Dialog, {
+    label: trans.__('GeoJSON (v2)'),
+    caption:
+      'Open a dialog to create a new GeoJSON v2 layer and source in the current JupyterGIS document.',
+    describedBy: {
+      args: {
+        type: 'object',
+        properties: {},
+      },
+    },
+    isEnabled: () => {
+      return tracker.currentWidget
+        ? tracker.currentWidget.model.sharedModel.editable
+        : false;
+    },
+    execute: Private.createEntry({
+      tracker,
+      formSchemaRegistry,
+      title: 'Create GeoJSON Layer (v2)',
+      createLayer: true,
+      createSource: true,
+      sourceData: { name: 'Custom GeoJSON Source (v2)' },
+      layerData: { name: 'Custom GeoJSON Layer (v2)' },
+      sourceType: 'GeoJSONSourceV2',
+      layerType: 'GeoJsonLayerV2',
+    }),
+    ...icons.get(CommandIDs.openNewGeoJsonV2Dialog),
   });
 
   commands.addCommand(CommandIDs.openNewWmsDialog, {

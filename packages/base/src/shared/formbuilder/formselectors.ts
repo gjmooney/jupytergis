@@ -6,10 +6,12 @@ import {
   LayerPropertiesForm,
   VectorLayerPropertiesForm,
   GeoTiffLayerPropertiesForm,
+  GeoJsonLayerV2Form,
 } from '@/src/features/layers/forms/layer';
 import type { ILayerProps } from '@/src/features/layers/forms/layer/layerform';
 import {
   GeoJSONSourcePropertiesForm,
+  GeoJSONSourceV2Form,
   GeoTiffSourcePropertiesForm,
   PathBasedSourcePropertiesForm,
   TileSourcePropertiesForm,
@@ -28,6 +30,9 @@ export function getLayerTypeForm(
     case 'VectorTileLayer':
     case 'VectorLayer':
       LayerForm = VectorLayerPropertiesForm;
+      break;
+    case 'GeoJsonLayerV2':
+      LayerForm = GeoJsonLayerV2Form;
       break;
     case 'HillshadeLayer':
       LayerForm = HillshadeLayerPropertiesForm;
@@ -51,6 +56,9 @@ export function getSourceTypeForm(
   switch (sourceType) {
     case 'GeoJSONSource':
       SourceForm = GeoJSONSourcePropertiesForm;
+      break;
+    case 'GeoJSONSourceV2':
+      SourceForm = GeoJSONSourceV2Form;
       break;
     case 'ImageSource':
       SourceForm = PathBasedSourcePropertiesForm;

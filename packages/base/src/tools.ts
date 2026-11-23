@@ -736,7 +736,8 @@ export const loadFile = async (fileInfo: {
       }
 
       case 'GeoJSONSource':
-      case 'PolygonSource': {
+      case 'PolygonSource':
+      case 'GeoJSONSourceV2': {
         const cached = await getFromIndexedDB(filepath);
         if (cached) {
           return cached.file;
@@ -831,7 +832,8 @@ export const loadFile = async (fileInfo: {
 
     switch (type) {
       case 'GeoJSONSource':
-      case 'PolygonSource': {
+      case 'PolygonSource':
+      case 'GeoJSONSourceV2': {
         switch (file.format) {
           case 'base64': {
             return JSON.parse(atob(file.content));

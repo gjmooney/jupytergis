@@ -27,12 +27,14 @@ const LAYER_SCHEMAS = {
   TerrainLayer: 'layers/terrainLayer.json',
   PolygonLayer: 'layers/polygonLayer.json',
   GeoJsonLayer: 'layers/geoJsonLayer.json',
+  GeoJsonLayerV2: 'layers/geojsonLayer.v2.json',
 };
 
 const SOURCE_SCHEMAS = {
   RasterSource: 'sources/rasterSource.json',
   VectorTileSource: 'sources/vectorTileSource.json',
   GeoJSONSource: 'sources/geoJsonSource.json',
+  GeoJSONSourceV2: 'sources/geojsonSource.v2.json',
   RasterDemSource: 'sources/rasterDemSource.json',
   ImageSource: 'sources/imageSource.json',
   ShapefileSource: 'sources/shapefileSource.json',

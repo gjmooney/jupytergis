@@ -16,6 +16,8 @@ import {
   IViewState,
   IRasterLayer,
   IVectorLayer,
+  IGeoJsonLayerV2,
+  IGeoJSONSourceV2,
   IGrammarSymbologyState,
   IHillshadeLayer,
   IImageLayer,
@@ -90,7 +92,6 @@ import {
 } from 'ol/layer';
 import LayerGroup from 'ol/layer/Group';
 import TileLayer from 'ol/layer/Tile';
-import { toDegrees, toRadians } from 'ol/math';
 import {
   fromLonLat,
   get as getProjection,
@@ -159,6 +160,7 @@ import {
   MAP_ADAPTER_FEATURES,
   getUnsupportedReason,
 } from '../../mapAdapterFeatures';
+import { resolveGeoJSONSourceV2 } from '../resolveGeoJSONSourceV2';
 import {
   getZoomExtentForOlLayer,
   isValidExtent,
@@ -403,7 +405,7 @@ export class OpenLayersAdapter implements IMapAdapter {
       view: new View({
         center: initialCenter,
         zoom,
-        rotation: -toRadians(rotation),
+        rotation,
         projection: proj,
       }),
       controls,
@@ -565,7 +567,7 @@ export class OpenLayersAdapter implements IMapAdapter {
       const currentProjection =
         getProjection(currentOptions.projection) ?? moveEndView.getProjection();
       const latLng = toLonLat(center, currentProjection);
-      const bearing = -toDegrees(moveEndView.getRotation());
+      const bearing = moveEndView.getRotation();
 
       const updatedOptions: Partial<IJGISOptions> = {
         latitude: latLng[1],
@@ -935,7 +937,7 @@ export class OpenLayersAdapter implements IMapAdapter {
       longitude: lonLat[0],
       latitude: lonLat[1],
       zoom: nextView.getZoom() ?? currentOptions.zoom,
-      bearing: -toDegrees(rotation),
+      bearing: rotation,
       extent: nextView.calculateExtent(this._map.getSize()),
     });
 
@@ -1362,7 +1364,7 @@ export class OpenLayersAdapter implements IMapAdapter {
       }
     }
 
-    view.setRotation(-toRadians(bearing || 0));
+    view.setRotation(bearing || 0);
     map.setView(view);
 
     // Use the extent only if explicitly requested (QGIS files).
@@ -1637,6 +1639,23 @@ export class OpenLayersAdapter implements IMapAdapter {
       default: {
         // Removed or unknown layer types are skipped.
         return;
+      }
+
+      case 'GeoJsonLayerV2': {
+        // Pilot: same Grammar → OL path as VectorLayer.
+        layerParameters = layer.parameters as IGeoJsonLayerV2;
+        if (Array.isArray(layerParameters.symbologyState?.layers)) {
+          newMapLayer = this._createGrammarVectorLayer(id, layer, className);
+        } else {
+          newMapLayer = new VectorImageLayer({
+            opacity: 1,
+            visible: layer.visible,
+            source: this._sources.get(layerParameters.source),
+            style: this.vectorLayerStyleRuleBuilder(layer),
+            className,
+          });
+        }
+        break;
       }
     }
 
@@ -2159,14 +2178,6 @@ export class OpenLayersAdapter implements IMapAdapter {
     }
   }
 
-  private _reportTileProgress(): void {
-    if (this._tilesLoaded === this._tilesTotal) {
-      this._tilesLoaded = 0;
-      this._tilesTotal = 0;
-    }
-    this._callbacks?.onTileProgress?.(this._tilesLoaded, this._tilesTotal);
-  }
-
   /**
    * Wait for all layers to be loaded.
    */
@@ -2588,14 +2599,6 @@ export class OpenLayersAdapter implements IMapAdapter {
           const sourceParameters = source.parameters as IOpenEOTileSource;
 
           newSource = new OpenEOTileSource(sourceParameters);
-          newSource.on('tileloadstart', () => {
-            this._tilesTotal += 1;
-            this._reportTileProgress();
-          });
-          newSource.on(['tileloadend', 'tileloaderror'], () => {
-            this._tilesLoaded += 1;
-            this._reportTileProgress();
-          });
 
           break;
         }
@@ -2630,6 +2633,78 @@ export class OpenLayersAdapter implements IMapAdapter {
           newSource = new VectorSource({
             features: featureCollection,
           });
+
+          break;
+        }
+
+        case 'GeoJSONSourceV2': {
+          const params = source.parameters as IGeoJSONSourceV2 | undefined;
+          if (!params) {
+            break;
+          }
+
+          const resolved = resolveGeoJSONSourceV2(params);
+          const viewProjection = this._map.getView().getProjection();
+          const format = new GeoJSON({
+            featureProjection: viewProjection,
+          });
+
+          const attributions = resolved.attribution
+            ? { attributions: resolved.attribution }
+            : {};
+
+            if (resolved.kind === 'url') {
+              // Pass the URL through; OpenLayers fetches. Headers later.
+              newSource = new VectorSource({
+                url: resolved.url,
+                format,
+                ...attributions,
+              });
+
+              break;
+            }
+
+          if (resolved.kind === 'data') {
+            const featureArray = format.readFeatures(resolved.data, {
+              featureProjection: viewProjection,
+            });
+
+            const featureCollection = new Collection(featureArray);
+            featureCollection.forEach(feature => {
+              feature.setId(getUid(feature));
+            });
+
+            newSource = new VectorSource({
+              features: featureCollection,
+              ...attributions,
+            });
+
+            break;
+          }
+
+          if (resolved.kind === 'path') {
+            const pathData = await loadFile({
+              filepath: resolved.path,
+              type: 'GeoJSONSourceV2',
+              model: this._model,
+            });
+
+            const featureArray = format.readFeatures(pathData, {
+              featureProjection: viewProjection,
+            });
+
+            const featureCollection = new Collection(featureArray);
+            featureCollection.forEach(feature => {
+              feature.setId(getUid(feature));
+            });
+
+            newSource = new VectorSource({
+              features: featureCollection,
+              ...attributions,
+            });
+
+            break;
+          }
 
           break;
         }
@@ -3041,7 +3116,7 @@ export class OpenLayersAdapter implements IMapAdapter {
         'error',
         `Tile load error for source "${id}"${url ? ': ' + url : ''}`,
       );
-      if (!hasLoadedData && this._sources.get(id) === evt.target) {
+      if (!hasLoadedData) {
         this._callbacks?.onSourceDataError?.(id);
       }
     });
@@ -3191,8 +3266,6 @@ export class OpenLayersAdapter implements IMapAdapter {
     zoom: number,
     duration = 1000,
     transitionType?: 'linear' | 'immediate' | 'smooth',
-    _pitch?: number,
-    bearing?: number,
   ) {
     const view = this._map.getView();
 
@@ -3200,14 +3273,12 @@ export class OpenLayersAdapter implements IMapAdapter {
     view.cancelAnimations();
 
     const targetCenter: Coordinate = [center.x, center.y];
-    const rotation = bearing == null ? undefined : -toRadians(bearing);
 
     if (transitionType === 'linear') {
       // Linear: direct zoom
       view.animate({
         center: targetCenter,
         zoom: zoom,
-        rotation,
         duration,
       });
 
@@ -3223,7 +3294,6 @@ export class OpenLayersAdapter implements IMapAdapter {
       // Start centering (full duration) and zoom out (50% duration) simultaneously
       view.animate({
         center: targetCenter,
-        rotation,
         duration: duration,
       });
       // Chain zoom out -> zoom in (zoom in starts when zoom out completes)
@@ -3244,9 +3314,6 @@ export class OpenLayersAdapter implements IMapAdapter {
     // Immediate move
     view.setCenter(targetCenter);
     view.setZoom(zoom);
-    if (rotation !== undefined) {
-      view.setRotation(rotation);
-    }
   }
 
   moveToPosition(
@@ -3621,8 +3688,6 @@ export class OpenLayersAdapter implements IMapAdapter {
           params.zoom,
           (params.transition.time ?? 1) * 1000,
           params.transition.type,
-          params.pitch,
-          params.bearing,
         );
       }
 
@@ -3944,8 +4009,6 @@ export class OpenLayersAdapter implements IMapAdapter {
   private _comparisonKey?: EventsKey;
   private _loggerRegistry?: ILoggerRegistry;
   private _loadingLayers: Set<string>;
-  private _tilesLoaded = 0;
-  private _tilesTotal = 0;
   private _highlightLayerRef: {
     current: VectorImageLayer<VectorSource> | null;
   } = { current: null };
