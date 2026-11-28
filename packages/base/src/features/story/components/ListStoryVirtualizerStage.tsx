@@ -131,13 +131,12 @@ function estimateRowSize(
   }
 
   const mode = getSegmentDisplayMode(item.activeSlide);
+  const markdownHeight = estimateMarkdownHeight(
+    getStoryMarkdownFromSlide(item.activeSlide),
+    viewportHeight,
+  );
   const contentHeight =
-    mode === 'map'
-      ? viewportHeight
-      : estimateMarkdownHeight(
-        getStoryMarkdownFromSlide(item.activeSlide),
-        viewportHeight,
-      );
+    mode === 'map' ? Math.max(viewportHeight, markdownHeight) : markdownHeight;
 
   return (
     contentHeight + gapAfter(items, index, viewportHeight, markdownSegmentGap)
@@ -349,13 +348,15 @@ function ListStoryVirtualizerList({
                     position: 'relative',
                     width: '100%',
                     alignSelf,
+                    height: 'auto',
+                    maxHeight: 'none',
                     ...(isMap
                       ? {
-                        height: viewportHeight,
-                        maxHeight: viewportHeight,
-                        alignItems: alignSelf,
-                      }
-                      : { height: 'auto', maxHeight: 'none' }),
+                          minHeight: viewportHeight,
+                          alignItems: alignSelf,
+                          overflow: 'visible',
+                        }
+                      : null),
                   }}
                 >
                   {isMap ? (
